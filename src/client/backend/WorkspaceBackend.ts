@@ -1,5 +1,5 @@
 import ky from "ky";
-import { EntryInfo, WorkspaceEntry } from "../../common/WorkspaceEntry";
+import { CreateEntryReply, EntryInfo, WorkspaceEntry } from "../../common/WorkspaceEntry";
 
 
 export class WorkspaceBackend {
@@ -8,13 +8,12 @@ export class WorkspaceBackend {
   }
 
 
-  async createEntry(path: string, type: "file" | "dir"): Promise<WorkspaceEntry[]> {
+  async createEntry(type: "file" | "dir"): Promise<CreateEntryReply> {
     return ky.post("/api/workspaces/default/files", {
       json: {
-        path,
         type
       }
-    }).json<WorkspaceEntry[]>();
+    }).json<CreateEntryReply>();
   }
 
 
@@ -60,9 +59,12 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
   }
 
 
-  async createEntry(path: string, type: "file" | "dir"): Promise<WorkspaceEntry[]> {
-    console.log("create entry:", path, type);
-    return DEMO_WORKSPACE;
+  async createEntry(type: "file" | "dir"): Promise<CreateEntryReply> {
+    console.log("create entry:", type);
+    return {
+      path: "/new-file.md",
+      entries: DEMO_WORKSPACE
+    };
   }
 
 

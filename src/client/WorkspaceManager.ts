@@ -1,4 +1,4 @@
-import { WorkspaceEntry } from "../common/WorkspaceEntry";
+import { CreateEntryReply, WorkspaceEntry } from "../common/WorkspaceEntry";
 import { makeObservable, observable } from "mobx";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { Backend } from "./backend/Backend";
@@ -53,8 +53,10 @@ export class WorkspaceManager {
   }
 
 
-  async createEntry(id: string, type: "file" | "dir") {
-    this.entries = await Backend.get(WorkspaceBackend).createEntry(id, type);
+  async createEntry(type: "file" | "dir"): Promise<CreateEntryReply> {
+    const reply = await Backend.get(WorkspaceBackend).createEntry(type);
+    this.entries = reply.entries;
+    return reply;
   }
 
 

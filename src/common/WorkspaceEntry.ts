@@ -8,3 +8,8 @@ export interface WorkspaceEntry {
 export interface EntryInfo {
   content: string;
 }
+
+export interface CreateEntryReply {
+  path: string;
+  entries: WorkspaceEntry[];
+}
