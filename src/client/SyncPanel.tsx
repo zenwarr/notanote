@@ -2,26 +2,30 @@ import { observer } from "mobx-react-lite";
 import { DocumentManager } from "./DocumentManager";
 import { Document, SaveState } from "./Document";
 import { CircularProgress, makeStyles } from "@material-ui/core";
+import { WorkspaceManager } from "./WorkspaceManager";
 
 
 export type SyncPanelProps = {
-  currentDoc?: Document;
+
 }
 
 
 export const SyncPanel = observer((props: SyncPanelProps) => {
   const classes = useStyles();
 
+  let workspaceManager = WorkspaceManager.instance;
+  const currentDoc = workspaceManager.selectedEntryPath ? DocumentManager.instance.documents.get(workspaceManager.selectedEntryPath)?.doc : undefined;
+
   const savingDocsCount = [ ...DocumentManager.instance.documents.values() ].filter(d => {
-    return d.doc !== props.currentDoc && d.doc.saveState === SaveState.Saving;
+    return d.doc !== currentDoc && d.doc.saveState === SaveState.Saving;
   }).length;
 
   const unsavedDocsCount = [ ...DocumentManager.instance.documents.values() ].filter(d => {
-    return d.doc !== props.currentDoc && d.doc.saveState === SaveState.UnsavedChanges;
+    return d.doc !== currentDoc && d.doc.saveState === SaveState.UnsavedChanges;
   }).length;
 
-  const currentDocSaving = props.currentDoc?.saveState === SaveState.Saving;
-  const currentDocHasUnsavedChanges = props.currentDoc?.saveState === SaveState.UnsavedChanges;
+  const currentDocSaving = currentDoc?.saveState === SaveState.Saving;
+  const currentDocHasUnsavedChanges = currentDoc?.saveState === SaveState.UnsavedChanges;
 
   let curDocState = <></>;
   if (currentDocSaving) {

@@ -1,29 +1,25 @@
-import { useState } from "react";
-import { Box, Grid, makeStyles } from "@material-ui/core";
+import { Box, makeStyles } from "@material-ui/core";
 import { WorkspaceView } from "./WorkspaceView";
-import { FileView } from "./FileView";
+import { ConnectedFileView } from "./FileView";
 import { SyncPanel } from "./SyncPanel";
-import { DocumentManager } from "./DocumentManager";
 
 
 export function App() {
-  const [ selectedFileID, setSelectedFileID ] = useState<string | undefined>();
-  const selectedDoc = selectedFileID != null ? DocumentManager.instance.documents.get(selectedFileID)?.doc : undefined;
   const classes = useStyles();
 
   return <div className={ classes.root }>
     <div className={ classes.workspaceView }>
       <Box p={ 2 }>
-        <WorkspaceView onFileSelected={ setSelectedFileID }/>
+        <WorkspaceView/>
       </Box>
     </div>
 
     <div className={ classes.docView }>
       <div className={ classes.syncPanel }>
-        <SyncPanel currentDoc={ selectedDoc }/>
+        <SyncPanel/>
       </div>
 
-      { selectedFileID && <FileView fileID={ selectedFileID }/> }
+      <ConnectedFileView/>
     </div>
   </div>;
 }

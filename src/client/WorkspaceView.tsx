@@ -14,7 +14,7 @@ import { CreateNewFolderOutlined, PostAddOutlined } from "@material-ui/icons";
 
 
 export interface WorkspaceViewProps {
-  onFileSelected?: (fileID: string | undefined) => void;
+
 }
 
 
@@ -47,11 +47,6 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   function onNodeSelect(_: unknown, value: string | string[]) {
     if (typeof value === "string" || value == null) {
       workspaceManager.selectedEntryPath = value;
-
-      const entry = WorkspaceManager.instance.getEntryByPath(value);
-      if (entry && entry.type === "file") {
-        props.onFileSelected?.(value);
-      }
     }
   }
 
