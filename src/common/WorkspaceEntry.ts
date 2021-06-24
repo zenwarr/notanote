@@ -5,6 +5,6 @@ export interface WorkspaceEntry {
   type: "file" | "dir";
 }
 
-export interface FileInfo {
+export interface EntryInfo {
   content: string;
 }

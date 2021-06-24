@@ -1,5 +1,5 @@
 import ky from "ky";
-import { WorkspaceEntry } from "../../common/WorkspaceEntry";
+import { EntryInfo, WorkspaceEntry } from "../../common/WorkspaceEntry";
 
 
 export class WorkspaceBackend {
@@ -15,6 +15,20 @@ export class WorkspaceBackend {
         type
       }
     }).json<WorkspaceEntry[]>();
+  }
+
+
+  async getEntry(entryPath: string): Promise<EntryInfo> {
+    return ky(`/api/workspaces/default/files/${ encodeURIComponent(entryPath) }`).json<EntryInfo>();
+  }
+
+
+  async saveEntry(entryPath: string, content: string): Promise<void> {
+    await ky.put(`/api/workspaces/default/files/${ encodeURIComponent(entryPath) }`, {
+      json: {
+        content
+      }
+    }).json<EntryInfo>();
   }
 }
 
@@ -49,5 +63,21 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
   async createEntry(path: string, type: "file" | "dir"): Promise<WorkspaceEntry[]> {
     console.log("create entry:", path, type);
     return DEMO_WORKSPACE;
+  }
+
+
+  async getEntry(entryPath: string): Promise<EntryInfo> {
+    if (entryPath === "file.md" || entryPath === "dir/nested.md") {
+      return {
+        content: "File content\n1\n2"
+      };
+    } else {
+      throw new Error("Entry not found");
+    }
+  }
+
+
+  async saveEntry(entryPath: string, content: string): Promise<void> {
+    console.log("save entry", entryPath, content);
   }
 }

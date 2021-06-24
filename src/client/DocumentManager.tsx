@@ -1,8 +1,8 @@
 import { Document, SaveState } from "./Document";
-import ky from "ky";
 import * as luxon from "luxon";
-import { FileInfo } from "../common/WorkspaceEntry";
 import { makeObservable, observable } from "mobx";
+import { WorkspaceBackend } from "./backend/WorkspaceBackend";
+import { Backend } from "./backend/Backend";
 
 
 const AUTO_SAVE_INTERVAL = luxon.Duration.fromObject({ second: 30 });
@@ -27,8 +27,8 @@ export class DocumentManager {
       return docInfo.doc;
     }
 
-    const fileInfo = await ky(`/api/workspaces/default/files/${ encodeURIComponent(fileID) }`).json<FileInfo>();
-    let document = new Document(fileInfo.content);
+    const entryInfo = await Backend.get(WorkspaceBackend).getEntry(fileID);
+    let document = new Document(entryInfo.content);
     this.documents.set(fileID, { doc: document, usageCount: 1 });
     return document;
   }
@@ -93,11 +93,7 @@ export class DocumentManager {
     doc.saveState = SaveState.Saving;
 
     try {
-      await ky.put(`/api/workspaces/default/files/${ encodeURIComponent(fileId) }`, {
-        json: {
-          content: doc.getContents()
-        }
-      }).json<FileInfo>();
+      await Backend.get(WorkspaceBackend).saveEntry(fileId, doc.getContents());
       doc.onSaveCompleted(undefined);
     } catch (err) {
       alert("Failed to save document: " + err.message);
