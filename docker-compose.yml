@@ -1,14 +1,6 @@
 version: "3.7"
 
 services:
-  redis:
-    image: redis:6.0.8-alpine
-    command: redis-server
-    volumes:
-      - type: volume
-        source: redis_data
-        target: /data
-
   nginx-proxy:
     image: nginxproxy/nginx-proxy:0.9.1-alpine
     ports:
@@ -29,10 +21,7 @@ services:
       - ./data/workspaces:/workspaces
     environment:
       - VIRTUAL_HOST=${DOMAIN}
-    depends_on:
-      - redis
     init: true
 
 volumes:
-  redis_data:
   yarn_cache:

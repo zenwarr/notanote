@@ -5,6 +5,7 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { FastifyInstance, FastifyRequest } from "fastify";
 import * as fs from "fs";
 import * as path from "path";
+import * as luxon from "luxon";
 
 
 export interface UserInfo {
@@ -40,23 +41,12 @@ export function configureAuth(app: FastifyInstance) {
   fastifyPassport.registerUserSerializer(async user => user);
   fastifyPassport.registerUserDeserializer(async user => user);
 
-  // const redisClient = redis.createClient({
-  //   host: process.env["REDIS_HOST"]
-  // });
-  // const RedisStore = connectRedis(session);
-  //
-  // app.use(session({
-  //   store: new RedisStore({ client: redisClient }),
-  //   secret: "k8WHaL2YsP6uDz7LRhHz9",
-  //   resave: true,
-  //   saveUninitialized: true,
-  //   name: "sess"
-  // }));
   app.register(fastifySecureSession, {
     key: fs.readFileSync(path.join(__dirname, "secret_key")),
     cookie: {
       httpOnly: true,
-      path: "/"
+      path: "/",
+      maxAge: luxon.Duration.fromObject({ days: 30 }).milliseconds
     },
     cookieName: "sess"
   });
