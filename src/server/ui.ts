@@ -1,11 +1,14 @@
-import { ensureLoggedIn, getProfile } from "./auth";
-import express from "express";
+import { getProfile, requireAuthenticatedUser } from "./auth";
+import { FastifyInstance } from "fastify";
 
 
-export function initUiRoutes(app: express.Application) {
-  app.get("/", ensureLoggedIn, (req, res) => {
-    res.render("index", {
-      userName: getProfile(req).name
+export default async function initUiRoutes(app: FastifyInstance) {
+  requireAuthenticatedUser(app);
+
+  app.get("/", (req, res) => {
+    res.view("index", {
+      // userName: getProfile(req).name
+      userName: "Default user"
     });
   });
 }

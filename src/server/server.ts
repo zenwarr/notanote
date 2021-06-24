@@ -1,42 +1,35 @@
-import express from "express";
+import fastify  from "fastify";
 import path from "path";
-import { initAppAuth, initAuthRoutes } from "./auth";
-import { initApiRoutes } from "./api";
-import { initUiRoutes } from "./ui";
+import fastifyFormBody from "fastify-formbody";
+import pointOfView from "point-of-view";
+import hbs from "handlebars";
+import fastifyStatic from "fastify-static";
+import { configureAuth } from "./auth";
 
 
-function createApp(): express.Application {
-  const app = express();
+export async function startApp() {
+  const app = fastify({
+    logger: true
+  });
 
-  app.use(express.json());
-  app.use(express.urlencoded());
-  app.set("views", path.join(__dirname, "../views"));
-  app.set("view engine", "hbs");
-  app.use("/static", express.static("static"));
+  app.register(fastifyFormBody);
+  app.register(pointOfView, {
+    engine: {
+      handlebars: hbs
+    },
+    root: path.join(__dirname, "../views")
+  });
+  app.register(fastifyStatic, {
+    root: path.join(__dirname, "../static"),
+    prefix: "/static"
+  });
 
-  initAppAuth(app);
+  configureAuth(app);
 
-  return app;
-}
+  app.register(require("./api"));
+  app.register(require("./auth"));
+  app.register(require("./ui"));
 
-
-function startListen(app: express.Application) {
-  const port = +("" + process.env["PORT"]);
-  if (Number.isNaN(port)) {
-    throw new Error("PORT config not found");
-  }
-
-  app.listen(port);
-  console.log("Application listening on port", port);
-}
-
-
-export function startApp() {
-  const app = createApp();
-
-  initAuthRoutes(app);
-  initApiRoutes(app);
-  initUiRoutes(app);
-
-  startListen(app);
+  await app.listen(process.env["PORT"]!, "0.0.0.0");
+  console.log("Application listening on port", process.env["PORT"]);
 }

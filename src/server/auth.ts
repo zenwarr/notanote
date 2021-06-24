@@ -1,10 +1,10 @@
-import passport from "passport";
+import fastifyPassport from "fastify-passport";
+import fastifySecureSession from "fastify-secure-session";
 import { Strategy as LocalStrategy } from "passport-local";
-import express from "express";
-import session from "express-session";
-import redis from "redis";
-import connectRedis from "connect-redis";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import { FastifyInstance, FastifyRequest } from "fastify";
+import * as fs from "fs";
+import * as path from "path";
 
 
 export interface UserInfo {
@@ -13,37 +13,8 @@ export interface UserInfo {
 }
 
 
-export function ensureLoggedIn(req: express.Request, res: express.Response, next: express.NextFunction) {
-  if (req.isAuthenticated()) {
-    next();
-  } else {
-    res.redirect("/auth");
-  }
-}
-
-
-export function initAuthRoutes(app: express.Application) {
-  app.get("/auth", (req, res) => {
-    return res.render("auth");
-  });
-
-  app.post("/auth/code", passport.authenticate("local", {
-    successMessage: "you are successfully logged in",
-    successRedirect: "/",
-    failureMessage: "failed to authorize"
-  }));
-
-  app.get("/auth/google", passport.authenticate("google", { scope: [ "profile" ] }));
-
-  app.get("/auth/oauth_callback", passport.authenticate("google", {
-    successMessage: "you are successfully logged in",
-    successRedirect: "/"
-  }));
-}
-
-
-export function initAppAuth(app: express.Application) {
-  passport.use("google", new GoogleStrategy({
+export function configureAuth(app: FastifyInstance) {
+  fastifyPassport.use("google", new GoogleStrategy({
     clientID: process.env["OAUTH_CLIENT_ID"]!,
     clientSecret: process.env["OAUTH_SECRET"]!,
     callbackURL: process.env["OAUTH_REDIRECT_URL"]
@@ -55,7 +26,7 @@ export function initAppAuth(app: express.Application) {
     }
   }));
 
-  passport.use("local", new LocalStrategy({
+  fastifyPassport.use("local", new LocalStrategy({
     usernameField: "password",
     passwordField: "password"
   }, (password, _, done) => {
@@ -66,26 +37,89 @@ export function initAppAuth(app: express.Application) {
     }
   }));
 
-  passport.serializeUser((user: any, done) => done(null, user));
-  passport.deserializeUser((user: any, done) => done(null, user));
+  fastifyPassport.registerUserSerializer(async user => user);
+  fastifyPassport.registerUserDeserializer(async user => user);
 
-  const redisClient = redis.createClient({
-    host: process.env["REDIS_HOST"]
+  // const redisClient = redis.createClient({
+  //   host: process.env["REDIS_HOST"]
+  // });
+  // const RedisStore = connectRedis(session);
+  //
+  // app.use(session({
+  //   store: new RedisStore({ client: redisClient }),
+  //   secret: "k8WHaL2YsP6uDz7LRhHz9",
+  //   resave: true,
+  //   saveUninitialized: true,
+  //   name: "sess"
+  // }));
+  app.register(fastifySecureSession, {
+    key: fs.readFileSync(path.join(__dirname, "secret_key")),
+    cookie: {
+      httpOnly: true,
+      path: "/"
+    },
+    cookieName: "sess"
   });
-  const RedisStore = connectRedis(session);
-
-  app.use(session({
-    store: new RedisStore({ client: redisClient }),
-    secret: "k8WHaL2YsP6uDz7LRhHz9",
-    resave: true,
-    saveUninitialized: true,
-    name: "sess"
-  }));
-  app.use(passport.initialize());
-  app.use(passport.session());
+  app.register(fastifyPassport.initialize());
+  app.register(fastifyPassport.secureSession());
 }
 
 
-export function getProfile(req: express.Request): UserInfo {
+export function requireAuthenticatedUser(app: FastifyInstance) {
+  app.addHook("preValidation", async (req, res) => {
+    console.log("preValidation auth hook", req.isAuthenticated);
+    if (!req.isAuthenticated || !req.isAuthenticated()) {
+      res.redirect("/auth");
+    }
+  });
+}
+
+export function getProfile(req: FastifyRequest): UserInfo {
   return (req.session as any).passport.user;
+}
+
+
+export default async function initAuth(app: FastifyInstance) {
+  app.get("/auth", (req, res) => {
+    res.view("auth");
+  });
+
+  app.post(
+      "/auth/code",
+      {
+        preValidation: fastifyPassport.authenticate("local", {
+          successMessage: "you are successfully logged in",
+          successRedirect: "/",
+          failureMessage: "failed to authorize"
+        })
+      },
+      () => {
+        // do nothing
+      }
+  );
+
+  app.get(
+      "/auth/google",
+      {
+        preValidation: fastifyPassport.authenticate("google", {
+          scope: [ "profile" ]
+        })
+      },
+      () => {
+        // do nothing
+      }
+  );
+
+  app.get(
+      "/auth/oauth_callback",
+      {
+        preValidation: fastifyPassport.authenticate("google", {
+          successMessage: "you are successfully logged in",
+          successRedirect: "/"
+        })
+      },
+      () => {
+        // do nothing
+      }
+  );
 }
