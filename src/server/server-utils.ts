@@ -1,12 +1,12 @@
-import express from "express";
+import { FastifyReply } from "fastify";
 import { getStatusCodeForError, isOk, Result } from "../common/errors";
 
 
-export function writeResult(res: express.Response, r: Result<unknown>) {
+export function writeResult(res: FastifyReply, r: Result<unknown>): unknown {
   if (!isOk(r)) {
-    res.status(getStatusCodeForError(r.error)).send(r);
-    return;
+    res.status(getStatusCodeForError(r.error));
+    return r;
   } else {
-    res.send(r.value);
+    return r.value;
   }
 }
