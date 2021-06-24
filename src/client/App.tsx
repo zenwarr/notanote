@@ -44,7 +44,13 @@ const useStyles = makeStyles(theme => ({
     left: 0
   },
   docView: {
-    width: "100%"
+    width: "100%",
+    position: "relative",
+    paddingTop: 20
   },
-  syncPanel: {}
+  syncPanel: {
+    position: "absolute",
+    left: 0,
+    top: 10
+  }
 }));

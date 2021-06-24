@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import { DocumentManager } from "./DocumentManager";
 import { Document, SaveState } from "./Document";
-import { CircularProgress } from "@material-ui/core";
+import { CircularProgress, makeStyles } from "@material-ui/core";
 
 
 export type SyncPanelProps = {
@@ -10,6 +10,8 @@ export type SyncPanelProps = {
 
 
 export const SyncPanel = observer((props: SyncPanelProps) => {
+  const classes = useStyles();
+
   const savingDocsCount = [ ...DocumentManager.instance.documents.values() ].filter(d => {
     return d.doc !== props.currentDoc && d.doc.saveState === SaveState.Saving;
   }).length;
@@ -35,9 +37,16 @@ export const SyncPanel = observer((props: SyncPanelProps) => {
     extraDocState = (extraDocState ? ", " : "") + `+${ unsavedDocsCount } changed`;
   }
 
-  return <>
+  return <div className={ classes.root }>
     { curDocState }
 
     { extraDocState }
-  </>;
+  </div>;
 });
+
+
+const useStyles = makeStyles(theme => ({
+  root: {
+    color: theme.palette.grey.A200
+  }
+}));
