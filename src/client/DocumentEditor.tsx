@@ -1,7 +1,8 @@
-import { MutableRefObject, Ref, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { EditorView } from "@codemirror/basic-setup";
 import { Document } from "./Document";
 import { DocumentManager } from "./DocumentManager";
+import "./DocumentEditor.css";
 
 
 export type DocumentEditorProps = {
