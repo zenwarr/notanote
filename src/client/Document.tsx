@@ -2,7 +2,7 @@ import { EditorState } from "@codemirror/state";
 import { json } from "@codemirror/lang-json";
 import { history, historyKeymap } from "@codemirror/history";
 import { makeObservable, observable } from "mobx";
-import { drawSelection, keymap, ViewPlugin, ViewUpdate } from "@codemirror/view";
+import { drawSelection, EditorView, keymap, placeholder, ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { indentOnInput } from "@codemirror/language";
 import { defaultHighlightStyle } from "@codemirror/highlight";
 import { bracketMatching } from "@codemirror/matchbrackets";
@@ -27,6 +27,8 @@ export class Document {
         closeBrackets(),
         autocompletion(),
         highlightSelectionMatches(),
+        placeholder("< your note here >"),
+        EditorView.lineWrapping,
         keymap.of([
           ...closeBracketsKeymap,
           ...defaultKeymap,

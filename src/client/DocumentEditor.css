@@ -1,6 +1,7 @@
 .cm-editor .cm-content {
   font-family: "Fira Code", "Consolas", monospace;
   font-size: 16px;
+  white-space: pre-wrap;
 }
 
 .cm-editor:focus {

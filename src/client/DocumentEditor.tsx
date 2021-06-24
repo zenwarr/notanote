@@ -54,6 +54,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
 
   return <div>
     <input type={ "text" } ref={ titleInputRef } className={ classes.titleInput } onKeyDown={ onTitleKey } value={ title }
+           placeholder={ "< Untitled >" }
            onChange={ onTitleChange }/>
 
     <div ref={ containerRef }/>
@@ -74,6 +75,10 @@ const useStyles = makeStyles(theme => ({
 
     "&:focus": {
       outline: "none"
+    },
+
+    "&::placeholder": {
+      color: "lightgray"
     }
   }
 }));
