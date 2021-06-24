@@ -9,14 +9,13 @@ services:
         source: redis_data
         target: /data
 
-  nginx:
-    image: nginx:1.19.3-alpine
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:0.9.1-alpine
     ports:
-      - "0.0.0.0:443:443"
-      - "0.0.0.0:80:80"
+      - "${HOST}:443:443"
+      - "${HOST}:80:80"
     volumes:
-      - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./configs/nginx/sites-enabled:/etc/nginx/sites-enabled
+      - /var/run/docker.sock:/tmp/docker.sock:ro
     depends_on:
       - app
 
@@ -27,6 +26,8 @@ services:
       - type: volume
         source: yarn_cache
         target: /yarn-cache
+    environment:
+      - VIRTUAL_HOST=${DOMAIN}
     depends_on:
       - redis
     init: true
