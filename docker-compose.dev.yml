@@ -1,0 +1,8 @@
+version: "3.7"
+
+services:
+  app:
+    build:
+      dockerfile: dev.Dockerfile
+    volumes:
+      - ./src:/app

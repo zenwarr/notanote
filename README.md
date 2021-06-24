@@ -1,5 +1,5 @@
-# File content
+# Start dev container
 
-- first
-- second
-- third
+```
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
