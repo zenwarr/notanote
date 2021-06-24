@@ -5,3 +5,4 @@ static
 *.js
 *.js.map
 !src/.storybook/*.js
+!src/webpack.config.js
