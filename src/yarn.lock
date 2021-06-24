@@ -1100,7 +1100,7 @@
   resolved "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@codemirror/autocomplete@^0.18.0":
+"@codemirror/autocomplete@^0.18.0", "@codemirror/autocomplete@^0.18.7":
   version "0.18.7"
   resolved "https://registry.npmjs.org/@codemirror/autocomplete/-/autocomplete-0.18.7.tgz#5d99cb8c4adf6abbc4b0cad9a14dcd2aae618916"
   integrity sha512-4x6xH2jDuJzweB0Wdx3VQrFUvZF0V7RAHoomQOCq3NxUOZd/UXcSXrj3LXItFAxi6K4OlTLayFuI3z4k3UKUQQ==
@@ -1111,27 +1111,6 @@
     "@codemirror/tooltip" "^0.18.4"
     "@codemirror/view" "^0.18.0"
     lezer-tree "^0.13.0"
-
-"@codemirror/basic-setup@^0.18.2":
-  version "0.18.2"
-  resolved "https://registry.npmjs.org/@codemirror/basic-setup/-/basic-setup-0.18.2.tgz#a766b7e8898ce5d4cd4782c1ebf87d15a0f1965f"
-  integrity sha512-4UNFQ4jhU7wKxJH23AJcZW6Ho54VXUpmbtFnN5amIdtGci4ZLvci4M7JKgKFraHmKfDIYQnSzN8d8ohXR7CRhw==
-  dependencies:
-    "@codemirror/autocomplete" "^0.18.0"
-    "@codemirror/closebrackets" "^0.18.0"
-    "@codemirror/commands" "^0.18.0"
-    "@codemirror/comment" "^0.18.0"
-    "@codemirror/fold" "^0.18.0"
-    "@codemirror/gutter" "^0.18.3"
-    "@codemirror/highlight" "^0.18.0"
-    "@codemirror/history" "^0.18.0"
-    "@codemirror/language" "^0.18.0"
-    "@codemirror/lint" "^0.18.0"
-    "@codemirror/matchbrackets" "^0.18.0"
-    "@codemirror/rectangular-selection" "^0.18.0"
-    "@codemirror/search" "^0.18.0"
-    "@codemirror/state" "^0.18.0"
-    "@codemirror/view" "^0.18.0"
 
 "@codemirror/closebrackets@^0.18.0":
   version "0.18.0"
@@ -1144,7 +1123,7 @@
     "@codemirror/text" "^0.18.0"
     "@codemirror/view" "^0.18.0"
 
-"@codemirror/commands@^0.18.0":
+"@codemirror/commands@^0.18.3":
   version "0.18.3"
   resolved "https://registry.npmjs.org/@codemirror/commands/-/commands-0.18.3.tgz#56283873fae9dd0c937da7dd0af5eadc9b378e9c"
   integrity sha512-nHYDG13qOirioXTAKmjl10W2L0eZ1ftvmTwvUTNY27UWVBPFSpk5zDXP3WqJ0mgMhQ4AOFLJaTjJEO3hmPComg==
@@ -1155,35 +1134,6 @@
     "@codemirror/text" "^0.18.0"
     "@codemirror/view" "^0.18.0"
     lezer-tree "^0.13.0"
-
-"@codemirror/comment@^0.18.0":
-  version "0.18.1"
-  resolved "https://registry.npmjs.org/@codemirror/comment/-/comment-0.18.1.tgz#e39c8b6937b86852246decb3441683c66b03abf4"
-  integrity sha512-Inhqs0F24WE28Fcp1dBZghwixBGv1HDwY9MjE0d5tpMY/IPGI6uT30fGyHAXrir6hUqk7eJRkO4UYnODGOnoIA==
-  dependencies:
-    "@codemirror/state" "^0.18.0"
-    "@codemirror/text" "^0.18.0"
-    "@codemirror/view" "^0.18.0"
-
-"@codemirror/fold@^0.18.0":
-  version "0.18.1"
-  resolved "https://registry.npmjs.org/@codemirror/fold/-/fold-0.18.1.tgz#118019ad79f6e0d48dc932823385d4d9f2e0eaf5"
-  integrity sha512-vvMUgDeSmeVow7/75YoNTERxPsdnIBeEw1JL2YVpLyscsUlalqwuxdhiHDLT5zjAu6JvMoTC103mwqgAYwM9tA==
-  dependencies:
-    "@codemirror/gutter" "^0.18.0"
-    "@codemirror/language" "^0.18.0"
-    "@codemirror/rangeset" "^0.18.0"
-    "@codemirror/state" "^0.18.0"
-    "@codemirror/view" "^0.18.0"
-
-"@codemirror/gutter@^0.18.0", "@codemirror/gutter@^0.18.3":
-  version "0.18.4"
-  resolved "https://registry.npmjs.org/@codemirror/gutter/-/gutter-0.18.4.tgz#6ebdfc87d94b02ffa0ec7bcf40d20f989fe26457"
-  integrity sha512-Sf2IWshMi9zwVVqpGmd2NRplY0qfrE2IiBEII9n2gB9M8hgIMg5GCyhdnsUDsOm0gcSut65W62vV7/DfYJHQCA==
-  dependencies:
-    "@codemirror/rangeset" "^0.18.3"
-    "@codemirror/state" "^0.18.0"
-    "@codemirror/view" "^0.18.0"
 
 "@codemirror/highlight@^0.18.0", "@codemirror/highlight@^0.18.4":
   version "0.18.4"
@@ -1197,7 +1147,7 @@
     lezer-tree "^0.13.0"
     style-mod "^4.0.0"
 
-"@codemirror/history@^0.18.0":
+"@codemirror/history@^0.18.1":
   version "0.18.1"
   resolved "https://registry.npmjs.org/@codemirror/history/-/history-0.18.1.tgz#853cde4b138b172235d58f945871f0fc08b7310a"
   integrity sha512-Aad3p4zs6UYKCUMXYjh7cvPK0ajuL+rMib9yBZ61w81LLl6OkM31Xrn9J6CLJmPxCwP3OJFiqBmNSBQ05oIsTw==
@@ -1265,7 +1215,7 @@
     lezer-markdown "^0.14.3"
     lezer-tree "^0.13.0"
 
-"@codemirror/language@^0.18.0", "@codemirror/language@^0.18.1":
+"@codemirror/language@^0.18.0", "@codemirror/language@^0.18.1", "@codemirror/language@^0.18.2":
   version "0.18.2"
   resolved "https://registry.npmjs.org/@codemirror/language/-/language-0.18.2.tgz#92b0e2ba0debfa8473d805efdabda5c24376cb16"
   integrity sha512-2Kz0Xyfvt1Ex2KfTUcYZ3IBxpnFCqHaJijwZknGBT7JXv9dwbOPs9SfPfL4oxVuDIHZx8JTPfoV3LTTJrm8M3Q==
@@ -1305,23 +1255,14 @@
     "@codemirror/state" "^0.18.0"
     "@codemirror/view" "^0.18.0"
 
-"@codemirror/rangeset@^0.18.0", "@codemirror/rangeset@^0.18.2", "@codemirror/rangeset@^0.18.3":
+"@codemirror/rangeset@^0.18.0", "@codemirror/rangeset@^0.18.2":
   version "0.18.3"
   resolved "https://registry.npmjs.org/@codemirror/rangeset/-/rangeset-0.18.3.tgz#78d001f17385cf462647a60f8b15dab11990c2b1"
   integrity sha512-p6bPVr6Cw0yh/QSelsg0RoNaG4btuzZo7YMT+WFwZsjbr7+X0dVpd2vqLAHIeDUfvOzrEI/dXXPKLpZZgYeU+g==
   dependencies:
     "@codemirror/state" "^0.18.0"
 
-"@codemirror/rectangular-selection@^0.18.0":
-  version "0.18.0"
-  resolved "https://registry.npmjs.org/@codemirror/rectangular-selection/-/rectangular-selection-0.18.0.tgz#87e1a4d319b5d55b4e97294e6df0070164e836c0"
-  integrity sha512-BQ4pp2zhXCVZNqct5LtLR3AOWVseENBF/3oOgBmwsCKH7c11NfTqIqgWG5EW8NLOXp8HP8cDm3np8eWez0VkGQ==
-  dependencies:
-    "@codemirror/state" "^0.18.0"
-    "@codemirror/text" "^0.18.0"
-    "@codemirror/view" "^0.18.0"
-
-"@codemirror/search@^0.18.0":
+"@codemirror/search@^0.18.4":
   version "0.18.4"
   resolved "https://registry.npmjs.org/@codemirror/search/-/search-0.18.4.tgz#cb258c994db78df8c74c0350b84a0c275cfa2711"
   integrity sha512-3chVkMPzl+pTUSqtimTicebhti4SLpvkj03pQx2aPZScXxIiYuDk4cLdIJK9omjmO1+oycRKbOrqvG7iZJJwMg==

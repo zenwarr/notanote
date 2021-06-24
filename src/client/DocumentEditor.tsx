@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
-import { EditorView } from "@codemirror/basic-setup";
 import { Document } from "./Document";
 import { DocumentManager } from "./DocumentManager";
 import "./DocumentEditor.css";
+import { EditorView } from "@codemirror/view";
 
 
 export type DocumentEditorProps = {
@@ -17,7 +17,8 @@ export function DocumentEditor(props: DocumentEditorProps) {
 
   useEffect(() => {
     const view = new EditorView({
-      state: props.doc.editorState, parent: containerRef.current,
+      state: props.doc.editorState,
+      parent: containerRef.current
     });
 
     viewRef.current = view;

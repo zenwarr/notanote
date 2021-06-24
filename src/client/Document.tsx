@@ -1,8 +1,15 @@
 import { EditorState } from "@codemirror/state";
-import { basicSetup } from "@codemirror/basic-setup";
 import { json } from "@codemirror/lang-json";
+import { history, historyKeymap } from "@codemirror/history";
 import { makeObservable, observable } from "mobx";
-import { ViewPlugin, ViewUpdate } from "@codemirror/view";
+import { drawSelection, keymap, ViewPlugin, ViewUpdate } from "@codemirror/view";
+import { indentOnInput } from "@codemirror/language";
+import { defaultHighlightStyle } from "@codemirror/highlight";
+import { bracketMatching } from "@codemirror/matchbrackets";
+import { closeBrackets, closeBracketsKeymap } from "@codemirror/closebrackets";
+import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
+import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
+import { defaultKeymap } from "@codemirror/commands";
 
 
 export class Document {
@@ -11,7 +18,22 @@ export class Document {
     this.editorState = EditorState.create({
       doc: content,
       extensions: [
-        basicSetup,
+        history(),
+        drawSelection(),
+        EditorState.allowMultipleSelections.of(true),
+        indentOnInput(),
+        defaultHighlightStyle.fallback,
+        bracketMatching(),
+        closeBrackets(),
+        autocompletion(),
+        highlightSelectionMatches(),
+        keymap.of([
+          ...closeBracketsKeymap,
+          ...defaultKeymap,
+          ...searchKeymap,
+          ...historyKeymap,
+          ...completionKeymap
+        ]),
         json(),
         ViewPlugin.fromClass(class {
           update(upd: ViewUpdate) {

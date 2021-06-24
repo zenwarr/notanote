@@ -6,3 +6,7 @@
 .cm-editor:focus {
   outline: none;
 }
+
+.ͼ1.cm-focused {
+  outline: none !important;
+}
