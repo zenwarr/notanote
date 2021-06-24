@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { DocumentManager } from "./DocumentManager";
-import { Document, SaveState } from "./Document";
+import { SaveState } from "./Document";
 import { CircularProgress, makeStyles } from "@material-ui/core";
 import { WorkspaceManager } from "./WorkspaceManager";
 

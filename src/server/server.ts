@@ -1,7 +1,8 @@
 import express from "express";
 import path from "path";
 import { initAppAuth, initAuthRoutes } from "./auth";
-import { initApi } from "./api";
+import { initApiRoutes } from "./api";
+import { initUiRoutes } from "./ui";
 
 
 function createApp(): express.Application {
@@ -34,7 +35,8 @@ export function startApp() {
   const app = createApp();
 
   initAuthRoutes(app);
-  initApi(app);
+  initApiRoutes(app);
+  initUiRoutes(app);
 
   startListen(app);
 }

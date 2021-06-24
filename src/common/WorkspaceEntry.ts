@@ -13,3 +13,5 @@ export interface CreateEntryReply {
   path: string;
   entries: WorkspaceEntry[];
 }
+
+export type EntryType = "dir" | "file";

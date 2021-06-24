@@ -1,5 +1,5 @@
 import { CreateEntryReply, WorkspaceEntry } from "../common/WorkspaceEntry";
-import { action, makeObservable, observable } from "mobx";
+import { makeObservable, observable } from "mobx";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { Backend } from "./backend/Backend";
 

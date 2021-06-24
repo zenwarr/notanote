@@ -1,7 +1,6 @@
 import * as path from "path";
 import * as React from "react";
-import { useCallback, useEffect, useState } from "react";
-import { useLoad } from "./useLoad";
+import { useEffect, useState } from "react";
 import { TreeItem, TreeView } from "@material-ui/lab";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";

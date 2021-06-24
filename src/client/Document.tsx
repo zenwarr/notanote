@@ -1,5 +1,4 @@
 import { EditorState } from "@codemirror/state";
-import { json } from "@codemirror/lang-json";
 import { history, historyKeymap } from "@codemirror/history";
 import { makeObservable, observable } from "mobx";
 import { drawSelection, EditorView, keymap, placeholder, ViewPlugin, ViewUpdate } from "@codemirror/view";
