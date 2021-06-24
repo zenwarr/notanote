@@ -7,6 +7,7 @@ import { WorkspaceEntry } from "../common/WorkspaceEntry";
 import { Box, Button } from "@material-ui/core";
 import { useCallback, useState } from "react";
 import { WorkspaceManager } from "./WorkspaceManager";
+import { observer } from "mobx-react-lite";
 
 
 export interface WorkspaceViewProps {
@@ -32,7 +33,7 @@ function getParentFromSelectedNode(selected: string | undefined): string {
 }
 
 
-export function WorkspaceView(props: WorkspaceViewProps) {
+export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const entriesLoad = useLoad(useCallback(() => WorkspaceManager.instance.load(), []));
   const [ selectedNode, setSelectedNode ] = useState<string | undefined>(undefined);
 
@@ -79,7 +80,7 @@ export function WorkspaceView(props: WorkspaceViewProps) {
       { entriesLoad.data.map(e => renderTreeEntry(e)) }
     </TreeView>
   </div>;
-}
+});
 
 function renderTreeEntry(e: WorkspaceEntry) {
   return <TreeItem nodeId={ e.id } key={ e.id } label={ e.name }>

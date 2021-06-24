@@ -1,4 +1,3 @@
-import ky from "ky";
 import { WorkspaceEntry } from "../common/WorkspaceEntry";
 import { makeObservable, observable } from "mobx";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
