@@ -58,6 +58,9 @@ const IGNORED_ENTRIES: string[] = [
 ];
 
 
+const WORKSPACES_DIR = process.env["WORKSPACES_DIR"] ?? "/workspaces";
+
+
 async function buildEntries(dir: string, rootDir: string): Promise<WorkspaceEntry[]> {
   const result: WorkspaceEntry[] = [];
 
@@ -115,8 +118,12 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "hbs");
 app.use("/static", express.static("static"));
 
+function getWorkspaceDir(workspaceId: string): string {
+  return path.join(WORKSPACES_DIR, workspaceId);
+}
+
 app.get("/api/workspaces/:workspaceID/tree", ensureLoggedIn, async (req, res) => {
-  const entries = await buildEntries(process.cwd(), process.cwd());
+  const entries = await buildEntries(getWorkspaceDir(req.params.workspaceID!), getWorkspaceDir(req.params.workspaceID!));
   res.send(entries);
 });
 
@@ -129,24 +136,25 @@ app.post("/api/workspaces/:workspaceID/files", ensureLoggedIn, async (req, res) 
     return;
   }
 
+  const workspaceDir = getWorkspaceDir(req.params.workspaceID!);
   const type = req.body.type;
   if (type === "dir") {
-    await fs.promises.mkdir(path.join(process.cwd(), createPath), {
+    await fs.promises.mkdir(path.join(workspaceDir, createPath), {
       recursive: true
     });
   } else {
-    await fs.promises.mkdir(path.join(process.cwd(), path.dirname(createPath)), {
+    await fs.promises.mkdir(path.join(workspaceDir, path.dirname(createPath)), {
       recursive: true
     });
-    await fs.promises.writeFile(path.join(process.cwd(), createPath), "", "utf-8");
+    await fs.promises.writeFile(path.join(workspaceDir, createPath), "", "utf-8");
   }
 
-  const entries = await buildEntries(process.cwd(), process.cwd());
+  const entries = await buildEntries(workspaceDir, workspaceDir);
   res.send(entries);
 });
 
 app.get("/api/workspaces/:workspaceID/files/:fileID", ensureLoggedIn, async (req, res) => {
-  const filePath = path.join(process.cwd(), decodeURIComponent(req.params["fileID"]!));
+  const filePath = path.join(getWorkspaceDir(req.params.workspaceID!), decodeURIComponent(req.params["fileID"]!));
 
   const stat = await fs.promises.stat(filePath);
   if (stat.isDirectory()) {
@@ -176,7 +184,7 @@ app.get("/api/workspaces/:workspaceID/files/:fileID", ensureLoggedIn, async (req
 });
 
 app.put("/api/workspaces/:workspaceID/files/:fileID", ensureLoggedIn, async (req, res) => {
-  const filePath = path.join(process.cwd(), decodeURIComponent(req.params["fileID"]!));
+  const filePath = path.join(getWorkspaceDir(req.params.workspaceID!), decodeURIComponent(req.params["fileID"]!));
 
   const stat = await fs.promises.stat(filePath);
   if (stat.isDirectory()) {

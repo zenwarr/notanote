@@ -6,3 +6,5 @@ static
 *.js.map
 !src/.storybook/*.js
 !src/webpack.config.js
+data/workspaces
+!data/workspaces/.gitkeep

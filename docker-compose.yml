@@ -26,6 +26,7 @@ services:
       - type: volume
         source: yarn_cache
         target: /yarn-cache
+      - ./data/workspaces:/workspaces
     environment:
       - VIRTUAL_HOST=${DOMAIN}
     depends_on:
