@@ -9,7 +9,8 @@ import { bracketMatching } from "@codemirror/matchbrackets";
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/closebrackets";
 import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
-import { defaultKeymap } from "@codemirror/commands";
+import { defaultKeymap, defaultTabBinding } from "@codemirror/commands";
+import { markdown } from "@codemirror/lang-markdown";
 
 
 export class Document {
@@ -34,9 +35,10 @@ export class Document {
           ...defaultKeymap,
           ...searchKeymap,
           ...historyKeymap,
-          ...completionKeymap
+          ...completionKeymap,
+          defaultTabBinding
         ]),
-        json(),
+        markdown(),
         ViewPlugin.fromClass(class {
           update(upd: ViewUpdate) {
             if (upd.docChanged) {

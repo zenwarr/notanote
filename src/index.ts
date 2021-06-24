@@ -8,6 +8,7 @@ import session from "express-session";
 import redis from "redis";
 import connectRedis from "connect-redis";
 import { Strategy as LocalStrategy } from "passport-local";
+import { randomUUID } from "crypto";
 
 
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
@@ -128,29 +129,46 @@ app.get("/api/workspaces/:workspaceID/tree", ensureLoggedIn, async (req, res) =>
 });
 
 app.post("/api/workspaces/:workspaceID/files", ensureLoggedIn, async (req, res) => {
-  const createPath = req.body.path;
-  if (path.isAbsolute(createPath)) {
+  const parent: string = req.body.parent || "";
+  const name: string | undefined = req.body.name;
+  const type: string = req.body.type;
+
+  if (path.isAbsolute(parent)) {
     res.status(400).send({
       error: "Invalid path: should be relative"
     });
     return;
   }
 
+  if (type === "dir" && !name) {
+    res.status(400).send({
+      error: "Invalid parameters: name should be provided when creating a dir"
+    });
+    return;
+  }
+
   const workspaceDir = getWorkspaceDir(req.params.workspaceID!);
-  const type = req.body.type;
+  let createdEntryPath: string;
   if (type === "dir") {
-    await fs.promises.mkdir(path.join(workspaceDir, createPath), {
+    createdEntryPath = path.join(workspaceDir, parent, name!);
+    await fs.promises.mkdir(createdEntryPath, {
       recursive: true
     });
   } else {
-    await fs.promises.mkdir(path.join(workspaceDir, path.dirname(createPath)), {
+    await fs.promises.mkdir(path.join(workspaceDir, parent), {
       recursive: true
     });
-    await fs.promises.writeFile(path.join(workspaceDir, createPath), "", "utf-8");
+
+    const generatedFileName = randomUUID() + ".md";
+    createdEntryPath = path.join(workspaceDir, parent, generatedFileName);
+    await fs.promises.writeFile(path.join(workspaceDir, parent, generatedFileName), "", "utf-8");
   }
 
   const entries = await buildEntries(workspaceDir, workspaceDir);
-  res.send(entries);
+  res.send({
+    path: path.relative(workspaceDir, createdEntryPath),
+    entries
+  });
 });
 
 app.get("/api/workspaces/:workspaceID/files/:fileID", ensureLoggedIn, async (req, res) => {

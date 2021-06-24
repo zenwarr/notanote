@@ -41,7 +41,8 @@ const useStyles = makeStyles(theme => ({
     minWidth: "300px",
     position: "sticky",
     top: 0,
-    left: 0
+    left: 0,
+    paddingRight: theme.spacing(2)
   },
   docView: {
     width: "100%",

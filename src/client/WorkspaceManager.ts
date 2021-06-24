@@ -1,5 +1,5 @@
 import { CreateEntryReply, WorkspaceEntry } from "../common/WorkspaceEntry";
-import { makeObservable, observable } from "mobx";
+import { action, makeObservable, observable } from "mobx";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { Backend } from "./backend/Backend";
 
@@ -7,7 +7,8 @@ import { Backend } from "./backend/Backend";
 export class WorkspaceManager {
   constructor() {
     makeObservable(this, {
-      entries: observable
+      entries: observable,
+      selectedEntryPath: observable
     });
   }
 
@@ -53,13 +54,16 @@ export class WorkspaceManager {
   }
 
 
-  async createEntry(type: "file" | "dir"): Promise<CreateEntryReply> {
-    const reply = await Backend.get(WorkspaceBackend).createEntry(type);
+  async createEntry(parent: string, name: string | undefined, type: "file" | "dir"): Promise<CreateEntryReply> {
+    const reply = await Backend.get(WorkspaceBackend).createEntry(parent, name, type);
     this.entries = reply.entries;
+    this.selectedEntryPath = reply.path;
     return reply;
   }
 
 
   entries: WorkspaceEntry[] = [];
+  selectedEntryPath: string | undefined = undefined;
+
   static instance = new WorkspaceManager();
 }
