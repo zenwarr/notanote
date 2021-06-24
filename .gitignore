@@ -1,0 +1,7 @@
+.idea
+node_modules
+static
+.env
+*.js
+*.js.map
+!src/.storybook/*.js

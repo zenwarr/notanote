@@ -1,0 +1,36 @@
+version: "3.7"
+
+services:
+  redis:
+    image: redis:6.0.8-alpine
+    command: redis-server
+    volumes:
+      - type: volume
+        source: redis_data
+        target: /data
+
+  nginx:
+    image: nginx:1.19.3-alpine
+    ports:
+      - "0.0.0.0:443:443"
+      - "0.0.0.0:80:80"
+    volumes:
+      - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./configs/nginx/sites-enabled:/etc/nginx/sites-enabled
+    depends_on:
+      - app
+
+  app:
+    build:
+      context: src
+    volumes:
+      - type: volume
+        source: yarn_cache
+        target: /yarn-cache
+    depends_on:
+      - redis
+    init: true
+
+volumes:
+  redis_data:
+  yarn_cache:
