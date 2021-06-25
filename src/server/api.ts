@@ -18,7 +18,7 @@ type FileRouteParams = {
 
 function getWorkspace(req: FastifyRequest<{
   Params: WorkspaceRouteParams
-}>) {
+}>): Result<Workspace> {
   const profile = getProfile(req);
   return Workspace.getForId(profile.id, req.params.workspaceID);
 }

@@ -9,18 +9,24 @@ const WORKSPACES_DIR = process.env["WORKSPACES_DIR"] ?? "/workspaces";
 
 
 export class Workspace {
-  private constructor(userId: string, id: string) {
-    this.root = path.join(WORKSPACES_DIR, userId, id);
+  private constructor(root: string, id: string) {
+    this.root = root;
     this.id = id;
   }
 
 
-  static async getOrCreateWorkspace(userId: string, id?: string): Promise<Result<Workspace>> {
-    const workspaceId = id ?? "default";
-    const workspaceRoot = path.join(WORKSPACES_DIR, userId, workspaceId);
+  static async getOrCreateWorkspace(userId: string, workspaceId?: string): Promise<Result<Workspace>> {
+    workspaceId ??= "default";
+
+    const workspaceRoot = getWorkspacePath(userId, workspaceId);
+    if (!workspaceRoot) {
+      return {
+        error: ErrorCode.EntryNotFound,
+        text: "workspace root not found"
+      };
+    }
 
     const exists = await this.exists(workspaceRoot);
-
     if (!isOk(exists)) {
       return exists;
     }
@@ -43,7 +49,7 @@ export class Workspace {
     }
 
     return {
-      value: new Workspace(userId, workspaceId)
+      value: new Workspace(workspaceRoot, workspaceId)
     };
   }
 
@@ -78,11 +84,12 @@ export class Workspace {
 
 
   async createEntry(parent: string, name: string | undefined, type: EntryType): Promise<Result<CreateEntryReply>> {
-    if (path.isAbsolute(parent)) {
+    const absoluteParentPath = joinNestedPathSecure(this.root, parent);
+    if (!absoluteParentPath) {
       return {
         error: ErrorCode.InvalidRequestParams,
-        text: "parent path should not be absolute"
-      };
+        text: "invalid entry path supplied"
+      }
     }
 
     if (type === "dir" && !name) {
@@ -92,20 +99,32 @@ export class Workspace {
       };
     }
 
-    let createdEntryPath: string;
+    if (!name) {
+      name = randomUUID();
+    }
+
+    if (type === "file") {
+      name = name + ".md";
+    }
+
+    const createdEntryPath = joinNestedPathSecure(absoluteParentPath, name);
+    if (!createdEntryPath) {
+      return {
+        error: ErrorCode.InvalidRequestParams,
+        text: "invalid entry path supplied"
+      };
+    }
+
     if (type === "dir") {
-      createdEntryPath = path.join(this.root, parent, name!);
       await fs.promises.mkdir(createdEntryPath, {
         recursive: true
       });
     } else {
-      await fs.promises.mkdir(path.join(this.root, parent), {
+      await fs.promises.mkdir(absoluteParentPath, {
         recursive: true
       });
 
-      const createdFileName = name == null ? (randomUUID() + ".md") : (name + ".md");
-      createdEntryPath = path.join(this.root, parent, createdFileName);
-      await fs.promises.writeFile(path.join(this.root, parent, createdFileName), "", "utf-8");
+      await fs.promises.writeFile(createdEntryPath, "", "utf-8");
     }
 
     const entries = await getFsEntries(this.root, this.root);
@@ -119,9 +138,17 @@ export class Workspace {
 
 
   async getEntry(filePath: string): Promise<Result<EntryInfo>> {
+    const entryPath = joinNestedPathSecure(this.root, filePath);
+    if (!entryPath) {
+      return {
+        error: ErrorCode.EntryNotFound,
+        text: "entry not found"
+      };
+    }
+
     let content: string | undefined;
     try {
-      content = await fs.promises.readFile(path.join(this.root, filePath), "utf-8");
+      content = await fs.promises.readFile(entryPath, "utf-8");
     } catch (error) {
       if (error.code === "ENOENT") {
         return {
@@ -140,13 +167,26 @@ export class Workspace {
 
 
   async saveEntry(filePath: string, content: string): Promise<Result<void>> {
-    await fs.promises.writeFile(path.join(this.root, filePath), content, "utf-8");
+    const absolutePath = joinNestedPathSecure(this.root, filePath);
+    if (!absolutePath) {
+      return {
+        error: ErrorCode.EntryNotFound,
+        text: "entry not found"
+      };
+    }
+
+    await fs.promises.writeFile(absolutePath, content, "utf-8");
     return { value: undefined };
   }
 
 
-  static getForId(userId: string, id: string) {
-    return new Workspace(userId, id);
+  static getForId(userId: string, id: string): Workspace | undefined {
+    const root = getWorkspacePath(userId, id);
+    if (!root) {
+      return undefined;
+    }
+
+    return new Workspace(root, id);
   }
 
 
@@ -160,6 +200,29 @@ const IGNORED_ENTRIES: string[] = [
   ".idea",
   "node_modules"
 ];
+
+
+function getWorkspacePath(userId: string, workspaceId: string) {
+  return joinNestedPathSecure(WORKSPACES_DIR, path.join(userId, workspaceId));
+}
+
+
+function joinNestedPathSecure(root: string, nested: string): string | undefined {
+  if (nested.indexOf("\0") >= 0) {
+    return undefined;
+  }
+
+  if (!root.endsWith(path.sep)) {
+    root = root + path.sep;
+  }
+
+  const result = path.join(root, nested);
+  if (!result.startsWith(root)) {
+    return undefined;
+  }
+
+  return result;
+}
 
 
 async function getFsEntries(dir: string, rootDir: string): Promise<WorkspaceEntry[]> {
