@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as path from "path";
 import { createRef, useEffect, useRef, useState } from "react";
 import { Document } from "./Document";
 import { DocumentManager } from "./DocumentManager";
@@ -10,7 +11,6 @@ import { makeStyles } from "@material-ui/core";
 export type DocumentEditorProps = {
   fileId: string;
   doc: Document;
-  onTitleChange?: (title: string) => void;
 }
 
 
@@ -19,7 +19,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
   const titleInputRef = createRef<HTMLInputElement>();
   const viewRef = useRef<EditorView>();
   const classes = useStyles();
-  const [ title, setTitle ] = useState<string | undefined>(undefined);
+  const [ title, setTitle ] = useState<string | undefined>(path.basename(props.fileId));
 
   useEffect(() => {
     const view = new EditorView({
@@ -36,7 +36,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
   }, []);
 
   useEffect(() => {
-    titleInputRef.current?.focus();
+    viewRef.current?.focus();
   }, [ props.doc ]);
 
   function onTitleKey(e: React.KeyboardEvent) {
@@ -49,11 +49,14 @@ export function DocumentEditor(props: DocumentEditorProps) {
   function onTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
     let title = e.target.value;
     setTitle(title);
-    props.onTitleChange?.(title);
   }
 
   return <div>
-    <input type={ "text" } ref={ titleInputRef } className={ classes.titleInput } onKeyDown={ onTitleKey } value={ title }
+    <input type={ "text" } ref={ titleInputRef }
+           className={ classes.titleInput }
+           onKeyDown={ onTitleKey }
+           value={ title }
+           readOnly
            placeholder={ "< Untitled >" }
            onChange={ onTitleChange }/>
 
