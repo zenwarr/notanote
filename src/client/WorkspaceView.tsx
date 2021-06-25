@@ -1,6 +1,6 @@
 import * as path from "path";
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { TreeItem, TreeView } from "@material-ui/lab";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
@@ -8,8 +8,9 @@ import { WorkspaceEntry } from "../common/WorkspaceEntry";
 import { Box, IconButton, makeStyles } from "@material-ui/core";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { observer } from "mobx-react-lite";
-import { CreateDirDialog } from "./CreateDirDialog";
+import { CreateEntryDialog } from "./CreateEntryDialog";
 import { CreateNewFolderOutlined, PostAddOutlined } from "@material-ui/icons";
+import { EntryType } from "../common/WorkspaceEntry";
 
 
 export interface WorkspaceViewProps {
@@ -37,7 +38,8 @@ function getParentFromSelectedNode(selected: string | undefined): string {
 
 export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const workspaceManager = WorkspaceManager.instance;
-  const [ folderDialogOpened, setFolderDialogOpened ] = useState(false);
+  const [ entryDialogOpened, setEntryDialogOpened ] = useState(false);
+  const createEntryType = useRef<EntryType | undefined>(undefined);
   const parent = getParentFromSelectedNode(workspaceManager.selectedEntryPath);
   const classes = useStyles();
 
@@ -50,15 +52,20 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   }
 
   function createFile() {
-    WorkspaceManager.instance.createEntry(parent, undefined, "file");
+    createEntryType.current = "file";
+    setEntryDialogOpened(true);
   }
 
   function createFolder() {
-    setFolderDialogOpened(true);
+    createEntryType.current = "dir";
+    setEntryDialogOpened(true);
   }
 
   return <div>
-    <CreateDirDialog open={ folderDialogOpened } onClose={ () => setFolderDialogOpened(false) } parentPath={ parent }/>
+    <CreateEntryDialog open={ entryDialogOpened }
+                       onClose={ () => setEntryDialogOpened(false) }
+                       type={ createEntryType.current! }
+                       parentPath={ parent }/>
 
     <Box mb={ 2 } display={ "flex" } justifyContent={ "center" }>
       <IconButton onClick={ createFile } title={ "Create file" }>

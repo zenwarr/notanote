@@ -2,15 +2,17 @@ import * as React from "react";
 import { useState } from "react";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@material-ui/core";
+import { EntryType } from "../common/WorkspaceEntry";
 
 
-export type CreateDirDialogProps = {
+export type CreateEntryDialogProps = {
   open: boolean;
   onClose: () => void;
   parentPath: string;
+  type: EntryType;
 }
 
-export function CreateDirDialog(props: CreateDirDialogProps) {
+export function CreateEntryDialog(props: CreateEntryDialogProps) {
   const [ name, setName ] = useState<string | undefined>();
   const [ loading, setLoading ] = useState(false);
 
@@ -23,7 +25,7 @@ export function CreateDirDialog(props: CreateDirDialogProps) {
 
     setLoading(true);
     try {
-      await WorkspaceManager.instance.createEntry(props.parentPath, name, "dir");
+      await WorkspaceManager.instance.createEntry(props.parentPath, name, props.type);
       props.onClose();
     } catch (error) {
       alert("Failed to create directory: " + error.message);
@@ -33,7 +35,9 @@ export function CreateDirDialog(props: CreateDirDialogProps) {
   }
 
   return <Dialog open={ props.open } onClose={ props.onClose } aria-labelledby="form-dialog-title" keepMounted={ false }>
-    <DialogTitle id="form-dialog-title">Directory name</DialogTitle>
+    <DialogTitle id="form-dialog-title">
+      Create new { props.type === "dir" ? "directory" : "file" }
+    </DialogTitle>
 
     <form onSubmit={ onCreate }>
       <DialogContent>
@@ -41,7 +45,7 @@ export function CreateDirDialog(props: CreateDirDialogProps) {
             autoFocus
             margin="dense"
             id="name"
-            label="Directory name"
+            label={(props.type === "dir" ? "Directory" : "File") + " name"}
             type="name"
             value={ name }
             onChange={ onChange }

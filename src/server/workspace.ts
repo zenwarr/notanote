@@ -103,9 +103,9 @@ export class Workspace {
         recursive: true
       });
 
-      const generatedFileName = randomUUID() + ".md";
-      createdEntryPath = path.join(this.root, parent, generatedFileName);
-      await fs.promises.writeFile(path.join(this.root, parent, generatedFileName), "", "utf-8");
+      const createdFileName = name == null ? (randomUUID() + ".md") : (name + ".md");
+      createdEntryPath = path.join(this.root, parent, createdFileName);
+      await fs.promises.writeFile(path.join(this.root, parent, createdFileName), "", "utf-8");
     }
 
     const entries = await getFsEntries(this.root, this.root);

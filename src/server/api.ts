@@ -42,12 +42,12 @@ export default async function initApiRoutes(app: FastifyInstance) {
 
   app.post<{
     Params: WorkspaceRouteParams,
-    Body: { parent: string; name?: string; type: EntryType }
+    Body: { parent: string; name: string; type: EntryType }
   }>("/api/workspaces/:workspaceID/files", {
     schema: {
       params: S.object().prop("workspaceID", S.string().required()),
       body: S.object().prop("parent", S.string().required())
-      .prop("name", S.string())
+      .prop("name", S.string().required())
       .prop("type", S.string().required())
     }
   }, async (req, res) => {
