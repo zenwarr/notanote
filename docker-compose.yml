@@ -4,8 +4,8 @@ services:
   nginx-proxy:
     image: nginxproxy/nginx-proxy:0.9.1-alpine
     ports:
-      - "${HOST}:443:443"
-      - "${HOST}:80:80"
+      - "${PUBLIC_HOST}:443:443"
+      - "${PUBLIC_HOST}:80:80"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
     depends_on:
@@ -19,8 +19,10 @@ services:
         source: yarn_cache
         target: /yarn-cache
       - ./data/workspaces:/workspaces
+      - .env:/config/.env
     environment:
-      - VIRTUAL_HOST=${DOMAIN}
+      - VIRTUAL_HOST=${PUBLIC_DOMAIN}
+      - ENV_FILE=/config/.env
     init: true
 
 volumes:

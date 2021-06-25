@@ -11,7 +11,9 @@ export async function startApp() {
   hbs.registerHelper("json", ctx => JSON.stringify(ctx));
 
   const app = fastify({
-    logger: true
+    logger: {
+      level: "warn"
+    }
   });
 
   app.register(fastifyFormBody);
@@ -32,6 +34,6 @@ export async function startApp() {
   app.register(require("./auth"));
   app.register(require("./ui"));
 
-  await app.listen(process.env["PORT"]!, "0.0.0.0");
+  await app.listen(process.env["PORT"] ?? 80, "0.0.0.0");
   console.log("Application listening on port", process.env["PORT"]);
 }

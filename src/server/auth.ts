@@ -49,8 +49,9 @@ export function configureAuth(app: FastifyInstance) {
     key: fs.readFileSync(path.join(__dirname, "secret_key")),
     cookie: {
       httpOnly: true,
+      secure: process.env["NODE_ENV"] !== "dev",
       path: "/",
-      maxAge: luxon.Duration.fromObject({ days: 30 }).milliseconds
+      maxAge: luxon.Duration.fromObject({ days: 30 }).as("millisecond")
     },
     cookieName: "sess"
   });

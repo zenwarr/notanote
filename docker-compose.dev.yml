@@ -4,5 +4,7 @@ services:
   app:
     build:
       dockerfile: dev.Dockerfile
+    environment:
+      - NODE_ENV
     volumes:
       - ./src:/app

@@ -1,6 +1,7 @@
 FROM node:16
 
 EXPOSE 8080
+ENV PORT=8080
 
 RUN mkdir /yarn-cache && \
     chmod 777 /yarn-cache && \
