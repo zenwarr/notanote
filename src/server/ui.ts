@@ -7,8 +7,7 @@ export default async function initUiRoutes(app: FastifyInstance) {
 
   app.get("/", (req, res) => {
     res.view("index", {
-      // userName: getProfile(req).name
-      userName: "Default user"
+      userName: getProfile(req)?.name ?? "Guest"
     });
   });
 }

@@ -57,15 +57,15 @@ export function configureAuth(app: FastifyInstance) {
 
 export function requireAuthenticatedUser(app: FastifyInstance) {
   app.addHook("preValidation", async (req, res) => {
-    console.log("preValidation auth hook", req.isAuthenticated);
     if (!req.isAuthenticated || !req.isAuthenticated()) {
       res.redirect("/auth");
     }
   });
 }
 
-export function getProfile(req: FastifyRequest): UserInfo {
-  return (req.session as any).passport.user;
+
+export function getProfile(req: FastifyRequest): UserInfo | undefined {
+  return req.session?.get("passport");
 }
 
 
