@@ -6,5 +6,9 @@ services:
       dockerfile: dev.Dockerfile
     environment:
       - NODE_ENV
+    restart: "no"
     volumes:
       - ./src:/app
+
+  nginx-proxy:
+    restart: "no"

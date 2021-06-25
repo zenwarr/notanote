@@ -8,6 +8,7 @@ services:
       - "${PUBLIC_HOST}:80:80"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
+    restart: unless-stopped
     depends_on:
       - app
 
@@ -20,6 +21,7 @@ services:
         target: /yarn-cache
       - ./data/workspaces:/workspaces
       - .env:/config/.env
+    restart: unless-stopped
     environment:
       - VIRTUAL_HOST=${PUBLIC_DOMAIN}
       - ENV_FILE=/config/.env
