@@ -3,6 +3,7 @@ import * as luxon from "luxon";
 import { makeObservable, observable } from "mobx";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { Backend } from "./backend/Backend";
+import { WorkspaceManager } from "./WorkspaceManager";
 
 
 const AUTO_SAVE_INTERVAL = luxon.Duration.fromObject({ second: 30 });
@@ -27,7 +28,7 @@ export class DocumentManager {
       return docInfo.doc;
     }
 
-    const entryInfo = await Backend.get(WorkspaceBackend).getEntry(fileID);
+    const entryInfo = await Backend.get(WorkspaceBackend).getEntry(WorkspaceManager.instance.id, fileID);
     let document = new Document(entryInfo.content);
     this.documents.set(fileID, { doc: document, usageCount: 1 });
     return document;
@@ -93,7 +94,7 @@ export class DocumentManager {
     doc.saveState = SaveState.Saving;
 
     try {
-      await Backend.get(WorkspaceBackend).saveEntry(fileId, doc.getContents());
+      await Backend.get(WorkspaceBackend).saveEntry(WorkspaceManager.instance.id, fileId, doc.getContents());
       doc.onSaveCompleted(undefined);
     } catch (err) {
       alert("Failed to save document: " + err.message);

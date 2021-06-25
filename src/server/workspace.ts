@@ -1,7 +1,7 @@
 import { CreateEntryReply, EntryInfo, EntryType, WorkspaceEntry } from "../common/WorkspaceEntry";
 import fs from "fs";
 import path from "path";
-import { ErrorCode, Result } from "../common/errors";
+import { ErrorCode, isOk, Result } from "../common/errors";
 import { randomUUID } from "crypto";
 
 
@@ -9,9 +9,66 @@ const WORKSPACES_DIR = process.env["WORKSPACES_DIR"] ?? "/workspaces";
 
 
 export class Workspace {
-  private constructor(id: string) {
-    this.root = path.join(WORKSPACES_DIR, id);
+  private constructor(userId: string, id: string) {
+    this.root = path.join(WORKSPACES_DIR, userId, id);
     this.id = id;
+  }
+
+
+  static async getOrCreateWorkspace(userId: string, id?: string): Promise<Result<Workspace>> {
+    const workspaceId = id ?? "default";
+    const workspaceRoot = path.join(WORKSPACES_DIR, userId, workspaceId);
+
+    const exists = await this.exists(workspaceRoot);
+
+    if (!isOk(exists)) {
+      return exists;
+    }
+
+    if (exists.value) {
+      return {
+        value: new Workspace(userId, workspaceId)
+      };
+    }
+
+    try {
+      await fs.promises.mkdir(workspaceRoot, {
+        recursive: true
+      });
+    } catch (e) {
+      return {
+        error: ErrorCode.Internal,
+        text: "failed to create workspace"
+      };
+    }
+
+    return {
+      value: new Workspace(userId, workspaceId)
+    };
+  }
+
+
+  private static async exists(workspaceRoot: string): Promise<Result<boolean>> {
+    try {
+      const stat = await fs.promises.stat(workspaceRoot);
+      if (!stat.isDirectory()) {
+        return {
+          error: ErrorCode.Internal,
+          text: "expected to be a directory"
+        };
+      }
+
+      return { value: true };
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        return { value: false };
+      } else {
+        return {
+          error: ErrorCode.Internal,
+          text: "error checking workspace presence"
+        };
+      }
+    }
   }
 
 
@@ -88,13 +145,13 @@ export class Workspace {
   }
 
 
-  static getForId(id: string) {
-    return new Workspace(id);
+  static getForId(userId: string, id: string) {
+    return new Workspace(userId, id);
   }
 
 
-  private readonly root: string;
-  private readonly id: string;
+  readonly root: string;
+  readonly id: string;
 }
 
 

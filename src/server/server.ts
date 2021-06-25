@@ -8,6 +8,8 @@ import { configureAuth } from "./auth";
 
 
 export async function startApp() {
+  hbs.registerHelper("json", ctx => JSON.stringify(ctx));
+
   const app = fastify({
     logger: true
   });

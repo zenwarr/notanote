@@ -1,6 +1,7 @@
 export enum ErrorCode {
   InvalidRequestParams = "INVALID_REQUEST_PARAMS",
-  EntryNotFound = "NOT_FOUND"
+  EntryNotFound = "NOT_FOUND",
+  Internal = "INTERNAL"
 }
 
 
@@ -11,6 +12,9 @@ export function getStatusCodeForError(code: ErrorCode) {
 
     case ErrorCode.EntryNotFound:
       return 404;
+
+    case ErrorCode.Internal:
+      return 500;
   }
 
   return 500;

@@ -1,5 +1,5 @@
-import { FastifyInstance } from "fastify";
-import { requireAuthenticatedUser } from "./auth";
+import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import { getProfile, requireAuthenticatedUser } from "./auth";
 import { Workspace } from "./workspace";
 import { writeResult } from "./server-utils";
 import S from "fluent-json-schema";
@@ -16,6 +16,14 @@ type FileRouteParams = {
 }
 
 
+function getWorkspace(req: FastifyRequest<{
+  Params: WorkspaceRouteParams
+}>) {
+  const profile = getProfile(req);
+  return Workspace.getForId(profile.id, req.params.workspaceID);
+}
+
+
 export default async function initApiRoutes(app: FastifyInstance) {
   requireAuthenticatedUser(app);
 
@@ -26,8 +34,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
       params: S.object().prop("workspaceID", S.string().required())
     }
   }, async (req, res) => {
-    const ws = Workspace.getForId(req.params.workspaceID);
-    const r = await ws.getAllEntries();
+    const r = await getWorkspace(req).getAllEntries();
 
     return writeResult(res, r);
   });
@@ -44,7 +51,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
       .prop("type", S.string().required())
     }
   }, async (req, res) => {
-    const ws = Workspace.getForId(req.params.workspaceID);
+    const ws = getWorkspace(req);
     const r = await ws.createEntry(req.body.parent || "", req.body.name, req.body.type as EntryType);
 
     return writeResult(res, r);
@@ -60,7 +67,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     }
   }, async (req, res) => {
     const fileID = decodeURIComponent(req.params.fileID);
-    const ws = Workspace.getForId(req.params.workspaceID);
+    const ws = getWorkspace(req);
     const r = await ws.getEntry(fileID);
 
     return writeResult(res, r);
@@ -78,7 +85,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
   }, async (req, res) => {
     const fileID = decodeURIComponent(req.params.fileID);
 
-    const ws = Workspace.getForId(req.params.workspaceID);
+    const ws = getWorkspace(req);
     const r = await ws.saveEntry(fileID, req.body.content);
 
     return writeResult(res, r);

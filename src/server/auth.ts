@@ -14,16 +14,20 @@ export interface UserInfo {
 }
 
 
+const GOOGLE_PROFILE_ID = process.env["USER_PROFILE_ID"] || "unknown";
+const LOCAL_AUTH_PASSWORD = process.env["AUTH_PASSWORD"];
+
+
 export function configureAuth(app: FastifyInstance) {
   fastifyPassport.use("google", new GoogleStrategy({
     clientID: process.env["OAUTH_CLIENT_ID"]!,
     clientSecret: process.env["OAUTH_SECRET"]!,
     callbackURL: process.env["OAUTH_REDIRECT_URL"]
   }, (accessToken: string, refreshToken: string, profile: any, cb: (err?: Error, user?: UserInfo) => void) => {
-    if (profile.id !== process.env["USER_PROFILE_ID"]) {
+    if (profile.id !== GOOGLE_PROFILE_ID) {
       cb(new Error("you are not allowed to use this application"));
     } else {
-      cb(undefined, { id: profile.id, name: profile.displayName });
+      cb(undefined, { id: GOOGLE_PROFILE_ID, name: profile.displayName });
     }
   }));
 
@@ -31,8 +35,8 @@ export function configureAuth(app: FastifyInstance) {
     usernameField: "password",
     passwordField: "password"
   }, (password, _, done) => {
-    if (password === process.env["AUTH_PASSWORD"]) {
-      done(null, { id: "default", name: "Default user" });
+    if (password === LOCAL_AUTH_PASSWORD) {
+      done(null, { id: GOOGLE_PROFILE_ID, name: "Default user" });
     } else {
       done(new Error("user not found"));
     }
@@ -64,7 +68,7 @@ export function requireAuthenticatedUser(app: FastifyInstance) {
 }
 
 
-export function getProfile(req: FastifyRequest): UserInfo | undefined {
+export function getProfile(req: FastifyRequest): UserInfo {
   return req.session?.get("passport");
 }
 

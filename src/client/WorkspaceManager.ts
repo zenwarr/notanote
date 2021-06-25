@@ -14,7 +14,7 @@ export class WorkspaceManager {
 
 
   async load() {
-    this.entries = await Backend.get(WorkspaceBackend).loadTree();
+    this.entries = await Backend.get(WorkspaceBackend).loadTree(this.id);
     return this.entries;
   }
 
@@ -55,7 +55,7 @@ export class WorkspaceManager {
 
 
   async createEntry(parent: string, name: string | undefined, type: "file" | "dir"): Promise<CreateEntryReply> {
-    const reply = await Backend.get(WorkspaceBackend).createEntry(parent, name, type);
+    const reply = await Backend.get(WorkspaceBackend).createEntry(this.id, parent, name, type);
     this.entries = reply.entries;
     this.selectedEntryPath = reply.path;
     return reply;
@@ -64,6 +64,7 @@ export class WorkspaceManager {
 
   entries: WorkspaceEntry[] = [];
   selectedEntryPath: string | undefined = undefined;
+  id = "default";
 
   static instance = new WorkspaceManager();
 }
