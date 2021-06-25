@@ -28,7 +28,7 @@ export function CreateEntryDialog(props: CreateEntryDialogProps) {
       await WorkspaceManager.instance.createEntry(props.parentPath, name, props.type);
       props.onClose();
     } catch (error) {
-      alert("Failed to create directory: " + error.message);
+      alert("Failed to create: " + error.message);
     } finally {
       setLoading(false);
     }
