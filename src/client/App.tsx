@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Route, Switch, useParams } from "react-router";
 import { HashRouter } from "react-router-dom";
 import { WorkspaceManager } from "./WorkspaceManager";
+import { WorkspaceEntry } from "../common/WorkspaceEntry";
 
 
 export function App() {
@@ -19,6 +20,12 @@ export function App() {
   useEffect(() => {
     WorkspaceManager.instance.load();
   }, []);
+
+  function onMobileEntrySelected(e: WorkspaceEntry) {
+    if (e.type === "file") {
+      setDrawerOpen(false);
+    }
+  }
 
   return <HashRouter>
     <div className={ classes.root }>
@@ -33,7 +40,7 @@ export function App() {
           <SwipeableDrawer open={ drawerOpen } onOpen={ () => setDrawerOpen(true) } onClose={ () => setDrawerOpen(false) }
                            disableBackdropTransition={ !iOS } disableDiscovery={ iOS }>
             <Box p={ 2 } className={ classes.workspaceViewContainer }>
-              <WorkspaceView/>
+              <WorkspaceView onEntrySelected={ onMobileEntrySelected }/>
             </Box>
           </SwipeableDrawer>
         </Hidden>

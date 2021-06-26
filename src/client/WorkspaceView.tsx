@@ -17,7 +17,7 @@ import FolderIcon from '@material-ui/icons/Folder';
 
 
 export interface WorkspaceViewProps {
-
+  onEntrySelected?: (entry: WorkspaceEntry) => void;
 }
 
 
@@ -100,6 +100,10 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
       const selectedEntry = WorkspaceManager.instance.getEntryByPath(value);
       if (selectedEntry && selectedEntry.type !== "dir") {
         history.push(`/f/${ value }`);
+      }
+
+      if (selectedEntry) {
+        props.onEntrySelected?.(selectedEntry);
       }
     }
   }
