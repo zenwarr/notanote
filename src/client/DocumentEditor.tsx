@@ -11,15 +11,13 @@ import { makeStyles } from "@material-ui/core";
 export type DocumentEditorProps = {
   fileId: string;
   doc: Document;
+  className?: string;
 }
 
 
 export function DocumentEditor(props: DocumentEditorProps) {
   const containerRef = useRef<any>();
-  const titleInputRef = createRef<HTMLInputElement>();
   const viewRef = useRef<EditorView>();
-  const classes = useStyles();
-  const [ title, setTitle ] = useState<string | undefined>(path.basename(props.fileId));
 
   useEffect(() => {
     const view = new EditorView({
@@ -39,33 +37,12 @@ export function DocumentEditor(props: DocumentEditorProps) {
     viewRef.current?.focus();
   }, [ props.doc ]);
 
-  function onTitleKey(e: React.KeyboardEvent) {
-    if (e.key === "Enter") {
-      viewRef.current?.focus();
-      e.preventDefault();
-    }
-  }
-
-  function onTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    let title = e.target.value;
-    setTitle(title);
-  }
-
-  return <div>
-    <input type={ "text" } ref={ titleInputRef }
-           className={ classes.titleInput }
-           onKeyDown={ onTitleKey }
-           value={ title }
-           readOnly
-           placeholder={ "< Untitled >" }
-           onChange={ onTitleChange }/>
-
-    <div ref={ containerRef }/>
-  </div>;
+  return <div ref={ containerRef } className={ props.className }/>;
 }
 
 
 const useStyles = makeStyles(theme => ({
+  root: {},
   titleInput: {
     width: "100%",
     marginBottom: theme.spacing(1),

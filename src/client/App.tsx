@@ -48,7 +48,7 @@ export function App() {
           <Route exact key={ "file" } path={ "/f/:segment+" } component={ FileViewRoute }/>
         </Switch>
 
-        <ConnectedFileView/>
+        <ConnectedFileView className={ classes.docEditor }/>
       </div>
     </div>
   </HashRouter>;
@@ -94,9 +94,14 @@ const useStyles = makeStyles(theme => ({
     width: "100%",
     position: "relative",
     paddingTop: 20,
+    display: "flex",
+    flexDirection: "column",
     [theme.breakpoints.down("sm")]: {
       padding: theme.spacing(2)
     }
+  },
+  docEditor: {
+    height: "100%"
   },
   syncPanel: {
     marginBottom: theme.spacing(2),

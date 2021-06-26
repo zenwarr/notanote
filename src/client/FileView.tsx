@@ -9,6 +9,7 @@ import { useWindowTitle } from "./useWindowTitle";
 
 export type FileViewProps = {
   fileID: string;
+  className?: string;
 }
 
 
@@ -23,17 +24,20 @@ export function FileView(props: FileViewProps) {
     </div>;
   }
 
-  return <pre>
-    <DocumentEditor doc={ contentLoad.data } fileId={ props.fileID }/>
-  </pre>;
+  return <DocumentEditor doc={ contentLoad.data } fileId={ props.fileID } className={ props.className }/>;
 }
 
 
-export const ConnectedFileView = observer(() => {
+export interface ConnectedFileViewProps {
+  className?: string;
+}
+
+
+export const ConnectedFileView = observer((props: ConnectedFileViewProps) => {
   const ws = WorkspaceManager.instance;
   const openedDoc = ws.selectedEntryPath ? ws.getEntryByPath(ws.selectedEntryPath) : undefined;
 
   useWindowTitle(openedDoc?.id);
 
-  return openedDoc ? <FileView fileID={ openedDoc?.id }/> : null;
+  return openedDoc ? <FileView fileID={ openedDoc?.id } className={ props.className }/> : null;
 });
