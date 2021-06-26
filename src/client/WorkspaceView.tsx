@@ -88,7 +88,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const createEntryType = useRef<EntryType | undefined>(undefined);
   const parent = getParentFromSelectedNode(workspaceManager.selectedEntryPath);
   const expand = useExpanded(workspaceManager.selectedEntryPath);
-  const [ selectedItem, setSelectedItem ] = useState<string | undefined>(undefined);
+  const [ selectedItem, setSelectedItem ] = useState<string | undefined>(workspaceManager.selectedEntryPath);
 
   const history = useHistory();
   const classes = useStyles();

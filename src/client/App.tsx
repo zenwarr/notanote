@@ -93,7 +93,7 @@ const useStyles = makeStyles(theme => ({
     maxWidth: "300px",
     minWidth: "300px",
     [theme.breakpoints.down("sm")]: {
-      minWidth: "90vw",
+      width: 500,
       maxWidth: "90vw"
     }
   },
