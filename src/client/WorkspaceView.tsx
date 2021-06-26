@@ -43,7 +43,9 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const parent = getParentFromSelectedNode(workspaceManager.selectedEntryPath);
   const classes = useStyles();
 
-  useEffect(() => { workspaceManager.load() }, []);
+  useEffect(() => {
+    workspaceManager.load();
+  }, []);
 
   function onNodeSelect(_: unknown, value: string | string[]) {
     if (typeof value === "string" || value == null) {

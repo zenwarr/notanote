@@ -89,7 +89,7 @@ export class Workspace {
       return {
         error: ErrorCode.InvalidRequestParams,
         text: "invalid entry path supplied"
-      }
+      };
     }
 
     if (type === "dir" && !name) {
