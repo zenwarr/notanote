@@ -1,4 +1,4 @@
-import { Box, Drawer, Hidden, makeStyles } from "@material-ui/core";
+import { Box, Drawer, Hidden, makeStyles, SwipeableDrawer } from "@material-ui/core";
 import { WorkspaceView } from "./WorkspaceView";
 import { ConnectedFileView } from "./FileView";
 import { Header } from "./Header";
@@ -12,6 +12,7 @@ import { WorkspaceManager } from "./WorkspaceManager";
 export function App() {
   const [ drawerOpen, setDrawerOpen ] = useState(false);
   const classes = useStyles();
+  const iOS = !!(navigator.userAgent && /iPad|iPhone|iPod/.test(navigator.userAgent));
 
   usePreventClose();
 
@@ -23,17 +24,18 @@ export function App() {
     <div className={ classes.root }>
       <div className={ classes.workspaceView }>
         <Hidden smDown>
-          <Box p={ 2 }>
+          <Box p={ 2 } className={ classes.workspaceViewContainer }>
             <WorkspaceView/>
           </Box>
         </Hidden>
 
         <Hidden mdUp>
-          <Drawer open={ drawerOpen } onClose={ () => setDrawerOpen(false) }>
-            <Box p={ 2 }>
+          <SwipeableDrawer open={ drawerOpen } onOpen={ () => setDrawerOpen(true) } onClose={ () => setDrawerOpen(false) }
+                           disableBackdropTransition={ !iOS } disableDiscovery={ iOS }>
+            <Box p={ 2 } className={ classes.workspaceViewContainer }>
               <WorkspaceView/>
             </Box>
-          </Drawer>
+          </SwipeableDrawer>
         </Hidden>
       </div>
 
@@ -46,7 +48,7 @@ export function App() {
           <Route exact key={ "file" } path={ "/f/:segment+" } component={ FileViewRoute }/>
         </Switch>
 
-        <ConnectedFileView />
+        <ConnectedFileView/>
       </div>
     </div>
   </HashRouter>;
@@ -69,17 +71,23 @@ const useStyles = makeStyles(theme => ({
     display: "flex",
     alignItems: "stretch",
     height: "100vh",
-    overflow: "scroll"
+    overflow: "auto"
   },
   workspaceView: {
-    maxWidth: "300px",
-    minWidth: "300px",
     position: "sticky",
     top: 0,
     left: 0,
     paddingRight: theme.spacing(2),
     [theme.breakpoints.down("sm")]: {
       display: "none"
+    }
+  },
+  workspaceViewContainer: {
+    maxWidth: "300px",
+    minWidth: "300px",
+    [theme.breakpoints.down("sm")]: {
+      minWidth: "90vw",
+      maxWidth: "90vw"
     }
   },
   docView: {
