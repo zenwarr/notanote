@@ -1,5 +1,5 @@
 import { useLoad } from "./useLoad";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback} from "react";
 import { DocumentManager } from "./DocumentManager";
 import { DocumentEditor } from "./DocumentEditor";
 import { observer } from "mobx-react-lite";

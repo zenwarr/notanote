@@ -2,7 +2,7 @@ import { observer } from "mobx-react-lite";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { DocumentManager } from "./DocumentManager";
 import { SaveState } from "./Document";
-import { CircularProgress, makeStyles } from "@material-ui/core";
+import { makeStyles } from "@material-ui/core";
 
 
 export const SyncPanel = observer(() => {

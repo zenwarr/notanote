@@ -1,4 +1,4 @@
-import { Box, Drawer, Hidden, makeStyles, SwipeableDrawer } from "@material-ui/core";
+import { Box, Hidden, makeStyles, SwipeableDrawer } from "@material-ui/core";
 import { WorkspaceView } from "./WorkspaceView";
 import { ConnectedFileView } from "./FileView";
 import { Header } from "./Header";

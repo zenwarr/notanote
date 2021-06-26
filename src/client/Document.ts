@@ -1,7 +1,7 @@
 import { EditorState } from "@codemirror/state";
 import { history, historyKeymap } from "@codemirror/history";
 import { makeObservable, observable } from "mobx";
-import { drawSelection, EditorView, keymap, placeholder, ViewPlugin, ViewUpdate } from "@codemirror/view";
+import { EditorView, keymap, placeholder, ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { indentOnInput } from "@codemirror/language";
 import { defaultHighlightStyle } from "@codemirror/highlight";
 import { bracketMatching } from "@codemirror/matchbrackets";

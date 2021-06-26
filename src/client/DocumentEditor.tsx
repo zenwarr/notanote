@@ -1,6 +1,5 @@
 import * as React from "react";
-import * as path from "path";
-import { createRef, useEffect, useRef, useState } from "react";
+import { useEffect, useRef} from "react";
 import { Document } from "./Document";
 import { DocumentManager } from "./DocumentManager";
 import "./DocumentEditor.css";

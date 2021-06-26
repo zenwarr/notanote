@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import * as path from "path";
 import { DocumentManager } from "./DocumentManager";
-import { Observer } from "mobx-react-lite/dist/ObserverComponent";
 import { autorun } from "mobx";
 
 
