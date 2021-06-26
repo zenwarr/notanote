@@ -11,6 +11,7 @@ import { observer } from "mobx-react-lite";
 import { CreateEntryDialog } from "./CreateEntryDialog";
 import { CreateNewFolderOutlined, PostAddOutlined } from "@material-ui/icons";
 import { EntryType } from "../common/WorkspaceEntry";
+import { useHistory } from "react-router";
 
 
 export interface WorkspaceViewProps {
@@ -41,15 +42,15 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const [ entryDialogOpened, setEntryDialogOpened ] = useState(false);
   const createEntryType = useRef<EntryType | undefined>(undefined);
   const parent = getParentFromSelectedNode(workspaceManager.selectedEntryPath);
+  const history = useHistory();
   const classes = useStyles();
-
-  useEffect(() => {
-    workspaceManager.load();
-  }, []);
 
   function onNodeSelect(_: unknown, value: string | string[]) {
     if (typeof value === "string" || value == null) {
-      workspaceManager.selectedEntryPath = value;
+      const selectedEntry = WorkspaceManager.instance.getEntryByPath(value);
+      if (selectedEntry && selectedEntry.type !== "dir") {
+        history.push(`/f/${ value }`);
+      }
     }
   }
 

@@ -3,7 +3,10 @@ import { WorkspaceView } from "./WorkspaceView";
 import { ConnectedFileView } from "./FileView";
 import { Header } from "./Header";
 import { usePreventClose } from "./usePreventClose";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Route, Switch, useParams } from "react-router";
+import { HashRouter } from "react-router-dom";
+import { WorkspaceManager } from "./WorkspaceManager";
 
 
 export function App() {
@@ -12,31 +15,52 @@ export function App() {
 
   usePreventClose();
 
-  return <div className={ classes.root }>
-    <div className={ classes.workspaceView }>
-      <Hidden smDown>
-        <Box p={ 2 }>
-          <WorkspaceView/>
-        </Box>
-      </Hidden>
+  useEffect(() => {
+    WorkspaceManager.instance.load();
+  }, []);
 
-      <Hidden mdUp>
-        <Drawer open={ drawerOpen } onClose={ () => setDrawerOpen(false) }>
+  return <HashRouter>
+    <div className={ classes.root }>
+      <div className={ classes.workspaceView }>
+        <Hidden smDown>
           <Box p={ 2 }>
             <WorkspaceView/>
           </Box>
-        </Drawer>
-      </Hidden>
-    </div>
+        </Hidden>
 
-    <div className={ classes.docView }>
-      <div className={ classes.syncPanel }>
-        <Header onToggleDrawer={ () => setDrawerOpen(!drawerOpen) }/>
+        <Hidden mdUp>
+          <Drawer open={ drawerOpen } onClose={ () => setDrawerOpen(false) }>
+            <Box p={ 2 }>
+              <WorkspaceView/>
+            </Box>
+          </Drawer>
+        </Hidden>
       </div>
 
-      <ConnectedFileView/>
+      <div className={ classes.docView }>
+        <div className={ classes.syncPanel }>
+          <Header onToggleDrawer={ () => setDrawerOpen(!drawerOpen) }/>
+        </div>
+
+        <Switch>
+          <Route exact key={ "file" } path={ "/f/:segment+" } component={ FileViewRoute }/>
+        </Switch>
+
+        <ConnectedFileView />
+      </div>
     </div>
-  </div>;
+  </HashRouter>;
+}
+
+
+export function FileViewRoute() {
+  const params = useParams<{ segment: string }>();
+
+  useEffect(() => {
+    WorkspaceManager.instance.selectedEntryPath = params.segment;
+  }, [ params.segment ]);
+
+  return null;
 }
 
 

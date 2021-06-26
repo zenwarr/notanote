@@ -30,16 +30,10 @@ export function FileView(props: FileViewProps) {
 
 
 export const ConnectedFileView = observer(() => {
-  const [ openedDoc, setOpenedDoc ] = useState<string | undefined>();
-  useWindowTitle(openedDoc);
+  const ws = WorkspaceManager.instance;
+  const openedDoc = ws.selectedEntryPath ? ws.getEntryByPath(ws.selectedEntryPath) : undefined;
 
-  const selectedEntryPath = WorkspaceManager.instance.selectedEntryPath;
-  useEffect(() => {
-    const selectedEntry = selectedEntryPath ? WorkspaceManager.instance.getEntryByPath(selectedEntryPath) : undefined;
-    if (selectedEntry && selectedEntry.type !== "dir") {
-      setOpenedDoc(selectedEntry.id);
-    }
-  }, [ selectedEntryPath ]);
+  useWindowTitle(openedDoc?.id);
 
-  return openedDoc ? <FileView fileID={ openedDoc }/> : null;
+  return openedDoc ? <FileView fileID={ openedDoc?.id }/> : null;
 });
