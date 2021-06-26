@@ -24,7 +24,7 @@ export const SyncPanel = observer(() => {
 
   let curDocState = <></>;
   if (currentDocSaving) {
-    curDocState = <CircularProgress/>;
+    curDocState = <>saving...</>;
   } else if (currentDocHasUnsavedChanges) {
     curDocState = <>*</>;
   }

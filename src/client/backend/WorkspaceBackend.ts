@@ -1,5 +1,6 @@
 import ky from "ky";
 import { CreateEntryReply, EntryInfo, WorkspaceEntry } from "../../common/WorkspaceEntry";
+import { timeout } from "./timeout";
 
 
 export class WorkspaceBackend {
@@ -88,5 +89,6 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
 
   async saveEntry(wsId: string, entryPath: string, content: string): Promise<void> {
     console.log("save entry", entryPath, content);
+    await timeout(1000);
   }
 }
