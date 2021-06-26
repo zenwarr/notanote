@@ -34,8 +34,8 @@ export class Document {
       doc: content,
       extensions: [
         history(),
-        drawSelection(),
-        EditorState.allowMultipleSelections.of(true),
+        // drawSelection(),
+        // EditorState.allowMultipleSelections.of(true),
         indentOnInput(),
         defaultHighlightStyle.fallback,
         bracketMatching(),
