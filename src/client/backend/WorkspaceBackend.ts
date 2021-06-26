@@ -42,6 +42,11 @@ const DEMO_WORKSPACE: WorkspaceEntry[] = [
   },
   {
     type: "dir",
+    id: "another-dir",
+    name: "another-dir"
+  },
+  {
+    type: "dir",
     id: "dir",
     name: "dir",
     children: [
