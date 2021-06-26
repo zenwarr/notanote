@@ -64,10 +64,10 @@
     "fastify-static": "^4.2.2",
     "fluent-json-schema": "^3.0.0",
     "hbs": "^4.1.2",
+    "luxon": "^1.27.0",
     "marked": "^2.1.2",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
-    "point-of-view": "^4.15.0",
-    "luxon": "^1.27.0"
+    "point-of-view": "^4.15.0"
   }
 }
