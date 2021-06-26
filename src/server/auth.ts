@@ -26,7 +26,7 @@ export async function configureAuth(app: FastifyInstance) {
     clientSecret: process.env["OAUTH_SECRET"]!,
     callbackURL: process.env["OAUTH_REDIRECT_URL"]
   }, (accessToken: string, refreshToken: string, profile: any, cb: (err?: Error, user?: UserInfo) => void) => {
-    if (!ALLOWED_GOOGLE_PROFILES.includes(profile.id)) {
+    if (!ALLOWED_GOOGLE_PROFILES.includes(profile.id) && !ALLOWED_GOOGLE_PROFILES.includes("*")) {
       cb(new Error("you are not allowed to use this application"));
     } else {
       cb(undefined, { id: profile.id, name: profile.displayName });
