@@ -15,8 +15,9 @@ export interface UserInfo {
 }
 
 
-const GOOGLE_PROFILE_ID = process.env["USER_PROFILE_ID"] || "unknown";
 const LOCAL_AUTH_PASSWORD = process.env["AUTH_PASSWORD"];
+const LOCAL_ADMIN_PROFILE_ID = "admin";
+const ALLOWED_GOOGLE_PROFILES = (process.env["ALLOWED_GOOGLE_PROFILES"] ?? "").split(",");
 
 
 export async function configureAuth(app: FastifyInstance) {
@@ -25,10 +26,10 @@ export async function configureAuth(app: FastifyInstance) {
     clientSecret: process.env["OAUTH_SECRET"]!,
     callbackURL: process.env["OAUTH_REDIRECT_URL"]
   }, (accessToken: string, refreshToken: string, profile: any, cb: (err?: Error, user?: UserInfo) => void) => {
-    if (profile.id !== GOOGLE_PROFILE_ID) {
+    if (!ALLOWED_GOOGLE_PROFILES.includes(profile.id)) {
       cb(new Error("you are not allowed to use this application"));
     } else {
-      cb(undefined, { id: GOOGLE_PROFILE_ID, name: profile.displayName });
+      cb(undefined, { id: profile.id, name: profile.displayName });
     }
   }));
 
@@ -37,7 +38,7 @@ export async function configureAuth(app: FastifyInstance) {
     passwordField: "password"
   }, (password, _, done) => {
     if (password === LOCAL_AUTH_PASSWORD) {
-      done(null, { id: GOOGLE_PROFILE_ID, name: "Default user" });
+      done(null, { id: LOCAL_ADMIN_PROFILE_ID, name: "Default user" });
     } else {
       done(new Error("user not found"));
     }
