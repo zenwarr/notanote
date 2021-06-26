@@ -45,7 +45,7 @@ export function CreateEntryDialog(props: CreateEntryDialogProps) {
             autoFocus
             margin="dense"
             id="name"
-            label={(props.type === "dir" ? "Directory" : "File") + " name"}
+            label={ (props.type === "dir" ? "Directory" : "File") + " name" }
             type="name"
             value={ name }
             onChange={ onChange }
