@@ -1,7 +1,7 @@
 import { Box, makeStyles } from "@material-ui/core";
 import { WorkspaceView } from "./WorkspaceView";
 import { ConnectedFileView } from "./FileView";
-import { SyncPanel } from "./SyncPanel";
+import { Header } from "./Header";
 
 
 export function App() {
@@ -16,7 +16,7 @@ export function App() {
 
     <div className={ classes.docView }>
       <div className={ classes.syncPanel }>
-        <SyncPanel/>
+        <Header/>
       </div>
 
       <ConnectedFileView/>
@@ -46,8 +46,7 @@ const useStyles = makeStyles(theme => ({
     paddingTop: 20
   },
   syncPanel: {
-    position: "absolute",
-    left: 0,
-    top: 10
+    marginBottom: theme.spacing(2),
+    marginRight: theme.spacing(2)
   }
 }));

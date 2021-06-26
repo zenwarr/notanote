@@ -1,16 +1,11 @@
 import { observer } from "mobx-react-lite";
+import { WorkspaceManager } from "./WorkspaceManager";
 import { DocumentManager } from "./DocumentManager";
 import { SaveState } from "./Document";
 import { CircularProgress, makeStyles } from "@material-ui/core";
-import { WorkspaceManager } from "./WorkspaceManager";
 
 
-export type SyncPanelProps = {
-
-}
-
-
-export const SyncPanel = observer((props: SyncPanelProps) => {
+export const SyncPanel = observer(() => {
   const classes = useStyles();
 
   let workspaceManager = WorkspaceManager.instance;

@@ -16,8 +16,8 @@ export default async function initUiRoutes(app: FastifyInstance) {
     }
 
     return res.view("index", {
-      userName: profile.name,
       params: {
+        userName: profile.name,
         workspaceId: workspace.value.id
       }
     });
