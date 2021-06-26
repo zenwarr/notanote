@@ -8,3 +8,5 @@ static
 !src/webpack.config.js
 data/workspaces
 !data/workspaces/.gitkeep
+data/config
+!data/config/.gitkeep

@@ -20,11 +20,13 @@ services:
         source: yarn_cache
         target: /yarn-cache
       - ./data/workspaces:/workspaces
-      - .env:/config/.env
+      - .env:/env/.env
+      - ./data/config:/config
     restart: unless-stopped
     environment:
       - VIRTUAL_HOST=${PUBLIC_DOMAIN}
-      - ENV_FILE=/config/.env
+      - ENV_FILE=/env/.env
+      - CONFIG_DIR=/config
     init: true
 
 volumes:

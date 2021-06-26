@@ -28,12 +28,13 @@ export async function startApp() {
     prefix: "/static"
   });
 
-  configureAuth(app);
+  await configureAuth(app);
 
   app.register(require("./api"));
   app.register(require("./auth"));
   app.register(require("./ui"));
 
-  await app.listen(process.env["PORT"] ?? 80, "0.0.0.0");
-  console.log("Application listening on port", process.env["PORT"]);
+  const port = process.env["PORT"] ?? 80;
+  await app.listen(port, "0.0.0.0");
+  console.log("Application listening on port", port);
 }
