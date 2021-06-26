@@ -83,16 +83,16 @@ export class Workspace {
   }
 
 
-  async createEntry(parent: string, name: string | undefined, type: EntryType): Promise<Result<CreateEntryReply>> {
+  async createEntry(parent: string, name: string, type: EntryType): Promise<Result<CreateEntryReply>> {
     const absoluteParentPath = joinNestedPathSecure(this.root, parent);
     if (!absoluteParentPath) {
       return {
         error: ErrorCode.InvalidRequestParams,
-        text: "invalid entry path supplied"
+        text: "invalid parent path supplied"
       };
     }
 
-    if (type === "dir" && !name) {
+    if (type === "dir" && !name ) {
       return {
         error: ErrorCode.InvalidRequestParams,
         text: "name should be provided when creating a directory"
@@ -217,11 +217,25 @@ function joinNestedPathSecure(root: string, nested: string): string | undefined 
   }
 
   const result = path.join(root, nested);
-  if (!result.startsWith(root)) {
+  if (!isPathInsideRoot(root, result)) {
     return undefined;
   }
 
   return result;
+}
+
+
+function addEndingPathSlash(p: string) {
+  return p.endsWith(path.sep) ? p : p + path.sep;
+}
+
+
+function isPathInsideRoot(root: string, nested: string): boolean {
+  if (addEndingPathSlash(root) === addEndingPathSlash(nested)) {
+    return true;
+  }
+
+  return nested.startsWith(addEndingPathSlash(root));
 }
 
 

@@ -4,10 +4,6 @@
   white-space: pre-wrap;
 }
 
-.cm-editor:focus {
-  outline: none;
-}
-
-.ͼ1.cm-focused {
+.cm-focused {
   outline: none !important;
 }
