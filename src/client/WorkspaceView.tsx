@@ -37,11 +37,55 @@ function getParentFromSelectedNode(selected: string | undefined): string {
 }
 
 
+function getParents(p: string) {
+  const parts = p.split("/").filter(x => !!x);
+  const result: string[] = [];
+  for (let q = 0; q < parts.length; ++q) {
+    result.push(parts.slice(0, q + 1).join("/"));
+  }
+  return result;
+}
+
+
+function useExpanded(selected: string | undefined) {
+  const [ expanded, setExpanded ] = useState<string[]>(selected ? [ ...getParents(selected) ] : []);
+
+  useEffect(() => {
+    if (selected && !expanded.includes(selected)) {
+      setExpanded([ ...expanded, ...getParents(selected) ]);
+    }
+  }, [ selected ]);
+
+  function toggleNode(input: string[], node: string) {
+    if (input.includes(node)) {
+      return input.filter(x => x !== node);
+    } else {
+      return [ ...input, node ];
+    }
+  }
+
+  return {
+    expanded,
+    onToggle: (_: unknown, nodes: string[]) => {
+      let result = expanded;
+      for (const node of nodes) {
+        for (const parent of getParents(node)) {
+          result = toggleNode(result, parent);
+        }
+      }
+      setExpanded(result);
+    }
+  };
+}
+
+
 export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const workspaceManager = WorkspaceManager.instance;
   const [ entryDialogOpened, setEntryDialogOpened ] = useState(false);
   const createEntryType = useRef<EntryType | undefined>(undefined);
   const parent = getParentFromSelectedNode(workspaceManager.selectedEntryPath);
+  const expand = useExpanded(workspaceManager.selectedEntryPath);
+
   const history = useHistory();
   const classes = useStyles();
 
@@ -81,6 +125,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
     </Box>
 
     <TreeView defaultCollapseIcon={ <ExpandMoreIcon/> } defaultExpandIcon={ <ChevronRightIcon/> } onNodeSelect={ onNodeSelect }
+              expanded={ expand.expanded } onNodeToggle={ expand.onToggle }
               selected={ workspaceManager.selectedEntryPath ?? "" }>
       { workspaceManager.entries.map(e => renderTreeEntry(e, classes.entry)) }
     </TreeView>
