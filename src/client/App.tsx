@@ -2,10 +2,12 @@ import { Box, makeStyles } from "@material-ui/core";
 import { WorkspaceView } from "./WorkspaceView";
 import { ConnectedFileView } from "./FileView";
 import { Header } from "./Header";
+import { usePreventClose } from "./usePreventClose";
 
 
 export function App() {
   const classes = useStyles();
+  usePreventClose();
 
   return <div className={ classes.root }>
     <div className={ classes.workspaceView }>

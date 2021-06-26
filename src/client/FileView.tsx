@@ -4,6 +4,7 @@ import { DocumentManager } from "./DocumentManager";
 import { DocumentEditor } from "./DocumentEditor";
 import { observer } from "mobx-react-lite";
 import { WorkspaceManager } from "./WorkspaceManager";
+import { useWindowTitle } from "./useWindowTitle";
 
 
 export type FileViewProps = {
@@ -30,6 +31,7 @@ export function FileView(props: FileViewProps) {
 
 export const ConnectedFileView = observer(() => {
   const [ openedDoc, setOpenedDoc ] = useState<string | undefined>();
+  useWindowTitle(openedDoc);
 
   const selectedEntryPath = WorkspaceManager.instance.selectedEntryPath;
   useEffect(() => {

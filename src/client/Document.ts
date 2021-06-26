@@ -10,10 +10,25 @@ import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import { defaultKeymap, defaultTabBinding } from "@codemirror/commands";
 import { markdown } from "@codemirror/lang-markdown";
+import * as luxon from "luxon";
+import { Backend } from "./backend/Backend";
+import { WorkspaceBackend } from "./backend/WorkspaceBackend";
+import { WorkspaceManager } from "./WorkspaceManager";
+
+
+const AUTO_SAVE_TIMEOUT = luxon.Duration.fromObject({ second: 5 });
 
 
 export class Document {
-  constructor(content: string) {
+  constructor(content: string, fileId: string) {
+    this.fileId = fileId;
+
+    makeObservable(this, {
+      lastSave: observable,
+      lastSaveError: observable,
+      saveState: observable
+    });
+
     const self = this;
     this.editorState = EditorState.create({
       doc: content,
@@ -48,48 +63,58 @@ export class Document {
         })
       ]
     });
-    makeObservable(this, {
-      lastSave: observable,
-      lastSaveError: observable,
-      saveState: observable
-    });
   }
 
 
-  public getContents() {
+  getContents() {
     return this.editorState.doc.toString();
   }
 
 
-  public onChanges() {
+  onChanges() {
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+    }
+
     if (this.saveState === SaveState.Saving) {
       this.hadChangesWhileSaving = true;
     } else {
       this.saveState = SaveState.UnsavedChanges;
     }
+
+    this.saveTimer = setTimeout(() => {
+      this.saveTimer = undefined;
+      this.save().catch(err => {
+        console.error("failed to save document", err);
+      });
+    }, AUTO_SAVE_TIMEOUT.as("millisecond"));
   }
 
 
-  public onSaveStart() {
+  async save() {
     this.saveState = SaveState.Saving;
-  }
 
+    try {
+      await Backend.get(WorkspaceBackend).saveEntry(WorkspaceManager.instance.id, this.fileId, this.getContents());
 
-  public onSaveCompleted(error: string | undefined) {
-    if (error != null) {
-      this.lastSaveError = error;
-      this.saveState = SaveState.UnsavedChanges;
-    } else {
       this.lastSaveError = undefined;
       this.lastSave = new Date();
       this.saveState = this.hadChangesWhileSaving ? SaveState.UnsavedChanges : SaveState.NoChanges;
+    } catch (err) {
+      this.lastSaveError = err;
+      this.saveState = SaveState.UnsavedChanges;
+
+      alert("Failed to save document: " + err.message);
+    } finally {
+      this.hadChangesWhileSaving = false;
     }
-    this.hadChangesWhileSaving = false;
   }
 
 
   editorState: EditorState;
   private hadChangesWhileSaving = false;
+  private saveTimer: any = undefined;
+  readonly fileId: string;
 
   lastSave: Date | undefined = undefined;
   lastSaveError: string | undefined = undefined;
