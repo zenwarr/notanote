@@ -5,12 +5,12 @@ import { timeout } from "./timeout";
 
 export class WorkspaceBackend {
   async loadTree(wsId: string) {
-    return ky(`/api/workspaces/${wsId}/tree`).json<WorkspaceEntry[]>();
+    return ky(`/api/workspaces/${ wsId }/tree`).json<WorkspaceEntry[]>();
   }
 
 
   async createEntry(wsId: string, parent: string, name: string | undefined, type: "file" | "dir"): Promise<CreateEntryReply> {
-    return ky.post(`/api/workspaces/${wsId}/files`, {
+    return ky.post(`/api/workspaces/${ wsId }/files`, {
       json: {
         parent,
         name,
@@ -21,12 +21,12 @@ export class WorkspaceBackend {
 
 
   async getEntry(wsId: string, entryPath: string): Promise<EntryInfo> {
-    return ky(`/api/workspaces/${wsId}/files/${ encodeURIComponent(entryPath) }`).json<EntryInfo>();
+    return ky(`/api/workspaces/${ wsId }/files/${ entryPath }`).json<EntryInfo>();
   }
 
 
   async saveEntry(wsId: string, entryPath: string, content: string): Promise<void> {
-    await ky.put(`/api/workspaces/${wsId}/files/${ encodeURIComponent(entryPath) }`, {
+    await ky.put(`/api/workspaces/${ wsId }/files/${ entryPath }`, {
       json: {
         content
       }
