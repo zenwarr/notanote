@@ -6,6 +6,13 @@ import { WorkspaceManager } from "./WorkspaceManager";
 import { ProfileManager } from "./ProfileManager";
 
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(err => {
+    console.error("failed to install service worker", err);
+  });
+}
+
+
 configure({
   enforceActions: "never"
 });

@@ -6,9 +6,23 @@ services:
       dockerfile: dev.Dockerfile
     environment:
       - NODE_ENV
+      - SELF_SIGNED_HOST=${PUBLIC_DOMAIN}
     restart: "no"
     volumes:
       - ./src:/app
 
   nginx-proxy:
     restart: "no"
+    volumes:
+      - generated_certs:/etc/nginx/certs
+
+  nginx-proxy-certs:
+    image: sebastienheyd/self-signed-proxy-companion
+    environment:
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - generated_certs:/etc/nginx/certs
+
+volumes:
+  generated_certs:

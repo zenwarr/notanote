@@ -1,6 +1,8 @@
 .idea
 node_modules
-static
+src/static/*.js
+src/static/*.css
+src/static/*.txt
 .env
 *.js
 *.js.map

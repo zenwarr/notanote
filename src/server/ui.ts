@@ -3,6 +3,7 @@ import { FastifyInstance } from "fastify";
 import { Workspace } from "./workspace";
 import { isOk } from "../common/errors";
 import { writeResult } from "./server-utils";
+import * as path from "path";
 
 
 export default async function initUiRoutes(app: FastifyInstance) {
@@ -21,5 +22,9 @@ export default async function initUiRoutes(app: FastifyInstance) {
         workspaceId: workspace.value.id
       }
     });
+  });
+
+  app.get("/sw.js", async (req, res) => {
+    return res.sendFile(path.join(__dirname, "../static/sw.js"));
   });
 }
