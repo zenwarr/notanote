@@ -38,9 +38,11 @@ export class Workspace {
     }
 
     try {
-      await fs.promises.mkdir(workspaceRoot, {
+      await fs.promises.mkdir(path.join(workspaceRoot, ".note"), {
         recursive: true
       });
+
+      await fs.promises.writeFile(path.join(workspaceRoot, ".note", "settings.json"), "{\n  \n}", "utf-8");
     } catch (e) {
       return {
         error: ErrorCode.Internal,
@@ -92,7 +94,7 @@ export class Workspace {
       };
     }
 
-    if (type === "dir" && !name ) {
+    if (type === "dir" && !name) {
       return {
         error: ErrorCode.InvalidRequestParams,
         text: "name should be provided when creating a directory"

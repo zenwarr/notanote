@@ -14,9 +14,19 @@ import * as luxon from "luxon";
 import { Backend } from "./backend/Backend";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { WorkspaceManager } from "./WorkspaceManager";
+import { json } from "@codemirror/lang-json";
 
 
 const AUTO_SAVE_TIMEOUT = luxon.Duration.fromObject({ second: 5 });
+
+
+function getEditorPluginForFile(fileId: string) {
+  if (fileId.endsWith(".json")) {
+    return json();
+  } else {
+    return markdown();
+  }
+}
 
 
 export class Document {
@@ -52,7 +62,7 @@ export class Document {
           ...completionKeymap,
           defaultTabBinding
         ]),
-        markdown(),
+        getEditorPluginForFile(fileId),
         ViewPlugin.fromClass(class {
           update(upd: ViewUpdate) {
             if (upd.docChanged) {
