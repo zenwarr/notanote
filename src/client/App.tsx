@@ -8,6 +8,7 @@ import { Route, Switch, useParams } from "react-router";
 import { HashRouter } from "react-router-dom";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { WorkspaceEntry } from "../common/WorkspaceEntry";
+import "./App.css";
 
 
 export function App() {
@@ -78,7 +79,7 @@ const useStyles = makeStyles(theme => ({
     display: "flex",
     alignItems: "stretch",
     height: "100vh",
-    overflow: "auto"
+    overflow: "hidden"
   },
   workspaceView: {
     position: "sticky",
@@ -109,7 +110,7 @@ const useStyles = makeStyles(theme => ({
     }
   },
   docEditor: {
-    height: "100%"
+    height: "calc(100% - 40px)"
   },
   syncPanel: {
     marginBottom: theme.spacing(2),
