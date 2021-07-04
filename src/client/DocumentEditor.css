@@ -10,7 +10,7 @@
 }
 
 .cm-editor .cm-line {
-  margin-bottom: var(--editor-paragraph-spacing);
+  padding-bottom: var(--editor-paragraph-spacing);
 }
 
 .cm-focused {
