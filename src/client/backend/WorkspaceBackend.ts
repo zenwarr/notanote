@@ -83,7 +83,7 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
           fontSize: 16,
           fontFamily: "Cascadia Code",
           lang: "ru",
-          hypens: "auto",
+          hyphens: "auto",
           paragraphSpacing: 10,
           lineHeight: 1.4,
           textIndent: 30,

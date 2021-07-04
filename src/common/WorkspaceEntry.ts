@@ -10,7 +10,7 @@ export interface FileSettings {
   textIndent?: number;
   lineHeight?: number;
   paragraphSpacing?: number;
-  hypens?: string;
+  hyphens?: string;
   fontSize?: number;
   fontFamily?: string;
   lang?: string;

@@ -56,7 +56,7 @@ function setEditorVars(el: HTMLElement, settings: FileSettings) {
   el.style.setProperty("--editor-text-indent", numberValueToPropValue(settings.textIndent));
   el.style.setProperty("--editor-line-height", settings.lineHeight == null ? null : "" + settings.lineHeight);
   el.style.setProperty("--editor-paragraph-spacing", numberValueToPropValue(settings.paragraphSpacing));
-  el.style.setProperty("--editor-hypens", settings.hypens ?? null);
+  el.style.setProperty("--editor-hyphens", settings.hyphens ?? null);
   el.style.setProperty("--editor-font-size", numberValueToPropValue(settings.fontSize));
   el.style.setProperty("--editor-font-family", settings.fontFamily ?? null);
 

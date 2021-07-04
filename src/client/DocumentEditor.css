@@ -5,7 +5,7 @@
   font-size: var(--editor-font-size);
   line-height: var(--editor-line-height);
   text-indent: var(--editor-text-indent);
-  hypens: var(--editor-hypens);
+  hyphens: var(--editor-hyphens);
   white-space: pre-wrap;
 }
 

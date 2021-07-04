@@ -12,7 +12,7 @@ const WORKSPACES_DIR = process.env["WORKSPACES_DIR"] ?? "/workspaces";
 interface WorkspaceSettings {
   settings?: FileSettings,
   patterns?: {
-    files: string;
+    files: string | string[];
     settings?: FileSettings
   }[]
 }
@@ -68,10 +68,19 @@ export class Workspace {
 
   private async getSettingsForFile(fileId: string) {
     const settings = await this.loadSettings();
-    const matching = settings?.patterns?.filter(pat => micromatch.isMatch(fileId, pat.files, {
-      basename: true,
-      dot: true
-    }));
+    const matching = settings?.patterns?.filter(pat => {
+      if (typeof pat.files === "string") {
+        return micromatch.isMatch(fileId, pat.files, {
+          basename: true,
+          dot: true
+        });
+      } else {
+        return pat.files.some(pattern => micromatch.isMatch(fileId, pattern, {
+          basename: true,
+          dot: true
+        }));
+      }
+    });
 
     let specificSettings = {
       ...settings?.settings
