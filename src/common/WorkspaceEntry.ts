@@ -5,7 +5,19 @@ export interface WorkspaceEntry {
   type: "file" | "dir";
 }
 
+export interface FileSettings {
+  tabWidth?: number;
+  textIndent?: number;
+  lineHeight?: number;
+  paragraphSpacing?: number;
+  hypens?: string;
+  fontSize?: number;
+  fontFamily?: string;
+  lang?: string;
+}
+
 export interface EntryInfo {
+  settings: FileSettings;
   content: string;
 }
 

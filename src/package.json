@@ -36,6 +36,7 @@
     "@types/jest": "^26.0.23",
     "@types/luxon": "^1.27.0",
     "@types/marked": "^2.0.3",
+    "@types/micromatch": "^4.0.1",
     "@types/node": "^15.12.4",
     "@types/passport-local": "^1.0.33",
     "@types/react": "^17.0.11",
@@ -79,6 +80,7 @@
     "hbs": "^4.1.2",
     "luxon": "^1.27.0",
     "marked": "^2.1.2",
+    "micromatch": "^4.0.4",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
     "point-of-view": "^4.15.0"

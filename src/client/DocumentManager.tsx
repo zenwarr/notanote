@@ -26,7 +26,7 @@ export class DocumentManager {
 
     const entryInfo = await Backend.get(WorkspaceBackend).getEntry(WorkspaceManager.instance.id, fileId);
 
-    const document = new Document(entryInfo.content, fileId);
+    const document = new Document(entryInfo.content, fileId, entryInfo.settings);
     this.documents.set(fileId, { doc: document, usageCount: 1 });
     return document;
   }

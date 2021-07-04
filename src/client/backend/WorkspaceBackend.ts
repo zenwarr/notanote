@@ -79,6 +79,16 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
   async getEntry(wsId: string, entryPath: string): Promise<EntryInfo> {
     if (entryPath === "file.md" || entryPath === "dir/nested.md") {
       return {
+        settings: {
+          fontSize: 16,
+          fontFamily: "Cascadia Code",
+          lang: "ru",
+          hypens: "auto",
+          paragraphSpacing: 10,
+          lineHeight: 1.4,
+          textIndent: 30,
+          tabWidth: 4
+        },
         content: "File content\n1\n2"
       };
     } else {

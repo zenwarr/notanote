@@ -1,11 +1,21 @@
-import { CreateEntryReply, EntryInfo, EntryType, WorkspaceEntry } from "../common/WorkspaceEntry";
+import { CreateEntryReply, EntryInfo, EntryType, FileSettings, WorkspaceEntry } from "../common/WorkspaceEntry";
 import fs from "fs";
 import path from "path";
 import { ErrorCode, isOk, Result } from "../common/errors";
 import { randomUUID } from "crypto";
+import * as micromatch from "micromatch";
 
 
 const WORKSPACES_DIR = process.env["WORKSPACES_DIR"] ?? "/workspaces";
+
+
+interface WorkspaceSettings {
+  settings?: FileSettings,
+  patterns?: {
+    files: string;
+    settings?: FileSettings
+  }[]
+}
 
 
 export class Workspace {
@@ -53,6 +63,41 @@ export class Workspace {
     return {
       value: new Workspace(workspaceRoot, workspaceId)
     };
+  }
+
+
+  private async getSettingsForFile(fileId: string) {
+    const settings = await this.loadSettings();
+    const matching = settings?.patterns?.filter(pat => micromatch.isMatch(fileId, pat.files, {
+      basename: true,
+      dot: true
+    }));
+
+    let specificSettings = {
+      ...settings?.settings
+    };
+
+    for (const m of matching || []) {
+      specificSettings = {
+        ...specificSettings,
+        ...m.settings
+      };
+    }
+
+    return specificSettings;
+  }
+
+
+  private async loadSettings(): Promise<WorkspaceSettings | undefined> {
+    const settingFilePath = path.join(this.root, ".note", "settings.json");
+    try {
+      return JSON.parse(await fs.promises.readFile(settingFilePath, "utf-8"));
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        console.error("failed to load workspace settings", error);
+      }
+      return undefined;
+    }
   }
 
 
@@ -163,7 +208,10 @@ export class Workspace {
     }
 
     return {
-      value: { content }
+      value: {
+        settings: await this.getSettingsForFile(filePath),
+        content
+      }
     };
   }
 

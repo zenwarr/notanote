@@ -1,7 +1,16 @@
 .cm-editor .cm-content {
-  font-family: "Cascadia Code", "Consolas", monospace;
-  font-size: 14px;
+  /*font-family: "Cascadia Code", "Consolas", monospace;*/
+  /*font-size: 14px;*/
+  font-family: var(--editor-font-family);
+  font-size: var(--editor-font-size);
+  line-height: var(--editor-line-height);
+  text-indent: var(--editor-text-indent);
+  hypens: var(--editor-hypens);
   white-space: pre-wrap;
+}
+
+.cm-editor .cm-line {
+  margin-bottom: var(--editor-paragraph-spacing);
 }
 
 .cm-focused {

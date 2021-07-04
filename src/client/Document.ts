@@ -15,6 +15,7 @@ import { Backend } from "./backend/Backend";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { json } from "@codemirror/lang-json";
+import { FileSettings } from "../common/WorkspaceEntry";
 
 
 const AUTO_SAVE_TIMEOUT = luxon.Duration.fromObject({ second: 5 });
@@ -30,8 +31,9 @@ function getEditorPluginForFile(fileId: string) {
 
 
 export class Document {
-  constructor(content: string, fileId: string) {
+  constructor(content: string, fileId: string, settings: FileSettings) {
     this.fileId = fileId;
+    this.settings = settings;
 
     makeObservable(this, {
       lastSave: observable,
@@ -70,7 +72,8 @@ export class Document {
             }
             self.editorState = upd.state;
           }
-        })
+        }),
+        EditorState.tabSize.of(settings.tabWidth ?? 2)
       ]
     });
   }
@@ -125,6 +128,7 @@ export class Document {
   private hadChangesWhileSaving = false;
   private saveTimer: any = undefined;
   readonly fileId: string;
+  readonly settings: FileSettings;
 
   lastSave: Date | undefined = undefined;
   lastSaveError: string | undefined = undefined;

@@ -112,7 +112,10 @@ const useStyles = makeStyles(theme => ({
   docEditor: {
     height: "calc(100% - 40px)",
     paddingRight: theme.spacing(5),
-    maxWidth: 900
+    width: "100%",
+    maxWidth: 900,
+    marginLeft: "auto",
+    marginRight: "auto"
   },
   syncPanel: {
     marginBottom: theme.spacing(2),
