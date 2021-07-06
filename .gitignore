@@ -12,3 +12,5 @@ data/workspaces
 !data/workspaces/.gitkeep
 data/config
 !data/config/.gitkeep
+!src/jest.config.js
+src/server/test/fixture/**/*.*

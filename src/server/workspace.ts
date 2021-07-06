@@ -1,12 +1,9 @@
 import { CreateEntryReply, EntryInfo, EntryType, FileSettings, WorkspaceEntry } from "../common/WorkspaceEntry";
 import fs from "fs";
 import path from "path";
-import { ErrorCode, isOk, Result } from "../common/errors";
+import { ErrorCode, LogicError } from "../common/errors";
 import { randomUUID } from "crypto";
 import * as micromatch from "micromatch";
-
-
-const WORKSPACES_DIR = process.env["WORKSPACES_DIR"] ?? "/workspaces";
 
 
 interface WorkspaceSettings {
@@ -25,26 +22,23 @@ export class Workspace {
   }
 
 
-  static async getOrCreateWorkspace(userId: string, workspaceId?: string): Promise<Result<Workspace>> {
+  static getCommonWorkspacesRoot() {
+    return process.env["WORKSPACES_DIR"] ?? "/workspaces";
+  }
+
+
+  static async getOrCreateWorkspace(userId: string, workspaceId?: string): Promise<Workspace> {
     workspaceId ??= "default";
 
     const workspaceRoot = getWorkspacePath(userId, workspaceId);
     if (!workspaceRoot) {
-      return {
-        error: ErrorCode.EntryNotFound,
-        text: "workspace root not found"
-      };
+      throw new LogicError(ErrorCode.EntryNotFound, "workspace root not found");
     }
 
     const exists = await this.exists(workspaceRoot);
-    if (!isOk(exists)) {
-      return exists;
-    }
 
-    if (exists.value) {
-      return {
-        value: new Workspace(userId, workspaceId)
-      };
+    if (exists) {
+      return new Workspace(userId, workspaceId);
     }
 
     try {
@@ -54,15 +48,10 @@ export class Workspace {
 
       await fs.promises.writeFile(path.join(workspaceRoot, ".note", "settings.json"), "{\n  \n}", "utf-8");
     } catch (e) {
-      return {
-        error: ErrorCode.Internal,
-        text: "failed to create workspace"
-      };
+      throw new LogicError(ErrorCode.Internal, "failed to create workspace");
     }
 
-    return {
-      value: new Workspace(workspaceRoot, workspaceId)
-    };
+    return new Workspace(workspaceRoot, workspaceId);
   }
 
 
@@ -110,49 +99,37 @@ export class Workspace {
   }
 
 
-  private static async exists(workspaceRoot: string): Promise<Result<boolean>> {
+  private static async exists(workspaceRoot: string): Promise<boolean> {
     try {
       const stat = await fs.promises.stat(workspaceRoot);
       if (!stat.isDirectory()) {
-        return {
-          error: ErrorCode.Internal,
-          text: "expected to be a directory"
-        };
+        throw new LogicError(ErrorCode.Internal, "expected to be a directory");
       }
 
-      return { value: true };
+      return true;
     } catch (error) {
       if (error.code === "ENOENT") {
-        return { value: false };
+        return false;
       } else {
-        return {
-          error: ErrorCode.Internal,
-          text: "error checking workspace presence"
-        };
+        throw new LogicError(ErrorCode.Internal, "error checking workspace presence");
       }
     }
   }
 
 
-  async getAllEntries(): Promise<Result<WorkspaceEntry[]>> {
-    return { value: await getFsEntries(this.root, this.root) };
+  async getAllEntries(): Promise<WorkspaceEntry[]> {
+    return getFsEntries(this.root, this.root);
   }
 
 
-  async createEntry(parent: string, name: string, type: EntryType): Promise<Result<CreateEntryReply>> {
+  async createEntry(parent: string, name: string, type: EntryType): Promise<CreateEntryReply> {
     const absoluteParentPath = joinNestedPathSecure(this.root, parent);
     if (!absoluteParentPath) {
-      return {
-        error: ErrorCode.InvalidRequestParams,
-        text: "invalid parent path supplied"
-      };
+      throw new LogicError(ErrorCode.InvalidRequestParams, "invalid parent path supplied");
     }
 
     if (type === "dir" && !name) {
-      return {
-        error: ErrorCode.InvalidRequestParams,
-        text: "name should be provided when creating a directory"
-      };
+      throw new LogicError(ErrorCode.InvalidRequestParams, "name should be provided when creating a directory");
     }
 
     if (!name) {
@@ -165,10 +142,7 @@ export class Workspace {
 
     const createdEntryPath = joinNestedPathSecure(absoluteParentPath, name);
     if (!createdEntryPath) {
-      return {
-        error: ErrorCode.InvalidRequestParams,
-        text: "invalid entry path supplied"
-      };
+      throw new LogicError(ErrorCode.InvalidRequestParams, "invalid entry path supplied");
     }
 
     if (type === "dir") {
@@ -185,21 +159,16 @@ export class Workspace {
 
     const entries = await getFsEntries(this.root, this.root);
     return {
-      value: {
-        path: path.relative(this.root, createdEntryPath),
-        entries
-      }
+      path: path.relative(this.root, createdEntryPath),
+      entries
     };
   }
 
 
-  async getEntry(filePath: string): Promise<Result<EntryInfo>> {
+  async getEntry(filePath: string): Promise<EntryInfo> {
     const entryPath = joinNestedPathSecure(this.root, filePath);
     if (!entryPath) {
-      return {
-        error: ErrorCode.EntryNotFound,
-        text: "entry not found"
-      };
+      throw new LogicError(ErrorCode.EntryNotFound, "entry not found");
     }
 
     let content: string | undefined;
@@ -207,35 +176,26 @@ export class Workspace {
       content = await fs.promises.readFile(entryPath, "utf-8");
     } catch (error) {
       if (error.code === "ENOENT") {
-        return {
-          error: ErrorCode.EntryNotFound,
-          text: "entry not found"
-        };
+        throw new LogicError(ErrorCode.EntryNotFound, "entry not found");
       } else {
         throw error;
       }
     }
 
     return {
-      value: {
-        settings: await this.getSettingsForFile(filePath),
-        content
-      }
+      settings: await this.getSettingsForFile(filePath),
+      content
     };
   }
 
 
-  async saveEntry(filePath: string, content: string): Promise<Result<void>> {
+  async saveEntry(filePath: string, content: string): Promise<void> {
     const absolutePath = joinNestedPathSecure(this.root, filePath);
     if (!absolutePath) {
-      return {
-        error: ErrorCode.EntryNotFound,
-        text: "entry not found"
-      };
+      throw new LogicError(ErrorCode.EntryNotFound, "entry not found");
     }
 
     await fs.promises.writeFile(absolutePath, content, "utf-8");
-    return { value: undefined };
   }
 
 
@@ -262,7 +222,7 @@ const IGNORED_ENTRIES: string[] = [
 
 
 function getWorkspacePath(userId: string, workspaceId: string) {
-  return joinNestedPathSecure(WORKSPACES_DIR, path.join(userId, workspaceId));
+  return joinNestedPathSecure(Workspace.getCommonWorkspacesRoot(), path.join(userId, workspaceId));
 }
 
 

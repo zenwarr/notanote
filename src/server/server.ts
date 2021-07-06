@@ -1,10 +1,12 @@
-import fastify  from "fastify";
+import fastify from "fastify";
 import path from "path";
 import fastifyFormBody from "fastify-formbody";
 import pointOfView from "point-of-view";
 import hbs from "handlebars";
 import fastifyStatic from "fastify-static";
 import { configureAuth } from "./auth";
+import { replaceAll } from "@codemirror/search";
+import { ErrorCode, getStatusCodeForError, LogicError } from "../common/errors";
 
 
 export async function startApp() {
@@ -29,6 +31,21 @@ export async function startApp() {
   });
 
   await configureAuth(app);
+
+  app.setErrorHandler((error, req, res) => {
+    console.error("request error", error);
+    if (error instanceof LogicError) {
+      res.status(getStatusCodeForError(error.code)).send({
+        error: error.code,
+        text: error.text
+      });
+    } else {
+      res.status(500).send({
+        error: ErrorCode.Internal,
+        text: "internal server error"
+      });
+    }
+  });
 
   app.register(require("./api"));
   app.register(require("./auth"));

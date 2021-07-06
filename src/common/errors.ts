@@ -21,20 +21,8 @@ export function getStatusCodeForError(code: ErrorCode) {
 }
 
 
-export type ErrorResult = {
-  error: ErrorCode;
-  text: string;
-}
-
-
-export type OkResult<T> = {
-  value: T;
-}
-
-
-export type Result<T> = ErrorResult | OkResult<T>;
-
-
-export function isOk<T>(r: Result<T>): r is OkResult<T> {
-  return !("error" in r);
+export class LogicError extends Error {
+  constructor(public code: ErrorCode, public text: string) {
+    super(text);
+  }
 }

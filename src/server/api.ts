@@ -1,10 +1,9 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
 import { getProfile, requireAuthenticatedUser } from "./auth";
 import { Workspace } from "./workspace";
-import { writeResult } from "./server-utils";
 import S from "fluent-json-schema";
 import { EntryType } from "../common/WorkspaceEntry";
-import { ErrorCode, isOk, Result } from "../common/errors";
+import { ErrorCode, LogicError } from "../common/errors";
 
 
 type WorkspaceRouteParams = {
@@ -19,17 +18,14 @@ type FileRouteParams = {
 
 function getWorkspace(req: FastifyRequest<{
   Params: WorkspaceRouteParams
-}>): Result<Workspace> {
+}>): Workspace {
   const profile = getProfile(req);
   const ws = Workspace.getForId(profile.id, req.params.workspaceID);
   if (!ws) {
-    return {
-      error: ErrorCode.EntryNotFound,
-      text: "workspace not found"
-    };
+    throw new LogicError(ErrorCode.EntryNotFound, "workspace not found");
   }
 
-  return { value: ws };
+  return ws;
 }
 
 
@@ -44,13 +40,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     }
   }, async (req, res) => {
     const ws = getWorkspace(req);
-    if (!isOk(ws)) {
-      return ws;
-    }
-
-    const r = await ws.value.getAllEntries();
-
-    return writeResult(res, r);
+    return ws.getAllEntries();
   });
 
 
@@ -66,13 +56,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     }
   }, async (req, res) => {
     const ws = getWorkspace(req);
-    if (!isOk(ws)) {
-      return ws;
-    }
-
-    const r = await ws.value.createEntry(req.body.parent || "", req.body.name, req.body.type as EntryType);
-
-    return writeResult(res, r);
+    return ws.createEntry(req.body.parent || "", req.body.name, req.body.type as EntryType);
   });
 
 
@@ -85,14 +69,9 @@ export default async function initApiRoutes(app: FastifyInstance) {
     }
   }, async (req, res) => {
     const ws = getWorkspace(req);
-    if (!isOk(ws)) {
-      return ws;
-    }
 
-    const fileID = decodeURIComponent(req.params['*']);
-    const r = await ws.value.getEntry(fileID);
-
-    return writeResult(res, r);
+    const fileID = decodeURIComponent(req.params["*"]);
+    return ws.getEntry(fileID);
   });
 
 
@@ -108,12 +87,8 @@ export default async function initApiRoutes(app: FastifyInstance) {
     const fileID = decodeURIComponent(req.params["*"]);
 
     const ws = getWorkspace(req);
-    if (!isOk(ws)) {
-      return ws;
-    }
 
-    const r = await ws.value.saveEntry(fileID, req.body.content);
-
-    return writeResult(res, r);
+    await ws.saveEntry(fileID, req.body.content);
+    return {};
   });
 }
