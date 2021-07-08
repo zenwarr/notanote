@@ -22,7 +22,7 @@ function getWorkspace(req: FastifyRequest<{
   const profile = getProfile(req);
   const ws = Workspace.getForId(profile.id, req.params.workspaceID);
   if (!ws) {
-    throw new LogicError(ErrorCode.EntryNotFound, "workspace not found");
+    throw new LogicError(ErrorCode.NotFound, "workspace not found");
   }
 
   return ws;
@@ -46,17 +46,16 @@ export default async function initApiRoutes(app: FastifyInstance) {
 
   app.post<{
     Params: WorkspaceRouteParams,
-    Body: { parent: string; name: string; type: EntryType }
+    Body: { entryPath: string; type: EntryType }
   }>("/api/workspaces/:workspaceID/files", {
     schema: {
       params: S.object().prop("workspaceID", S.string().required()),
-      body: S.object().prop("parent", S.string().required())
-      .prop("name", S.string().required())
+      body: S.object().prop("entryPath", S.string().required())
       .prop("type", S.string().required())
     }
   }, async (req, res) => {
     const ws = getWorkspace(req);
-    return ws.createEntry(req.body.parent || "", req.body.name, req.body.type as EntryType);
+    return ws.createEntry(req.body.entryPath, req.body.type as EntryType);
   });
 
 

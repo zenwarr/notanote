@@ -2,7 +2,6 @@ import { CreateEntryReply, EntryInfo, EntryType, FileSettings, WorkspaceEntry } 
 import fs from "fs";
 import path from "path";
 import { ErrorCode, LogicError } from "../common/errors";
-import { randomUUID } from "crypto";
 import * as micromatch from "micromatch";
 
 
@@ -32,7 +31,7 @@ export class Workspace {
 
     const workspaceRoot = getWorkspacePath(userId, workspaceId);
     if (!workspaceRoot) {
-      throw new LogicError(ErrorCode.EntryNotFound, "workspace root not found");
+      throw new LogicError(ErrorCode.NotFound, "workspace root not found");
     }
 
     const exists = await this.exists(workspaceRoot);
@@ -122,44 +121,35 @@ export class Workspace {
   }
 
 
-  async createEntry(parent: string, name: string, type: EntryType): Promise<CreateEntryReply> {
-    const absoluteParentPath = joinNestedPathSecure(this.root, parent);
-    if (!absoluteParentPath) {
+  async createEntry(entryPath: string, type: EntryType): Promise<CreateEntryReply> {
+    if (type === "file" && !entryPath.endsWith(".md")) {
+      entryPath += ".md";
+    }
+
+    const absoluteEntryPath = joinNestedPathSecure(this.root, entryPath);
+    if (!absoluteEntryPath) {
       throw new LogicError(ErrorCode.InvalidRequestParams, "invalid parent path supplied");
     }
 
-    if (type === "dir" && !name) {
-      throw new LogicError(ErrorCode.InvalidRequestParams, "name should be provided when creating a directory");
-    }
-
-    if (!name) {
-      name = randomUUID();
-    }
-
-    if (type === "file") {
-      name = name + ".md";
-    }
-
-    const createdEntryPath = joinNestedPathSecure(absoluteParentPath, name);
-    if (!createdEntryPath) {
-      throw new LogicError(ErrorCode.InvalidRequestParams, "invalid entry path supplied");
+    if (fs.existsSync(absoluteEntryPath)) {
+      throw new LogicError(ErrorCode.AlreadyExists, "entry already exists");
     }
 
     if (type === "dir") {
-      await fs.promises.mkdir(createdEntryPath, {
+      await fs.promises.mkdir(absoluteEntryPath, {
         recursive: true
       });
     } else {
-      await fs.promises.mkdir(absoluteParentPath, {
+      await fs.promises.mkdir(path.dirname(absoluteEntryPath), {
         recursive: true
       });
 
-      await fs.promises.writeFile(createdEntryPath, "", "utf-8");
+      await fs.promises.writeFile(absoluteEntryPath, "", "utf-8");
     }
 
     const entries = await getFsEntries(this.root, this.root);
     return {
-      path: path.relative(this.root, createdEntryPath),
+      path: path.relative(this.root, absoluteEntryPath),
       entries
     };
   }
@@ -168,7 +158,7 @@ export class Workspace {
   async getEntry(filePath: string): Promise<EntryInfo> {
     const entryPath = joinNestedPathSecure(this.root, filePath);
     if (!entryPath) {
-      throw new LogicError(ErrorCode.EntryNotFound, "entry not found");
+      throw new LogicError(ErrorCode.NotFound, "entry not found");
     }
 
     let content: string | undefined;
@@ -176,7 +166,7 @@ export class Workspace {
       content = await fs.promises.readFile(entryPath, "utf-8");
     } catch (error) {
       if (error.code === "ENOENT") {
-        throw new LogicError(ErrorCode.EntryNotFound, "entry not found");
+        throw new LogicError(ErrorCode.NotFound, "entry not found");
       } else {
         throw error;
       }
@@ -192,7 +182,7 @@ export class Workspace {
   async saveEntry(filePath: string, content: string): Promise<void> {
     const absolutePath = joinNestedPathSecure(this.root, filePath);
     if (!absolutePath) {
-      throw new LogicError(ErrorCode.EntryNotFound, "entry not found");
+      throw new LogicError(ErrorCode.NotFound, "entry not found");
     }
 
     await fs.promises.writeFile(absolutePath, content, "utf-8");

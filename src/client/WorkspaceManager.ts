@@ -54,8 +54,8 @@ export class WorkspaceManager {
   }
 
 
-  async createEntry(parent: string, name: string | undefined, type: "file" | "dir"): Promise<CreateEntryReply> {
-    const reply = await Backend.get(WorkspaceBackend).createEntry(this.id, parent, name, type);
+  async createEntry(entryPath: string, type: "file" | "dir"): Promise<CreateEntryReply> {
+    const reply = await Backend.get(WorkspaceBackend).createEntry(this.id, entryPath, type);
     this.entries = reply.entries;
 
     if (type === "file") {

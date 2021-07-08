@@ -9,33 +9,15 @@ import { Box, IconButton, makeStyles } from "@material-ui/core";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { observer } from "mobx-react-lite";
 import { CreateEntryDialog } from "./CreateEntryDialog";
-import { CreateNewFolderOutlined, PostAddOutlined } from "@material-ui/icons";
+import { CreateNewFolderOutlined, LocalHospital, PostAddOutlined } from "@material-ui/icons";
 import { EntryType } from "../common/WorkspaceEntry";
 import { useHistory } from "react-router";
 import DescriptionIcon from "@material-ui/icons/Description";
-import FolderIcon from '@material-ui/icons/Folder';
+import FolderIcon from "@material-ui/icons/Folder";
 
 
 export interface WorkspaceViewProps {
   onEntrySelected?: (entry: WorkspaceEntry) => void;
-}
-
-
-function getParentFromSelectedNode(selected: string | undefined): string {
-  if (!selected) {
-    return "";
-  }
-
-  const workspaceEntry = WorkspaceManager.instance.getEntryByPath(selected);
-  if (!workspaceEntry) {
-    return "";
-  }
-
-  if (workspaceEntry.type === "dir") {
-    return selected;
-  } else {
-    return path.dirname(selected);
-  }
 }
 
 
@@ -82,13 +64,46 @@ function useExpanded(selected: string | undefined) {
 }
 
 
+interface CreateOptions {
+  parentPath: string;
+  suggestedName: string;
+  type: EntryType;
+}
+
+
+function getCreateOptions(selected: string | undefined, createType: EntryType) {
+  let parentPath: string;
+
+  if (!selected) {
+    parentPath = "/";
+  } else {
+    const workspaceEntry = WorkspaceManager.instance.getEntryByPath(selected);
+    if (!workspaceEntry) {
+      parentPath = "/";
+    } else if (workspaceEntry.type === "dir") {
+      parentPath = selected;
+    } else {
+      parentPath = path.dirname(selected);
+    }
+  }
+
+  let suggestedName = createType === "dir" ? "new-dir" : "new-file.md";
+
+  return {
+    type: createType,
+    parentPath,
+    suggestedName
+  };
+}
+
+
 export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const workspaceManager = WorkspaceManager.instance;
   const [ entryDialogOpened, setEntryDialogOpened ] = useState(false);
-  const createEntryType = useRef<EntryType | undefined>(undefined);
-  const parent = getParentFromSelectedNode(workspaceManager.selectedEntryPath);
   const expand = useExpanded(workspaceManager.selectedEntryPath);
   const [ selectedItem, setSelectedItem ] = useState<string | undefined>(workspaceManager.selectedEntryPath);
+
+  const createOptions = useRef<CreateOptions | undefined>(undefined);
 
   const history = useHistory();
   const classes = useStyles();
@@ -109,13 +124,18 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   }
 
   function createFile() {
-    createEntryType.current = "file";
+    createOptions.current = getCreateOptions(selectedItem, "file");
     setEntryDialogOpened(true);
   }
 
   function createFolder() {
-    createEntryType.current = "dir";
+    createOptions.current = getCreateOptions(selectedItem, "dir");
     setEntryDialogOpened(true);
+  }
+
+  function onCreateDialogClose() {
+    createOptions.current = undefined;
+    setEntryDialogOpened(false);
   }
 
   const labelClasses = {
@@ -125,10 +145,11 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   };
 
   return <div>
-    <CreateEntryDialog open={ entryDialogOpened }
-                       onClose={ () => setEntryDialogOpened(false) }
-                       type={ createEntryType.current! }
-                       parentPath={ parent }/>
+    { createOptions.current && <CreateEntryDialog open={ entryDialogOpened }
+                                                  onClose={ onCreateDialogClose }
+                                                  type={ createOptions.current.type }
+                                                  suggestedName={ createOptions.current.suggestedName }
+                                                  parentPath={ createOptions.current.parentPath }/> }
 
     <Box mb={ 2 } display={ "flex" } justifyContent={ "center" }>
       <IconButton onClick={ createFile } title={ "Create file" }>

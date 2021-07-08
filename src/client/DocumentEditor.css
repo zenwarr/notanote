@@ -1,6 +1,4 @@
 .cm-editor .cm-content {
-  /*font-family: "Cascadia Code", "Consolas", monospace;*/
-  /*font-size: 14px;*/
   font-family: var(--editor-font-family);
   font-size: var(--editor-font-size);
   line-height: var(--editor-line-height);

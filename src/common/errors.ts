@@ -1,6 +1,7 @@
 export enum ErrorCode {
   InvalidRequestParams = "INVALID_REQUEST_PARAMS",
-  EntryNotFound = "NOT_FOUND",
+  NotFound = "NOT_FOUND",
+  AlreadyExists = "ALREADY_EXISTS",
   Internal = "INTERNAL"
 }
 
@@ -8,9 +9,10 @@ export enum ErrorCode {
 export function getStatusCodeForError(code: ErrorCode) {
   switch (code) {
     case ErrorCode.InvalidRequestParams:
+    case ErrorCode.AlreadyExists:
       return 400;
 
-    case ErrorCode.EntryNotFound:
+    case ErrorCode.NotFound:
       return 404;
 
     case ErrorCode.Internal:

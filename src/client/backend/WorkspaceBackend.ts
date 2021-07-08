@@ -9,11 +9,10 @@ export class WorkspaceBackend {
   }
 
 
-  async createEntry(wsId: string, parent: string, name: string | undefined, type: "file" | "dir"): Promise<CreateEntryReply> {
+  async createEntry(wsId: string, entryPath: string, type: "file" | "dir"): Promise<CreateEntryReply> {
     return ky.post(`/api/workspaces/${ wsId }/files`, {
       json: {
-        parent,
-        name,
+        entryPath,
         type
       }
     }).json<CreateEntryReply>();
@@ -67,8 +66,8 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
   }
 
 
-  async createEntry(wsId: string, parent: string, name: string | undefined, type: "file" | "dir"): Promise<CreateEntryReply> {
-    console.log("create entry:", parent, name, type);
+  async createEntry(wsId: string, entryPath: string, type: "file" | "dir"): Promise<CreateEntryReply> {
+    console.log("create entry:", entryPath, type);
     return {
       path: "/new-file.md",
       entries: [ ...DEMO_WORKSPACE ]

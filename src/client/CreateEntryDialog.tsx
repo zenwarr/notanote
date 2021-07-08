@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as path from "path";
 import { useState } from "react";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@material-ui/core";
@@ -9,15 +10,17 @@ export type CreateEntryDialogProps = {
   open: boolean;
   onClose: () => void;
   parentPath: string;
+  suggestedName: string;
   type: EntryType;
 }
 
+
 export function CreateEntryDialog(props: CreateEntryDialogProps) {
-  const [ name, setName ] = useState<string | undefined>();
+  const [ inputPath, setPath ] = useState<string>(() => path.join(props.parentPath, props.suggestedName));
   const [ loading, setLoading ] = useState(false);
 
   function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setName(e.target.value);
+    setPath(e.target.value);
   }
 
   async function onCreate(e: React.FormEvent) {
@@ -25,7 +28,7 @@ export function CreateEntryDialog(props: CreateEntryDialogProps) {
 
     setLoading(true);
     try {
-      await WorkspaceManager.instance.createEntry(props.parentPath, name, props.type);
+      await WorkspaceManager.instance.createEntry(inputPath, props.type);
       props.onClose();
     } catch (error) {
       alert("Failed to create: " + error.message);
@@ -47,7 +50,7 @@ export function CreateEntryDialog(props: CreateEntryDialogProps) {
             id="name"
             label={ (props.type === "dir" ? "Directory" : "File") + " name" }
             type="name"
-            value={ name }
+            value={ inputPath }
             onChange={ onChange }
             fullWidth
         />
