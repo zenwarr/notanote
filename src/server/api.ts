@@ -74,6 +74,21 @@ export default async function initApiRoutes(app: FastifyInstance) {
   });
 
 
+  app.delete<{
+    Params: WorkspaceRouteParams & FileRouteParams
+  }>("/api/workspaces/:workspaceID/files/*", {
+    schema: {
+      params: S.object().prop("workspaceID", S.string().required())
+      .prop("*", S.string().required())
+    }
+  }, async req => {
+    const ws = getWorkspace(req);
+
+    const fileID = decodeURIComponent(req.params["*"]);
+    return ws.removeEntry(fileID);
+  });
+
+
   app.put<{
     Params: WorkspaceRouteParams & FileRouteParams,
     Body: { content: string }

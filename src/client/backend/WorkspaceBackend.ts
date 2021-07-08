@@ -31,6 +31,11 @@ export class WorkspaceBackend {
       }
     }).json<EntryInfo>();
   }
+
+
+  async removeEntry(wsId: string, entryPath: string): Promise<WorkspaceEntry[]> {
+    return ky.delete(`/api/workspaces/${ wsId }/files/${ entryPath }`).json<WorkspaceEntry[]>();
+  }
 }
 
 
@@ -99,5 +104,12 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
   async saveEntry(wsId: string, entryPath: string, content: string): Promise<void> {
     console.log("save entry", entryPath, content);
     await timeout(1000);
+  }
+
+
+  async removeEntry(wsId: string, entryPath: string): Promise<WorkspaceEntry[]> {
+    console.log("delete entry", entryPath);
+    await timeout(1000);
+    return DEMO_WORKSPACE;
   }
 }

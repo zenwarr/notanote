@@ -66,6 +66,12 @@ export class WorkspaceManager {
   }
 
 
+  async remove(entryPath: string) {
+    this.selectedEntryPath = undefined;
+    this.entries = await Backend.get(WorkspaceBackend).removeEntry(this.id, entryPath);
+  }
+
+
   entries: WorkspaceEntry[] = [];
   selectedEntryPath: string | undefined = undefined;
   id = "default";

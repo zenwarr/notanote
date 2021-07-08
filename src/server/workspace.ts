@@ -128,7 +128,7 @@ export class Workspace {
 
     const absoluteEntryPath = joinNestedPathSecure(this.root, entryPath);
     if (!absoluteEntryPath) {
-      throw new LogicError(ErrorCode.InvalidRequestParams, "invalid parent path supplied");
+      throw new LogicError(ErrorCode.InvalidRequestParams, "invalid entry path supplied");
     }
 
     if (fs.existsSync(absoluteEntryPath)) {
@@ -152,6 +152,25 @@ export class Workspace {
       path: path.relative(this.root, absoluteEntryPath),
       entries
     };
+  }
+
+
+  async removeEntry(filePath: string): Promise<WorkspaceEntry[]> {
+    const absoluteEntryPath = joinNestedPathSecure(this.root, filePath);
+    if (!absoluteEntryPath) {
+      throw new LogicError(ErrorCode.InvalidRequestParams, "invalid entry path supplied");
+    }
+
+    const stat = await fs.promises.stat(absoluteEntryPath);
+    if (stat.isDirectory()) {
+      await fs.promises.rmdir(absoluteEntryPath, {
+        recursive: true
+      });
+    } else {
+      await fs.promises.rm(absoluteEntryPath);
+    }
+
+    return this.getAllEntries();
   }
 
 
