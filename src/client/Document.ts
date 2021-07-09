@@ -3,7 +3,7 @@ import { history, historyKeymap } from "@codemirror/history";
 import { makeObservable, observable } from "mobx";
 import { EditorView, keymap, placeholder, ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { indentOnInput } from "@codemirror/language";
-import { defaultHighlightStyle } from "@codemirror/highlight";
+import { defaultHighlightStyle, HighlightStyle, tags } from "@codemirror/highlight";
 import { bracketMatching } from "@codemirror/matchbrackets";
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/closebrackets";
 import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
@@ -41,6 +41,10 @@ export class Document {
       saveState: observable
     });
 
+    const highlightStyle = HighlightStyle.define([
+      { tag: tags.monospace, fontFamily: "Cascadia Code", lineSpacing: 1.3 }
+    ]);
+
     const self = this;
     this.editorState = EditorState.create({
       doc: content,
@@ -53,6 +57,7 @@ export class Document {
         bracketMatching(),
         closeBrackets(),
         autocompletion(),
+        highlightStyle,
         highlightSelectionMatches(),
         placeholder("< your note here >"),
         EditorView.lineWrapping,
@@ -73,7 +78,7 @@ export class Document {
             self.editorState = upd.state;
           }
         }),
-        EditorState.tabSize.of(settings.tabWidth ?? 2)
+        EditorState.tabSize.of(settings.tabWidth ?? 2),
       ]
     });
   }

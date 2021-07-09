@@ -93,7 +93,7 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
           textIndent: 30,
           tabWidth: 4
         },
-        content: "File content\n1\n2"
+        content: "File content\n1\n2\n\n```\nSome code\n```"
       };
     } else {
       throw new Error("Entry not found");
