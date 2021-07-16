@@ -100,16 +100,20 @@ export class Document {
       this.saveState = SaveState.UnsavedChanges;
     }
 
-    this.saveTimer = setTimeout(() => {
+    const doSave = () => {
       this.saveTimer = undefined;
-      this.save().catch(err => {
-        console.error("failed to save document", err);
+      this.save().then(isSaved => {
+        if (!isSaved) {
+          this.saveTimer = setTimeout(doSave, AUTO_SAVE_TIMEOUT.as("millisecond"));
+        }
       });
-    }, AUTO_SAVE_TIMEOUT.as("millisecond"));
+    };
+
+    this.saveTimer = setTimeout(doSave, AUTO_SAVE_TIMEOUT.as("millisecond"));
   }
 
 
-  async save() {
+  async save(): Promise<boolean> {
     this.saveState = SaveState.Saving;
 
     try {
@@ -118,11 +122,13 @@ export class Document {
       this.lastSaveError = undefined;
       this.lastSave = new Date();
       this.saveState = this.hadChangesWhileSaving ? SaveState.UnsavedChanges : SaveState.NoChanges;
+      return true;
     } catch (err) {
       this.lastSaveError = err;
       this.saveState = SaveState.UnsavedChanges;
 
-      alert("Failed to save document: " + err.message);
+      console.error(`Failed to save document: ${ err.message }`);
+      return false;
     } finally {
       this.hadChangesWhileSaving = false;
     }

@@ -3,6 +3,7 @@ import { WorkspaceManager } from "./WorkspaceManager";
 import { DocumentManager } from "./DocumentManager";
 import { SaveState } from "./Document";
 import { makeStyles } from "@material-ui/core";
+import cn from "classnames";
 
 
 export const SyncPanel = observer(() => {
@@ -11,13 +12,16 @@ export const SyncPanel = observer(() => {
   let workspaceManager = WorkspaceManager.instance;
   const currentDoc = workspaceManager.selectedEntryPath ? DocumentManager.instance.documents.get(workspaceManager.selectedEntryPath)?.doc : undefined;
 
-  const savingDocsCount = [ ...DocumentManager.instance.documents.values() ].filter(d => {
+  let docs = [ ...DocumentManager.instance.documents.values() ];
+  const savingDocsCount = docs.filter(d => {
     return d.doc !== currentDoc && d.doc.saveState === SaveState.Saving;
   }).length;
 
-  const unsavedDocsCount = [ ...DocumentManager.instance.documents.values() ].filter(d => {
+  const unsavedDocsCount = docs.filter(d => {
     return d.doc !== currentDoc && d.doc.saveState === SaveState.UnsavedChanges;
   }).length;
+
+  const hasErrors = docs.some(doc => doc.doc.lastSaveError != null);
 
   const currentDocSaving = currentDoc?.saveState === SaveState.Saving;
   const currentDocHasUnsavedChanges = currentDoc?.saveState === SaveState.UnsavedChanges;
@@ -36,7 +40,11 @@ export const SyncPanel = observer(() => {
     extraDocState = (extraDocState ? ", " : "") + `+${ unsavedDocsCount } changed`;
   }
 
-  return <div className={ classes.root }>
+  const className = cn(classes.root, {
+    [classes.rootWithError]: hasErrors && !currentDocSaving
+  });
+
+  return <div className={ className }>
     { curDocState }
 
     { extraDocState }
@@ -47,5 +55,8 @@ export const SyncPanel = observer(() => {
 const useStyles = makeStyles(theme => ({
   root: {
     color: theme.palette.grey.A200
+  },
+  rootWithError: {
+    color: "red"
   }
 }));
