@@ -58,15 +58,9 @@ export class Workspace {
     const settings = await this.loadSettings();
     const matching = settings?.patterns?.filter(pat => {
       if (typeof pat.files === "string") {
-        return micromatch.isMatch(fileId, pat.files, {
-          basename: true,
-          dot: true
-        });
+        return matches(fileId, pat.files);
       } else {
-        return pat.files.some(pattern => micromatch.isMatch(fileId, pattern, {
-          basename: true,
-          dot: true
-        }));
+        return pat.files.some(pattern => matches(fileId, pattern));
       }
     });
 
@@ -228,6 +222,16 @@ const IGNORED_ENTRIES: string[] = [
   ".idea",
   "node_modules"
 ];
+
+
+function matches(fileId: string, pattern: string): boolean {
+  const simpleMode = pattern.match(/^\*\.\w+$/) != null;
+
+  return micromatch.isMatch(fileId, pattern, {
+    basename: simpleMode,
+    dot: true
+  });
+}
 
 
 function getWorkspacePath(userId: string, workspaceId: string) {
