@@ -1,33 +1,14 @@
 import { EditorState } from "@codemirror/state";
-import { history, historyKeymap } from "@codemirror/history";
 import { makeObservable, observable } from "mobx";
-import { EditorView, keymap, placeholder, ViewPlugin, ViewUpdate } from "@codemirror/view";
-import { indentOnInput } from "@codemirror/language";
-import { defaultHighlightStyle, HighlightStyle, tags } from "@codemirror/highlight";
-import { bracketMatching } from "@codemirror/matchbrackets";
-import { closeBrackets, closeBracketsKeymap } from "@codemirror/closebrackets";
-import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
-import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
-import { defaultKeymap, defaultTabBinding } from "@codemirror/commands";
-import { markdown } from "@codemirror/lang-markdown";
 import * as luxon from "luxon";
 import { Backend } from "./backend/Backend";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { WorkspaceManager } from "./WorkspaceManager";
-import { json } from "@codemirror/lang-json";
 import { FileSettings } from "../common/WorkspaceEntry";
+import { createEditorState } from "./Editor";
 
 
 const AUTO_SAVE_TIMEOUT = luxon.Duration.fromObject({ second: 5 });
-
-
-function getEditorPluginForFile(fileId: string) {
-  if (fileId.endsWith(".json")) {
-    return json();
-  } else {
-    return markdown();
-  }
-}
 
 
 export class Document {
@@ -41,45 +22,14 @@ export class Document {
       saveState: observable
     });
 
-    const highlightStyle = HighlightStyle.define([
-      { tag: tags.monospace, fontFamily: "Cascadia Code", lineSpacing: 1.3 }
-    ]);
-
     const self = this;
-    this.editorState = EditorState.create({
-      doc: content,
-      extensions: [
-        history(),
-        // drawSelection(),
-        // EditorState.allowMultipleSelections.of(true),
-        indentOnInput(),
-        defaultHighlightStyle.fallback,
-        bracketMatching(),
-        closeBrackets(),
-        autocompletion(),
-        highlightStyle,
-        highlightSelectionMatches(),
-        placeholder("< your note here >"),
-        EditorView.lineWrapping,
-        keymap.of([
-          ...closeBracketsKeymap,
-          ...defaultKeymap,
-          ...searchKeymap,
-          ...historyKeymap,
-          ...completionKeymap,
-          defaultTabBinding
-        ]),
-        getEditorPluginForFile(fileId),
-        ViewPlugin.fromClass(class {
-          update(upd: ViewUpdate) {
-            if (upd.docChanged) {
-              self.onChanges();
-            }
-            self.editorState = upd.state;
-          }
-        }),
-        EditorState.tabSize.of(settings.tabWidth ?? 2),
-      ]
+    this.editorState = createEditorState(content, fileId, settings, {
+      onUpdate: upd => {
+        if (upd.docChanged) {
+          self.onChanges();
+        }
+        self.editorState = upd.state;
+      }
     });
   }
 

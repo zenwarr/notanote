@@ -5,25 +5,38 @@ export interface WorkspaceEntry {
   type: "file" | "dir";
 }
 
-export interface FileSettings {
+
+export type FileSettings = BlockSettings & {
   tabWidth?: number;
-  textIndent?: number;
+  lang?: string;
+  blocks?: { [name: string]: BlockSettings }
+}
+
+
+export interface BlockSettings {
+  fontFamily?: string;
+  fontSize?: number | string;
+  fontWeight?: string;
+
   lineHeight?: number;
   paragraphSpacing?: number;
-  hyphens?: string;
-  fontSize?: number;
-  fontFamily?: string;
-  lang?: string;
+  hyphens?: string
+  textIndent?: number;
+
+  color?: string;
 }
+
 
 export interface EntryInfo {
   settings: FileSettings;
   content: string;
 }
 
+
 export interface CreateEntryReply {
   path: string;
   entries: WorkspaceEntry[];
 }
+
 
 export type EntryType = "dir" | "file";

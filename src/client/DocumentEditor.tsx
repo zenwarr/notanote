@@ -52,12 +52,21 @@ function numberValueToPropValue(value: number | undefined): string | null {
 }
 
 
+function sizeValueToPropValue(value: number | string | undefined): string | null {
+  if (typeof value === "string") {
+    return value;
+  } else {
+    return numberValueToPropValue(value);
+  }
+}
+
+
 function setEditorVars(el: HTMLElement, settings: FileSettings) {
   el.style.setProperty("--editor-text-indent", numberValueToPropValue(settings.textIndent));
   el.style.setProperty("--editor-line-height", settings.lineHeight == null ? null : "" + settings.lineHeight);
   el.style.setProperty("--editor-paragraph-spacing", numberValueToPropValue(settings.paragraphSpacing));
   el.style.setProperty("--editor-hyphens", settings.hyphens ?? null);
-  el.style.setProperty("--editor-font-size", numberValueToPropValue(settings.fontSize));
+  el.style.setProperty("--editor-font-size", sizeValueToPropValue(settings.fontSize));
   el.style.setProperty("--editor-font-family", settings.fontFamily ?? null);
 
   document.documentElement.lang = settings.lang || "en";

@@ -1,6 +1,7 @@
 import ky from "ky";
 import { CreateEntryReply, EntryInfo, WorkspaceEntry } from "../../common/WorkspaceEntry";
 import { timeout } from "./timeout";
+import { tags } from "@codemirror/highlight";
 
 
 export class WorkspaceBackend {
@@ -82,6 +83,11 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
 
   async getEntry(wsId: string, entryPath: string): Promise<EntryInfo> {
     if (entryPath === "file.md" || entryPath === "dir/nested.md") {
+      const r: any = {};
+      for (const key of Object.keys(tags)) {
+        r[key] = { color: "blue" + key };
+      }
+
       return {
         settings: {
           fontSize: 16,
@@ -91,7 +97,11 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
           paragraphSpacing: 10,
           lineHeight: 1.4,
           textIndent: 30,
-          tabWidth: 4
+          tabWidth: 4,
+          blocks: {
+            ...r,
+            processingInstruction: { color: "lightgray" }
+          }
         },
         content: "File content\n1\n2\n\n```\nSome code\n```"
       };
