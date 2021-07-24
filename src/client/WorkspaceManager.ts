@@ -2,14 +2,20 @@ import { CreateEntryReply, WorkspaceEntry } from "../common/WorkspaceEntry";
 import { makeObservable, observable } from "mobx";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { Backend } from "./backend/Backend";
+import { LastOpenedDocStorage } from "./LastOpenedDocStorage";
 
 
 export class WorkspaceManager {
   constructor() {
     makeObservable(this, {
       entries: observable,
-      selectedEntryPath: observable
-    });
+      _selectedEntryPath: observable
+    } as any);
+
+    const lastOpenedDoc = LastOpenedDocStorage.instance.getLastOpenedDoc();
+    if (lastOpenedDoc) {
+      this._selectedEntryPath = lastOpenedDoc;
+    }
   }
 
 
@@ -72,8 +78,19 @@ export class WorkspaceManager {
   }
 
 
+  get selectedEntryPath() {
+    return this._selectedEntryPath;
+  }
+
+
+  set selectedEntryPath(id: string | undefined) {
+    LastOpenedDocStorage.instance.saveLastOpenedDoc(id);
+    this._selectedEntryPath = id;
+  }
+
+
   entries: WorkspaceEntry[] = [];
-  selectedEntryPath: string | undefined = undefined;
+  protected _selectedEntryPath: string | undefined = undefined;
   id = "default";
 
   static instance = new WorkspaceManager();
