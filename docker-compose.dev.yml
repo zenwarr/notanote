@@ -12,9 +12,15 @@ services:
       - ./src:/app
 
   nginx-proxy:
-    restart: "no"
+    image: nginxproxy/nginx-proxy:0.9.1-alpine
+    ports:
+      - "${PUBLIC_HOST}:443:443"
+      - "${PUBLIC_HOST}:80:80"
     volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
       - generated_certs:/etc/nginx/certs
+    depends_on:
+      - app
 
   nginx-proxy-certs:
     image: sebastienheyd/self-signed-proxy-companion

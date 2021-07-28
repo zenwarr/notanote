@@ -1,17 +1,6 @@
 version: "3.7"
 
 services:
-  nginx-proxy:
-    image: nginxproxy/nginx-proxy:0.9.1-alpine
-    ports:
-      - "${PUBLIC_HOST}:443:443"
-      - "${PUBLIC_HOST}:80:80"
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-    restart: unless-stopped
-    depends_on:
-      - app
-
   app:
     build:
       context: src
@@ -28,6 +17,13 @@ services:
       - ENV_FILE=/env/.env
       - CONFIG_DIR=/config
     init: true
+    networks:
+      - default
 
 volumes:
   yarn_cache:
+
+networks:
+  default:
+    external:
+      name: vps-network
