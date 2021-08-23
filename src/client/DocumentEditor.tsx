@@ -5,7 +5,7 @@ import { DocumentManager } from "./DocumentManager";
 import "./DocumentEditor.css";
 import { EditorView } from "@codemirror/view";
 import { FileSettings } from "../common/WorkspaceEntry";
-import { useCurrentThemeIsDark } from "./useThemeController";
+import { useCurrentThemeIsDark } from "./Theme";
 
 
 export type DocumentEditorProps = {

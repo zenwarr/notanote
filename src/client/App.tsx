@@ -9,7 +9,7 @@ import { HashRouter } from "react-router-dom";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { WorkspaceEntry } from "../common/WorkspaceEntry";
 import "./App.css";
-import { useThemeController } from "./useThemeController";
+import { useThemeController } from "./Theme";
 
 
 export function App() {

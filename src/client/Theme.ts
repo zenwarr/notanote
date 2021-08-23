@@ -14,6 +14,15 @@ export function useThemeController() {
       {
         palette: {
           type: isDark ? "dark" : "light"
+        },
+        overrides: {
+          MuiCssBaseline: {
+            "@global": {
+              html: {
+                colorScheme: isDark ? "dark" : "auto"
+              }
+            }
+          }
         }
       }
   ), [ isDark ]);
