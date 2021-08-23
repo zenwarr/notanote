@@ -7,7 +7,7 @@ import { closeBrackets, closeBracketsKeymap } from "@codemirror/closebrackets";
 import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import { EditorView, keymap, placeholder, ViewPlugin, ViewUpdate } from "@codemirror/view";
-import { defaultKeymap, defaultTabBinding } from "@codemirror/commands";
+import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { createHighlightStyle } from "./Highlight";
 import { FileSettings } from "../common/WorkspaceEntry";
 import { json } from "@codemirror/lang-json";
@@ -50,7 +50,7 @@ export function createEditorState(content: string, fileId: string, settings: Fil
         ...searchKeymap,
         ...historyKeymap,
         ...completionKeymap,
-        defaultTabBinding
+        indentWithTab
       ]),
       getEditorPluginForFile(fileId),
       ViewPlugin.fromClass(class {
