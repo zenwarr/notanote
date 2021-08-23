@@ -4,8 +4,8 @@ import { Document } from "./Document";
 import { DocumentManager } from "./DocumentManager";
 import "./DocumentEditor.css";
 import { EditorView } from "@codemirror/view";
-import { makeStyles } from "@material-ui/core";
 import { FileSettings } from "../common/WorkspaceEntry";
+import { useCurrentThemeIsDark } from "./useThemeController";
 
 
 export type DocumentEditorProps = {
@@ -18,6 +18,7 @@ export type DocumentEditorProps = {
 export function DocumentEditor(props: DocumentEditorProps) {
   const containerRef = useRef<any>();
   const viewRef = useRef<EditorView>();
+  const isDarkTheme = useCurrentThemeIsDark();
 
   useEffect(() => {
     const view = new EditorView({
@@ -39,9 +40,9 @@ export function DocumentEditor(props: DocumentEditorProps) {
 
   useLayoutEffect(() => {
     if (containerRef.current) {
-      setEditorVars(containerRef.current, props.doc.settings);
+      setEditorVars(containerRef.current, props.doc.settings, isDarkTheme);
     }
-  }, [ props.doc.settings ]);
+  }, [ props.doc.settings, isDarkTheme ]);
 
   return <div ref={ containerRef } className={ props.className }/>;
 }
@@ -61,36 +62,14 @@ function sizeValueToPropValue(value: number | string | undefined): string | null
 }
 
 
-function setEditorVars(el: HTMLElement, settings: FileSettings) {
+function setEditorVars(el: HTMLElement, settings: FileSettings, isDarkTheme: boolean) {
   el.style.setProperty("--editor-text-indent", numberValueToPropValue(settings.textIndent));
   el.style.setProperty("--editor-line-height", settings.lineHeight == null ? null : "" + settings.lineHeight);
   el.style.setProperty("--editor-paragraph-spacing", numberValueToPropValue(settings.paragraphSpacing));
   el.style.setProperty("--editor-hyphens", settings.hyphens ?? null);
   el.style.setProperty("--editor-font-size", sizeValueToPropValue(settings.fontSize));
   el.style.setProperty("--editor-font-family", settings.fontFamily ?? null);
+  el.style.setProperty("--editor-caret-color", isDarkTheme ? "lightgray" : "black");
 
   document.documentElement.lang = settings.lang || "en";
 }
-
-
-const useStyles = makeStyles(theme => ({
-  root: {},
-  titleInput: {
-    width: "100%",
-    marginBottom: theme.spacing(1),
-    paddingTop: theme.spacing(1),
-    paddingBottom: theme.spacing(1),
-    border: 0,
-    background: "transparent",
-    fontSize: "25px",
-    fontWeight: "bold",
-
-    "&:focus": {
-      outline: "none"
-    },
-
-    "&::placeholder": {
-      color: "lightgray"
-    }
-  }
-}));

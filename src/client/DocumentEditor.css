@@ -4,6 +4,7 @@
   line-height: var(--editor-line-height);
   text-indent: var(--editor-text-indent);
   hyphens: var(--editor-hyphens);
+  caret-color: var(--editor-caret-color);
   white-space: pre-wrap;
 }
 
