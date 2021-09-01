@@ -53,14 +53,7 @@ function useExpanded(selected: string | undefined) {
   return {
     expanded,
     onToggle: (_: unknown, nodes: string[]) => {
-      let result = expanded;
-      for (const node of nodes) {
-        for (const parent of getParents(node)) {
-          result = toggleNode(result, parent);
-        }
-      }
-
-      setExpanded(result);
+      setExpanded(nodes);
     }
   };
 }

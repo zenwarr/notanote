@@ -62,6 +62,18 @@ const DEMO_WORKSPACE: WorkspaceEntry[] = [
         name: "nested.md"
       }
     ]
+  },
+  {
+    type: "dir",
+    id: "second-dir",
+    name: "second-dir",
+    children: [
+      {
+        type: "file",
+        id: "second-dir/nested.md",
+        name: "nested.md"
+      }
+    ]
   }
 ];
 
