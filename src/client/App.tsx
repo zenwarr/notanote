@@ -10,6 +10,8 @@ import { WorkspaceManager } from "./WorkspaceManager";
 import { WorkspaceEntry } from "../common/WorkspaceEntry";
 import "./App.css";
 import { useThemeController } from "./Theme";
+import { useShortcuts } from "./Shortcuts";
+import { FilePickerProvider } from "./FilePicker";
 
 
 export function App() {
@@ -19,6 +21,7 @@ export function App() {
 
   usePreventClose();
   const theme = useThemeController();
+  useShortcuts();
 
   useEffect(() => {
     WorkspaceManager.instance.load();
@@ -33,36 +36,38 @@ export function App() {
   return <HashRouter>
     <ThemeProvider theme={ theme.theme }>
       <CssBaseline>
-        <div className={ classes.root }>
-          <div className={ classes.workspaceView }>
-            <Hidden smDown>
-              <Box p={ 2 } className={ classes.workspaceViewContainer }>
-                <WorkspaceView/>
-              </Box>
-            </Hidden>
-
-            <Hidden mdUp>
-              <SwipeableDrawer open={ drawerOpen } onOpen={ () => setDrawerOpen(true) } onClose={ () => setDrawerOpen(false) }
-                               disableBackdropTransition={ !iOS } disableDiscovery={ iOS }>
+        <FilePickerProvider>
+          <div className={ classes.root }>
+            <div className={ classes.workspaceView }>
+              <Hidden smDown>
                 <Box p={ 2 } className={ classes.workspaceViewContainer }>
-                  <WorkspaceView onEntrySelected={ onMobileEntrySelected }/>
+                  <WorkspaceView/>
                 </Box>
-              </SwipeableDrawer>
-            </Hidden>
-          </div>
+              </Hidden>
 
-          <div className={ classes.docView }>
-            <div className={ classes.syncPanel }>
-              <Header onToggleDrawer={ () => setDrawerOpen(!drawerOpen) } isDarkTheme={ theme.isDark } setIsDark={ theme.setIsDark }/>
+              <Hidden mdUp>
+                <SwipeableDrawer open={ drawerOpen } onOpen={ () => setDrawerOpen(true) } onClose={ () => setDrawerOpen(false) }
+                                disableBackdropTransition={ !iOS } disableDiscovery={ iOS }>
+                  <Box p={ 2 } className={ classes.workspaceViewContainer }>
+                    <WorkspaceView onEntrySelected={ onMobileEntrySelected }/>
+                  </Box>
+                </SwipeableDrawer>
+              </Hidden>
             </div>
 
-            <Switch>
-              <Route exact key={ "file" } path={ "/f/:segment+" } component={ FileViewRoute }/>
-            </Switch>
+            <div className={ classes.docView }>
+              <div className={ classes.syncPanel }>
+                <Header onToggleDrawer={ () => setDrawerOpen(!drawerOpen) } isDarkTheme={ theme.isDark } setIsDark={ theme.setIsDark }/>
+              </div>
 
-            <ConnectedFileView className={ classes.docEditor }/>
+              <Switch>
+                <Route exact key={ "file" } path={ "/f/:segment+" } component={ FileViewRoute }/>
+              </Switch>
+
+              <ConnectedFileView className={ classes.docEditor }/>
+            </div>
           </div>
-        </div>
+        </FilePickerProvider>
       </CssBaseline>
     </ThemeProvider>
   </HashRouter>;
