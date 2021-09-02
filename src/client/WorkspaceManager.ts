@@ -2,7 +2,7 @@ import { CreateEntryReply, WorkspaceEntry } from "../common/WorkspaceEntry";
 import { makeObservable, observable } from "mobx";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { Backend } from "./backend/Backend";
-import { LastOpenedDocStorage } from "./LastOpenedDocStorage";
+import { RecentDocStorage } from "./RecentDocStorage";
 import { PaletteOption } from "./Palette";
 
 
@@ -13,7 +13,7 @@ export class WorkspaceManager {
       _selectedEntryPath: observable
     } as any);
 
-    const lastOpenedDoc = LastOpenedDocStorage.instance.getLastOpenedDoc();
+    const lastOpenedDoc = RecentDocStorage.instance.getLastOpenedDoc();
     if (lastOpenedDoc) {
       this._selectedEntryPath = lastOpenedDoc;
     }
@@ -85,7 +85,9 @@ export class WorkspaceManager {
 
 
   set selectedEntryPath(id: string | undefined) {
-    LastOpenedDocStorage.instance.saveLastOpenedDoc(id);
+    if (id) {
+      RecentDocStorage.instance.saveLastOpenedDoc(id);
+    }
     this._selectedEntryPath = id;
   }
 
@@ -100,7 +102,27 @@ export class WorkspaceManager {
 
 export function workspaceFileCompleter(value: string): PaletteOption[] {
   if (!value) {
-    return [];
+    const recentDocs = RecentDocStorage.instance.getRecentDocs();
+    const recentEntries: (WorkspaceEntry | undefined)[] = [];
+    WorkspaceManager.instance.walk(entry => {
+      if (entry.type !== "file") {
+        return false;
+      }
+
+      const recentIndex = recentDocs.indexOf(entry.id);
+      if (recentIndex < 0) {
+        return false;
+      }
+
+      recentEntries[recentIndex] = entry;
+      return false;
+    });
+
+    return recentEntries.filter(x => x != null).map(entry => ({
+      value: entry!.id,
+      content: entry!.name,
+      description: entry!.id
+    }));
   }
 
   value = value.toLowerCase();
