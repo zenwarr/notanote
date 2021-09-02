@@ -147,14 +147,14 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
     text: classes.entryText
   };
 
-  return <div>
+  return <div className={ classes.container }>
     { createOptions.current && <CreateEntryDialog open={ entryDialogOpened }
                                                   onClose={ onCreateDialogClose }
                                                   type={ createOptions.current.type }
                                                   suggestedName={ createOptions.current.suggestedName }
                                                   parentPath={ createOptions.current.parentPath }/> }
 
-    <Box mb={ 2 } display={ "flex" } justifyContent={ "space-between" }>
+    <Box mb={ 2 } display={ "flex" } justifyContent={ "space-between" } className={ classes.toolbar }>
       <Box>
         <IconButton onClick={ createFile } title={ "Create file" }>
           <PostAddOutlined/>
@@ -213,5 +213,17 @@ const useStyles = makeStyles(theme => ({
     marginRight: theme.spacing(1),
     color: "gray"
   },
-  entryText: {}
+  entryText: {},
+  toolbar: {
+    backgroundColor: theme.palette.background.default,
+    position: "sticky",
+    left: 0,
+    top: 0,
+    zIndex: 10
+  },
+  container: {
+    overflow: "auto",
+    height: "100vh",
+    position: "relative"
+  }
 }));
