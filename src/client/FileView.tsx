@@ -35,7 +35,7 @@ export interface ConnectedFileViewProps {
 
 export const ConnectedFileView = observer((props: ConnectedFileViewProps) => {
   const ws = WorkspaceManager.instance;
-  const openedDoc = ws.selectedEntry ? ws.getEntryByPath(ws.selectedFile) : undefined;
+  const openedDoc = ws.selectedFile ? ws.getEntryByPath(ws.selectedFile) : undefined;
 
   useWindowTitle(openedDoc?.id);
 
