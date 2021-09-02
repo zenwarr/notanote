@@ -77,6 +77,9 @@ export function Palette(props: PaletteProps) {
       }
 
       e.preventDefault();
+    } else if (e.key === "Escape") {
+      props.onClose?.();
+      e.preventDefault();
     }
   }
 
