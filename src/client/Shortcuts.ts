@@ -3,7 +3,7 @@ import { toggleFilePicker } from "./FilePicker";
 
 
 function runShortcutAction(e: KeyboardEvent) {
-  if (e.key === "p" && e.ctrlKey) {
+  if (e.code === "KeyP" && e.ctrlKey) {
     toggleFilePicker();
     e.preventDefault();
   }
@@ -13,7 +13,7 @@ function runShortcutAction(e: KeyboardEvent) {
 export function useShortcuts() {
   useEffect(() => {
     document.addEventListener("keydown", runShortcutAction);
-    
+
     return () => document.removeEventListener("keydown", runShortcutAction);
   }, []);
 }
