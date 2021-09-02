@@ -6,6 +6,7 @@ import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { FileSettings } from "../common/WorkspaceEntry";
 import { createEditorState } from "./Editor";
+import { DocumentManager } from "./DocumentManager";
 
 
 const AUTO_SAVE_TIMEOUT = luxon.Duration.fromObject({ second: 5 });
@@ -72,6 +73,7 @@ export class Document {
       this.lastSaveError = undefined;
       this.lastSave = new Date();
       this.saveState = this.hadChangesWhileSaving ? SaveState.UnsavedChanges : SaveState.NoChanges;
+      DocumentManager.instance.onDocumentSaved(this);
       return true;
     } catch (err) {
       this.lastSaveError = err;

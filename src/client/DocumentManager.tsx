@@ -3,6 +3,7 @@ import { computed, makeObservable, observable } from "mobx";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { Backend } from "./backend/Backend";
 import { WorkspaceManager } from "./WorkspaceManager";
+import { SpecialFiles } from "../common/SpecialFiles";
 
 
 export class DocumentManager {
@@ -48,6 +49,17 @@ export class DocumentManager {
     }
 
     return false;
+  }
+
+
+  public onDocumentSaved(doc: Document) {
+    if (SpecialFiles.shouldReloadSettingsAfterSave(doc.fileId)) {
+      for (const [ key, value ] of this.documents) {
+        if (value.usageCount === 0) {
+          this.documents.delete(key);
+        }
+      }
+    }
   }
 
 

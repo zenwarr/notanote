@@ -42,6 +42,18 @@ export class WorkspaceBackend {
 
 const DEMO_WORKSPACE: WorkspaceEntry[] = [
   {
+    type: "dir",
+    id: ".note",
+    name: ".note",
+    children: [
+      {
+        type: "file",
+        id: ".note/settings.json",
+        name: "settings.json"
+      }
+    ]
+  },
+  {
     type: "file",
     id: "file.md",
     name: "file.md file.md file.md file.md file.md file.md file.md vv"
@@ -116,6 +128,11 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
           }
         },
         content: "File content\n1\n2\n\n```\nSome code\n```"
+      };
+    } else if (entryPath === ".note/settings.json") {
+      return {
+        settings: {},
+        content: "{}"
       };
     } else {
       throw new Error("Entry not found");
