@@ -78,7 +78,7 @@ export function FileViewRoute() {
   const params = useParams<{ segment: string }>();
 
   useEffect(() => {
-    WorkspaceManager.instance.selectedEntryPath = params.segment;
+    WorkspaceManager.instance.selectedEntry = params.segment;
   }, [ params.segment ]);
 
   return null;

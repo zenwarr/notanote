@@ -10,12 +10,14 @@ export class WorkspaceManager {
   constructor() {
     makeObservable(this, {
       entries: observable,
-      _selectedEntryPath: observable
+      _selectedEntry: observable,
+      _selectedFile: observable
     } as any);
 
     const lastOpenedDoc = RecentDocStorage.instance.getLastOpenedDoc();
     if (lastOpenedDoc) {
-      this._selectedEntryPath = lastOpenedDoc;
+      this._selectedEntry = lastOpenedDoc;
+      this._selectedFile = lastOpenedDoc;
     }
   }
 
@@ -66,7 +68,7 @@ export class WorkspaceManager {
     this.entries = reply.entries;
 
     if (type === "file") {
-      this.selectedEntryPath = reply.path;
+      this.selectedEntry = reply.path;
     }
 
     return reply;
@@ -74,26 +76,41 @@ export class WorkspaceManager {
 
 
   async remove(entryPath: string) {
-    this.selectedEntryPath = undefined;
+    this.selectedEntry = undefined;
     this.entries = await Backend.get(WorkspaceBackend).removeEntry(this.id, entryPath);
   }
 
 
-  get selectedEntryPath() {
-    return this._selectedEntryPath;
+  get selectedEntry() {
+    return this._selectedEntry;
   }
 
 
-  set selectedEntryPath(id: string | undefined) {
+  set selectedEntry(id: string | undefined) {
     if (id) {
       RecentDocStorage.instance.saveLastOpenedDoc(id);
     }
-    this._selectedEntryPath = id;
+    this._selectedEntry = id;
+
+    if (id == null) {
+      this._selectedFile = undefined;
+    } else {
+      const entry = this.getEntryByPath(id);
+      if (entry && entry.type === "file") {
+        this._selectedFile = id;
+      }
+    }
+  }
+
+
+  get selectedFile() {
+    return this._selectedFile;
   }
 
 
   entries: WorkspaceEntry[] = [];
-  protected _selectedEntryPath: string | undefined = undefined;
+  protected _selectedEntry: string | undefined = undefined;
+  protected _selectedFile: string | undefined = undefined;
   id = "default";
 
   static instance = new WorkspaceManager();

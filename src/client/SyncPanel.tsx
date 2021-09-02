@@ -10,7 +10,7 @@ export const SyncPanel = observer(() => {
   const classes = useStyles();
 
   let workspaceManager = WorkspaceManager.instance;
-  const currentDoc = workspaceManager.selectedEntryPath ? DocumentManager.instance.documents.get(workspaceManager.selectedEntryPath)?.doc : undefined;
+  const currentDoc = workspaceManager.selectedEntry ? DocumentManager.instance.documents.get(workspaceManager.selectedEntry)?.doc : undefined;
 
   let docs = [ ...DocumentManager.instance.documents.values() ];
   const savingDocsCount = docs.filter(d => {

@@ -95,9 +95,7 @@ function getCreateOptions(selected: string | undefined, createType: EntryType) {
 export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const workspaceManager = WorkspaceManager.instance;
   const [ entryDialogOpened, setEntryDialogOpened ] = useState(false);
-  const expand = useExpanded(workspaceManager.selectedEntryPath);
-  const selectedItem = WorkspaceManager.instance.selectedEntryPath;
-
+  const expand = useExpanded(workspaceManager.selectedEntry);
   const createOptions = useRef<CreateOptions | undefined>(undefined);
 
   const history = useHistory();
@@ -105,7 +103,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 
   function onNodeSelect(_: unknown, value: string | string[]) {
     if (typeof value === "string" || value == null) {
-      workspaceManager.selectedEntryPath = value;
+      WorkspaceManager.instance.selectedEntry = value;
 
       const selectedEntry = WorkspaceManager.instance.getEntryByPath(value);
       if (selectedEntry && selectedEntry.type !== "dir") {
@@ -119,12 +117,12 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   }
 
   function createFile() {
-    createOptions.current = getCreateOptions(selectedItem, "file");
+    createOptions.current = getCreateOptions(workspaceManager.selectedEntry, "file");
     setEntryDialogOpened(true);
   }
 
   function createFolder() {
-    createOptions.current = getCreateOptions(selectedItem, "dir");
+    createOptions.current = getCreateOptions(workspaceManager.selectedEntry, "dir");
     setEntryDialogOpened(true);
   }
 
@@ -134,11 +132,11 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   }
 
   async function remove() {
-    if (!selectedItem || !confirm("Are you sure you want to remove it?\n\n" + selectedItem)) {
+    if (!workspaceManager.selectedEntry || !confirm("Are you sure you want to remove it?\n\n" + workspaceManager.selectedEntry)) {
       return;
     }
 
-    await WorkspaceManager.instance.remove(selectedItem);
+    await WorkspaceManager.instance.remove(workspaceManager.selectedEntry);
   }
 
   const labelClasses = {
@@ -166,7 +164,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
       </Box>
 
       <Box>
-        <IconButton onClick={ remove } title={ "Remove selected" } disabled={ !selectedItem }>
+        <IconButton onClick={ remove } title={ "Remove selected" } disabled={ !workspaceManager.selectedEntry }>
           <DeleteForever color={ "secondary" }/>
         </IconButton>
       </Box>
@@ -174,7 +172,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 
     <TreeView defaultCollapseIcon={ <ExpandMoreIcon/> } defaultExpandIcon={ <ChevronRightIcon/> } onNodeSelect={ onNodeSelect }
               expanded={ expand.expanded } onNodeToggle={ expand.onToggle }
-              selected={ selectedItem || "" }>
+              selected={ workspaceManager.selectedEntry || "" }>
       { workspaceManager.entries.map(e => renderTreeEntry(e, labelClasses)) }
     </TreeView>
   </div>;

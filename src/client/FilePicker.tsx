@@ -21,7 +21,7 @@ export function FilePickerProvider(props: React.PropsWithChildren<{}>) {
 
   function onSelect(value: string) {
     setIsOpen(false);
-    WorkspaceManager.instance.selectedEntryPath = value;
+    WorkspaceManager.instance.selectedEntry = value;
   }
 
   return <div>
