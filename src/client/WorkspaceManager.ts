@@ -103,9 +103,11 @@ export function workspaceFileCompleter(value: string): PaletteOption[] {
     return [];
   }
 
+  value = value.toLowerCase();
+
   const result: PaletteOption[] = [];
   WorkspaceManager.instance.walk(entry => {
-    if (entry.name.includes(value) && entry.type === "file") {
+    if (entry.type === "file" && entry.name.toLowerCase().includes(value)) {
       result.push({
         value: entry.id,
         content: entry.name
