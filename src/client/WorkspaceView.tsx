@@ -96,7 +96,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const workspaceManager = WorkspaceManager.instance;
   const [ entryDialogOpened, setEntryDialogOpened ] = useState(false);
   const expand = useExpanded(workspaceManager.selectedEntryPath);
-  const [ selectedItem, setSelectedItem ] = useState<string | undefined>(workspaceManager.selectedEntryPath);
+  const selectedItem = WorkspaceManager.instance.selectedEntryPath;
 
   const createOptions = useRef<CreateOptions | undefined>(undefined);
 
@@ -105,7 +105,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 
   function onNodeSelect(_: unknown, value: string | string[]) {
     if (typeof value === "string" || value == null) {
-      setSelectedItem(value);
+      workspaceManager.selectedEntryPath = value;
 
       const selectedEntry = WorkspaceManager.instance.getEntryByPath(value);
       if (selectedEntry && selectedEntry.type !== "dir") {
