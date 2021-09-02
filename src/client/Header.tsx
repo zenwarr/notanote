@@ -5,6 +5,8 @@ import { ProfileHeader } from "./ProfileHeader";
 import MenuIcon from "@material-ui/icons/Menu";
 import Brightness4Icon from "@material-ui/icons/Brightness4";
 import Brightness7Icon from "@material-ui/icons/Brightness7";
+import { toggleFilePicker } from "./FilePicker";
+import CallToActionIcon from "@material-ui/icons/CallToAction";
 
 
 export interface HeaderProps {
@@ -28,9 +30,14 @@ export const Header = observer((props: HeaderProps) => {
       <SyncPanel/>
     </div>
 
-    <IconButton onClick={ () => props.setIsDark(!props.isDarkTheme) } className={ classes.themeButton }>
+    <IconButton onClick={ toggleFilePicker } title={ "Show file palette (Ctrl+P)" }>
+      <CallToActionIcon/>
+    </IconButton>
+
+    <IconButton onClick={ () => props.setIsDark(!props.isDarkTheme) } className={ classes.themeButton }
+                title={ props.isDarkTheme ? "Turn off dark theme" : "Turn on dark theme" }>
       {
-        props.isDarkTheme ? <Brightness4Icon /> : <Brightness7Icon/>
+        props.isDarkTheme ? <Brightness4Icon/> : <Brightness7Icon/>
       }
     </IconButton>
 
