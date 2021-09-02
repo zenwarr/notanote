@@ -47,7 +47,7 @@ export function Palette(props: PaletteProps) {
     setSelectedOptionAndScroll(undefined);
   }
 
-  function onKeyPress(e: React.KeyboardEvent) {
+  function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") {
       const selectedIndex = options.findIndex(x => x.value === selectedOption);
       if (selectedIndex < 0 || selectedIndex + 1 >= options.length) {
@@ -90,21 +90,22 @@ export function Palette(props: PaletteProps) {
   }
 
   return <Dialog open={ props.open } classes={ { paper: classes.dialogPaper } }>
-    <Input autoFocus className={ classes.input } onBlur={ props.onClose } value={ inputValue }
-           inputProps={ { onKeyDown: onKeyPress } }
-           onChange={ e => setInputValue(e.target.value) }/>
+    <div onKeyDown={ onKeyDown }>
+      <Input autoFocus className={ classes.input } onBlur={ props.onClose } value={ inputValue }
+             onChange={ e => setInputValue(e.target.value) }/>
 
-    {
-      options.length > 0 && <List className={ classes.list } ref={ listRef }>
-        {
-          options?.map(option => <ListItem onClick={ () => onSelect(option.value) } key={ option.value } button
-                                           dense
-                                           selected={ option.value === selectedOption }>
-            <ListItemText primary={option.content} secondary={option.description} />
-          </ListItem>)
-        }
-      </List>
-    }
+      {
+        options.length > 0 && <List className={ classes.list } ref={ listRef }>
+          {
+            options?.map(option => <ListItem onClick={ () => onSelect(option.value) } key={ option.value } button
+                                             dense
+                                             selected={ option.value === selectedOption }>
+              <ListItemText primary={ option.content } secondary={ option.description }/>
+            </ListItem>)
+          }
+        </List>
+      }
+    </div>
   </Dialog>;
 }
 
