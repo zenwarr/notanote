@@ -3,6 +3,7 @@ import { makeObservable, observable } from "mobx";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { Backend } from "./backend/Backend";
 import { LastOpenedDocStorage } from "./LastOpenedDocStorage";
+import { PaletteOption } from "./Palette";
 
 
 export class WorkspaceManager {
@@ -94,4 +95,28 @@ export class WorkspaceManager {
   id = "default";
 
   static instance = new WorkspaceManager();
+}
+
+
+export function workspaceFileCompleter(value: string): PaletteOption[] {
+  if (!value) {
+    return [];
+  }
+
+  const result: PaletteOption[] = [];
+  WorkspaceManager.instance.walk(entry => {
+    if (entry.name.includes(value) && entry.type === "file") {
+      result.push({
+        value: entry.id,
+        content: entry.name
+      });
+      if (result.length === 6) {
+        return true;
+      }
+    }
+
+    return false;
+  });
+
+  return result;
 }
