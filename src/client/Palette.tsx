@@ -89,9 +89,9 @@ export function Palette(props: PaletteProps) {
     setSelectedOption(value);
   }
 
-  return <Dialog open={ props.open } classes={ { paper: classes.dialogPaper } }>
+  return <Dialog open={ props.open } classes={ { paper: classes.dialogPaper } } onClose={ props.onClose }>
     <div onKeyDown={ onKeyDown }>
-      <Input autoFocus className={ classes.input } onBlur={ props.onClose } value={ inputValue }
+      <Input autoFocus className={ classes.input } value={ inputValue }
              onChange={ e => setInputValue(e.target.value) }/>
 
       {
