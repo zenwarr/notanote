@@ -26,6 +26,11 @@ export function DocumentEditor(props: DocumentEditorProps) {
       parent: containerRef.current
     });
 
+    const cursorPos = props.doc.editorState.selection.ranges[0]?.head;
+    if (cursorPos != null) {
+      view.scrollPosIntoView(cursorPos);
+    }
+
     viewRef.current = view;
 
     return () => {
