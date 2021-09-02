@@ -122,6 +122,8 @@ const useStyles = makeStyles(theme => ({
   },
   list: {
     maxHeight: "500px",
-    overflowY: "auto"
+    overflowY: "auto",
+    scrollbarGutter: "stable",
+    scrollbarWidth: "thin"
   }
 }));
