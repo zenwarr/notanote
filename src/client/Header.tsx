@@ -34,7 +34,7 @@ export const Header = observer((props: HeaderProps) => {
       <CallToActionIcon/>
     </IconButton>
 
-    <IconButton onClick={ () => props.setIsDark(!props.isDarkTheme) } className={ classes.themeButton }
+    <IconButton onClick={ () => props.setIsDark(!props.isDarkTheme) }
                 title={ props.isDarkTheme ? "Turn off dark theme" : "Turn on dark theme" }>
       {
         props.isDarkTheme ? <Brightness4Icon/> : <Brightness7Icon/>
@@ -49,8 +49,5 @@ export const Header = observer((props: HeaderProps) => {
 const useStyles = makeStyles(theme => ({
   syncPanel: {
     width: "100%"
-  },
-  themeButton: {
-    marginRight: theme.spacing(1)
   }
 }));
