@@ -10,7 +10,8 @@ export function demoCompleter(value: string) {
     for (let q = 0; q < value.length; ++q) {
       result.push({
         value: `${ value } #${ q + 1 }`,
-        content: `${ value } #${ q + 1 }`
+        content: `${ value } #${ q + 1 }`,
+        description: `description`
       });
     }
 

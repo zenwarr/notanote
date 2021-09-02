@@ -6,6 +6,7 @@ import { createRef, useEffect, useLayoutEffect, useState } from "react";
 export interface PaletteOption {
   value: string;
   content: React.ReactNode;
+  description?: React.ReactNode;
 }
 
 
@@ -30,15 +31,15 @@ export function Palette(props: PaletteProps) {
   function setSelectedOptionAndScroll(value: string | undefined) {
     setSelectedOption(value);
 
-    if (value == null) {
-      return;
-    }
+    // if (value == null) {
+    //   return;
+    // }
 
-    const index = options.findIndex(x => x.value === value);
-    const pos = index * 46;
-    if (index >= 0 && listRef.current && !(pos >= listRef.current.scrollTop && pos < listRef.current.scrollTop + listRef.current.clientHeight)) {
-      listRef.current.scrollTo(0, 46 * index - 3 * 46);
-    }
+    // const index = options.findIndex(x => x.value === value);
+    // const pos = index * 46;
+    // if (index >= 0 && listRef.current && !(pos >= listRef.current.scrollTop && pos < listRef.current.scrollTop + listRef.current.clientHeight)) {
+    //   listRef.current.scrollTo(0, 46 * index - 3 * 46);
+    // }
   }
 
   const options = props.completer?.(inputValue) || [];
@@ -98,9 +99,7 @@ export function Palette(props: PaletteProps) {
         {
           options?.map(option => <ListItem onClick={ () => onSelect(option.value) } key={ option.value } button
                                            selected={ option.value === selectedOption }>
-            <ListItemText>
-              { option.content }
-            </ListItemText>
+            <ListItemText primary={option.content} secondary={option.description} />
           </ListItem>)
         }
       </List>
@@ -120,7 +119,7 @@ const useStyles = makeStyles(theme => ({
     top: 100
   },
   list: {
-    maxHeight: "300px",
+    maxHeight: "500px",
     overflowY: "auto"
   }
 }));

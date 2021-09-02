@@ -110,7 +110,8 @@ export function workspaceFileCompleter(value: string): PaletteOption[] {
     if (entry.type === "file" && entry.name.toLowerCase().includes(value)) {
       result.push({
         value: entry.id,
-        content: entry.name
+        content: entry.name,
+        description: entry.id
       });
       if (result.length === 6) {
         return true;
