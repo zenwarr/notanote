@@ -98,6 +98,7 @@ export function Palette(props: PaletteProps) {
       options.length > 0 && <List className={ classes.list } ref={ listRef }>
         {
           options?.map(option => <ListItem onClick={ () => onSelect(option.value) } key={ option.value } button
+                                           dense
                                            selected={ option.value === selectedOption }>
             <ListItemText primary={option.content} secondary={option.description} />
           </ListItem>)
