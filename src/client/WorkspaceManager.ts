@@ -124,7 +124,7 @@ const COMPLETE_RESULT_COUNT = 10;
 export function workspaceFileCompleter(value: string): PaletteOption[] {
   if (!value) {
     const recentDocs = RecentDocStorage.instance.getRecentDocs();
-    const recentEntries: (WorkspaceEntry | undefined)[] = [];
+    let recentEntries: (WorkspaceEntry | undefined)[] = [];
     WorkspaceManager.instance.walk(entry => {
       if (entry.type !== "file") {
         return false;
@@ -139,7 +139,14 @@ export function workspaceFileCompleter(value: string): PaletteOption[] {
       return false;
     });
 
-    return recentEntries.filter(x => x != null).map(entry => ({
+    recentEntries = recentEntries.filter(x => x != null);
+    if (recentEntries.length >= 2) {
+      const swap = recentEntries[0];
+      recentEntries[0] = recentEntries[1];
+      recentEntries[1] = swap;
+    }
+
+    return recentEntries.map(entry => ({
       value: entry!.id,
       content: entry!.name,
       description: entry!.id

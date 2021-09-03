@@ -25,6 +25,7 @@ import { json } from "@codemirror/lang-json";
 import { markdown } from "@codemirror/lang-markdown";
 import * as ReactDOM from "react-dom";
 import { ReactElement } from "react";
+import { Checkbox } from "@material-ui/core";
 
 
 function getEditorPluginForFile(fileId: string) {
@@ -96,7 +97,7 @@ class CheckboxWidget extends ReactWidget<boolean> {
       toggleBoolean(view, view.posAtDOM(e.target));
     }
 
-    return <input type={ "checkbox" } checked={ props } onChange={onChange}/>;
+    return <Checkbox checked={ props } onChange={ onChange }/>;
   }
 }
 
@@ -110,7 +111,6 @@ function checkboxes(view: EditorView) {
       to,
       enter: (type, from, to) => {
         const value = view.state.doc.sliceString(from, to);
-        console.log("+ ", value);
         if (value === "[ ]" || value === "[x]") {
           let isTrue = value === "[ ]";
 
