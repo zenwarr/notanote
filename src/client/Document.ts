@@ -5,7 +5,7 @@ import { Backend } from "./backend/Backend";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { FileSettings } from "../common/WorkspaceEntry";
-import { createEditorState } from "./Editor";
+import { createEditorState } from "./EditorState";
 import { DocumentManager } from "./DocumentManager";
 
 
