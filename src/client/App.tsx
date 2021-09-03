@@ -47,9 +47,9 @@ export function App() {
 
               <Hidden mdUp>
                 <SwipeableDrawer open={ drawerOpen } onOpen={ () => setDrawerOpen(true) } onClose={ () => setDrawerOpen(false) }
-                                disableBackdropTransition={ !iOS } disableDiscovery={ iOS }>
-                  <Box p={ 2 } className={ classes.workspaceViewContainer }>
-                    <WorkspaceView onEntrySelected={ onMobileEntrySelected }/>
+                                 disableBackdropTransition={ !iOS } disableDiscovery={ iOS }>
+                  <Box className={ classes.workspaceViewContainer }>
+                    <WorkspaceView treeWithPadding onEntrySelected={ onMobileEntrySelected }/>
                   </Box>
                 </SwipeableDrawer>
               </Hidden>

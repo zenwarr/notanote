@@ -20,6 +20,7 @@ import { Backend } from "./backend/Backend";
 
 export interface WorkspaceViewProps {
   onEntrySelected?: (entry: WorkspaceEntry) => void;
+  treeWithPadding?: boolean;
 }
 
 
@@ -170,11 +171,13 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
       </Box>
     </Box>
 
-    <TreeView defaultCollapseIcon={ <ExpandMoreIcon/> } defaultExpandIcon={ <ChevronRightIcon/> } onNodeSelect={ onNodeSelect }
-              expanded={ expand.expanded } onNodeToggle={ expand.onToggle }
-              selected={ workspaceManager.selectedEntry || "" }>
-      { workspaceManager.entries.map(e => renderTreeEntry(e, labelClasses)) }
-    </TreeView>
+    <Box p={ props.treeWithPadding ? 1 : undefined }>
+      <TreeView defaultCollapseIcon={ <ExpandMoreIcon/> } defaultExpandIcon={ <ChevronRightIcon/> } onNodeSelect={ onNodeSelect }
+                expanded={ expand.expanded } onNodeToggle={ expand.onToggle }
+                selected={ workspaceManager.selectedEntry || "" }>
+        { workspaceManager.entries.map(e => renderTreeEntry(e, labelClasses)) }
+      </TreeView>
+    </Box>
   </div>;
 });
 
