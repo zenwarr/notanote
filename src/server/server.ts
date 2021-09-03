@@ -5,7 +5,6 @@ import pointOfView from "point-of-view";
 import hbs from "handlebars";
 import fastifyStatic from "fastify-static";
 import { configureAuth } from "./auth";
-import { replaceAll } from "@codemirror/search";
 import { ErrorCode, getStatusCodeForError, LogicError } from "../common/errors";
 
 
