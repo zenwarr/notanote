@@ -105,4 +105,9 @@ export default async function initApiRoutes(app: FastifyInstance) {
     await ws.saveEntry(fileID, req.body.content);
     return {};
   });
+
+
+  app.get("/api/latest-version", async req => {
+    return require("../package.json").version;
+  });
 }
