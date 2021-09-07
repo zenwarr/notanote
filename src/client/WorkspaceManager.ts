@@ -88,9 +88,6 @@ export class WorkspaceManager {
 
 
   set selectedEntry(id: string | undefined) {
-    if (id) {
-      RecentDocStorage.instance.saveLastOpenedDoc(id);
-    }
     this._selectedEntry = id;
 
     if (id == null) {
@@ -99,6 +96,7 @@ export class WorkspaceManager {
       const entry = this.getEntryByPath(id);
       if (entry && entry.type === "file") {
         this._selectedFile = id;
+        RecentDocStorage.instance.saveLastOpenedDoc(id);
       }
     }
   }
