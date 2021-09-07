@@ -1,6 +1,6 @@
 {
   "name": "notes",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "main": "index.js",
   "author": "zenwarr <zenw@yandex.ru>",
   "license": "MIT",
@@ -12,7 +12,7 @@
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
     "test": "jest",
-    "release": "npm version patch"
+    "release": "yarn version --patch"
   },
   "devDependencies": {
     "@babel/core": "^7.15.5",
