@@ -11,7 +11,7 @@ import { WorkspaceEntry } from "../common/WorkspaceEntry";
 import "./App.css";
 import { useThemeController } from "./Theme";
 import { useShortcuts } from "./Shortcuts";
-import { FilePickerProvider } from "./FilePicker";
+import { PaletteProvider } from "./PaletteProvider";
 
 
 export function App() {
@@ -36,7 +36,7 @@ export function App() {
   return <HashRouter>
     <ThemeProvider theme={ theme.theme }>
       <CssBaseline>
-        <FilePickerProvider>
+        <PaletteProvider>
           <div className={ classes.root }>
             <div className={ classes.workspaceView }>
               <Hidden smDown>
@@ -67,7 +67,7 @@ export function App() {
               <ConnectedFileView className={ classes.docEditor }/>
             </div>
           </div>
-        </FilePickerProvider>
+        </PaletteProvider>
       </CssBaseline>
     </ThemeProvider>
   </HashRouter>;

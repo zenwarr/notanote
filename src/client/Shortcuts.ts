@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import { toggleFilePicker } from "./FilePicker";
+import { PaletteMode, togglePalette } from "./PaletteProvider";
 
 
 function runShortcutAction(e: KeyboardEvent) {
   if (e.code === "KeyP" && e.ctrlKey) {
-    toggleFilePicker();
     e.preventDefault();
+    togglePalette(e.altKey ? PaletteMode.Command : PaletteMode.File);
   }
 }
 
@@ -16,4 +16,30 @@ export function useShortcuts() {
 
     return () => document.removeEventListener("keydown", runShortcutAction);
   }, []);
+}
+
+
+export interface Command {
+  name: string;
+  description: string;
+  action: () => Promise<void>;
+}
+
+
+export const COMMANDS: Command[] = [
+  { name: "theme.set_dark", description: "Set dark theme", action: async () => console.log("set dark theme") },
+  { name: "theme.set_light", description: "Set light theme", action: async () => console.log("set light theme") },
+  {
+    name: "theme.set_follow_system",
+    description: "Set theme to follow system dark mode",
+    action: async () => console.log("set theme follow system")
+  }
+];
+
+
+export function runCommandInBackground(name: string) {
+  const cmd = COMMANDS.find(c => c.name === name);
+  if (cmd) {
+    cmd.action().then(() => alert(`Command ${ name } completed`), err => alert(`Failed to run command ${ name }: ${ err.message }`));
+  }
 }

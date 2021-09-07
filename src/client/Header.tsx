@@ -5,7 +5,7 @@ import { ProfileHeader } from "./ProfileHeader";
 import MenuIcon from "@material-ui/icons/Menu";
 import Brightness4Icon from "@material-ui/icons/Brightness4";
 import Brightness7Icon from "@material-ui/icons/Brightness7";
-import { toggleFilePicker } from "./FilePicker";
+import { PaletteMode, togglePalette } from "./PaletteProvider";
 import CallToActionIcon from "@material-ui/icons/CallToAction";
 
 
@@ -30,7 +30,7 @@ export const Header = observer((props: HeaderProps) => {
       <SyncPanel/>
     </div>
 
-    <IconButton onClick={ toggleFilePicker } title={ "Show file palette (Ctrl+P)" }>
+    <IconButton onClick={ () => togglePalette(PaletteMode.File) } title={ "Show file palette (Ctrl+P)" }>
       <CallToActionIcon/>
     </IconButton>
 
