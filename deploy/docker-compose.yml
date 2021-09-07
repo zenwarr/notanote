@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   app:
-    image: ghcr.io/zenwarr/notanote:master
+    image: ghcr.io/zenwarr/notanote:latest
     volumes:
       - type: volume
         source: yarn_cache
