@@ -37,20 +37,6 @@ function getParents(p: string) {
 function useExpanded(selected: string | undefined) {
   const [ expanded, setExpanded ] = useState<string[]>(selected ? [ ...getParents(selected) ] : []);
 
-  useEffect(() => {
-    if (selected && !expanded.includes(selected)) {
-      setExpanded([ ...expanded, ...getParents(selected) ]);
-    }
-  }, [ selected ]);
-
-  function toggleNode(input: string[], node: string) {
-    if (input.includes(node)) {
-      return input.filter(x => x !== node);
-    } else {
-      return [ ...input, node ];
-    }
-  }
-
   return {
     expanded,
     onToggle: (_: unknown, nodes: string[]) => {
