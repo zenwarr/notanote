@@ -11,7 +11,8 @@
     "build-client-dev": "webpack --env prod=false",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook",
-    "test": "jest"
+    "test": "jest",
+    "release": "npm version patch"
   },
   "devDependencies": {
     "@babel/core": "^7.15.5",
