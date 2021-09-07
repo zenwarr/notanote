@@ -1,0 +1,28 @@
+version: "3.7"
+
+services:
+  app:
+    image: ghcr.io/zenwarr/notanote:master
+    volumes:
+      - type: volume
+        source: yarn_cache
+        target: /yarn-cache
+      - ./data/workspaces:/workspaces
+      - .env:/env/.env
+      - ./data/config:/config
+    restart: unless-stopped
+    environment:
+      - VIRTUAL_HOST=${PUBLIC_DOMAIN}
+      - ENV_FILE=/env/.env
+      - CONFIG_DIR=/config
+    init: true
+    networks:
+      - default
+
+volumes:
+  yarn_cache:
+
+networks:
+  default:
+    external:
+      name: vps-network
