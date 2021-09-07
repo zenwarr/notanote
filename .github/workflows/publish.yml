@@ -1,9 +1,6 @@
-name: Node.js Package
+name: Publish
 
-on:
-  push:
-    tags:
-      - '*'
+on: push
 
 env:
   IMAGE_NAME: ${{ github.repository }}
