@@ -54,7 +54,7 @@ export async function configureAuth(app: FastifyInstance) {
       httpOnly: true,
       secure: process.env["NODE_ENV"] !== "dev",
       path: "/",
-      maxAge: luxon.Duration.fromObject({ days: 30 }).as("millisecond")
+      maxAge: luxon.Duration.fromObject({ days: 30 }).as("milliseconds")
     },
     cookieName: "sess"
   });

@@ -9,7 +9,7 @@ import { createEditorState } from "./EditorState";
 import { DocumentManager } from "./DocumentManager";
 
 
-const AUTO_SAVE_TIMEOUT = luxon.Duration.fromObject({ second: 5 });
+const AUTO_SAVE_TIMEOUT = luxon.Duration.fromObject({ seconds: 5 });
 
 
 export class Document {
@@ -55,12 +55,12 @@ export class Document {
       this.saveTimer = undefined;
       this.save().then(isSaved => {
         if (!isSaved) {
-          this.saveTimer = setTimeout(doSave, AUTO_SAVE_TIMEOUT.as("millisecond"));
+          this.saveTimer = setTimeout(doSave, AUTO_SAVE_TIMEOUT.as("milliseconds"));
         }
       });
     };
 
-    this.saveTimer = setTimeout(doSave, AUTO_SAVE_TIMEOUT.as("millisecond"));
+    this.saveTimer = setTimeout(doSave, AUTO_SAVE_TIMEOUT.as("milliseconds"));
   }
 
 
