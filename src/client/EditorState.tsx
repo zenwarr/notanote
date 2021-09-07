@@ -28,7 +28,7 @@ export interface CreateEditorStateOptions {
 }
 
 
-function getStoredSelectionForFile(fileId: string): EditorSelection | undefined {
+function getStoredSelectionForFile(fileId: string, fileContent: string): EditorSelection | undefined {
   const stored = localStorage.getItem("stored-selection-" + fileId);
   if (!stored) {
     return undefined;
@@ -36,7 +36,7 @@ function getStoredSelectionForFile(fileId: string): EditorSelection | undefined 
 
   try {
     const range = JSON.parse(stored);
-    if (typeof range.anchor === "number") {
+    if (typeof range.anchor === "number" && range.anchor < fileContent.length) {
       return range;
     } else {
       return undefined;
@@ -58,7 +58,7 @@ function storeSelectionForFile(fileId: string, selection: EditorSelection) {
 export function createEditorState(content: string, fileId: string, settings: FileSettings, options: CreateEditorStateOptions) {
   return EditorState.create({
     doc: content,
-    selection: getStoredSelectionForFile(fileId) || { anchor: 0 },
+    selection: getStoredSelectionForFile(fileId, content) || { anchor: 0 },
     extensions: [
       history(),
       // drawSelection(),
