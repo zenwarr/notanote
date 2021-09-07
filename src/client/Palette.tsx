@@ -26,6 +26,7 @@ export function Palette(props: PaletteProps) {
 
   useEffect(() => {
     setInputValue("");
+    setSelectedOption(undefined);
   }, [ props.open ]);
 
   function setSelectedOptionAndScroll(value: string | undefined) {
