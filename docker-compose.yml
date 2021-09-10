@@ -5,6 +5,8 @@ services:
     build:
       context: src
       dockerfile: dev.Dockerfile
+      args:
+        - CONTAINER_USER_ID
     volumes:
       - type: volume
         source: yarn_cache
