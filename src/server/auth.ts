@@ -48,13 +48,14 @@ export async function configureAuth(app: FastifyInstance) {
   fastifyPassport.registerUserDeserializer(async user => user);
 
   await generateSessionSecret();
+
   app.register(fastifySecureSession, {
     key: fs.readFileSync(getSecretFilePath()),
     cookie: {
       httpOnly: true,
       secure: process.env["NODE_ENV"] !== "dev",
       path: "/",
-      maxAge: luxon.Duration.fromObject({ days: 30 }).as("milliseconds")
+      maxAge: luxon.Duration.fromObject({ days: 30 }).as("seconds")
     },
     cookieName: "sess"
   });
