@@ -4,11 +4,13 @@ import { configure } from "mobx";
 import { CssBaseline } from "@material-ui/core";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { ProfileManager } from "./ProfileManager";
+import { Workbox } from "workbox-window";
 
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js").catch(err => {
-    console.error("failed to install service worker", err);
+  const wb = new Workbox("/sw.js");
+  wb.register().catch(err => {
+    console.error("failed to initialize workbox", err);
   });
 }
 

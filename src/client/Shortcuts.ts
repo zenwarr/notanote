@@ -46,7 +46,7 @@ export const COMMANDS: Command[] = [
 
 async function showVersion() {
   const version = await Backend.get(SystemBackend).getLatestVersion();
-  alert(`Your version: ${ require("../package.json").version }\nLatest version: ${ version }`);
+  alert(`Your version: ${ process.env["CLIENT_VERSION"] }\nLatest version: ${ version }`);
 }
 
 

@@ -7,7 +7,6 @@ import {
 
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
 import { ExpirationPlugin } from "workbox-expiration";
-import * as precache from "workbox-precaching";
 
 
 registerRoute(

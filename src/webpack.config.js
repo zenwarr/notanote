@@ -1,5 +1,6 @@
 const path = require("path");
 const cssExtract = require("mini-css-extract-plugin");
+const webpack = require("webpack");
 
 
 module.exports = (env) => [
@@ -44,6 +45,9 @@ module.exports = (env) => [
       new cssExtract({
         filename: `index.css`,
         chunkFilename: "[id]-[contenthash].css"
+      }),
+      new webpack.DefinePlugin({
+        CLIENT_VERSION: JSON.stringify(require("./package.json").version)
       })
     ]
   },
