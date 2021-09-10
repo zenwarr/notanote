@@ -20,8 +20,6 @@ services:
       - NODE_ENV
       - SELF_SIGNED_HOST=${PUBLIC_DOMAIN}
     init: true
-    networks:
-      - default
 
   nginx-proxy:
     image: nginxproxy/nginx-proxy:0.9.1-alpine
@@ -45,8 +43,3 @@ services:
 volumes:
   yarn_cache:
   generated_certs:
-
-networks:
-  default:
-    external:
-      name: vps-network
