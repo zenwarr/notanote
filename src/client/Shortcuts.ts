@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 import { PaletteMode, togglePalette } from "./PaletteProvider";
+import { SystemBackend } from "./backend/SystemBackend";
+import { Backend } from "./backend/Backend";
 
 
 function runShortcutAction(e: KeyboardEvent) {
@@ -33,13 +35,24 @@ export const COMMANDS: Command[] = [
     name: "theme.set_follow_system",
     description: "Set theme to follow system dark mode",
     action: async () => console.log("set theme follow system")
+  },
+  {
+    name: "version.show",
+    description: "Show version",
+    action: showVersion
   }
 ];
+
+
+async function showVersion() {
+  const version = await Backend.get(SystemBackend).getLatestVersion();
+  alert(`Your version: ${ require("../package.json").version }\nLatest version: ${ version }`);
+}
 
 
 export function runCommandInBackground(name: string) {
   const cmd = COMMANDS.find(c => c.name === name);
   if (cmd) {
-    cmd.action().then(() => alert(`Command ${ name } completed`), err => alert(`Failed to run command ${ name }: ${ err.message }`));
+    cmd.action().catch(err => alert(`Failed to run command ${ name }: ${ err.message }`));
   }
 }
