@@ -10,10 +10,13 @@ export interface PaletteOption {
 }
 
 
+export type PaletteCompleter = (value: string) => PaletteOption[];
+
+
 export type PaletteProps = {
   open: boolean;
   onClose?: () => void;
-  completer?: (value: string) => PaletteOption[];
+  completer?: PaletteCompleter;
   onSelect?: (value: string) => void;
 }
 
