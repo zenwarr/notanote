@@ -1,4 +1,4 @@
-[![Publish](https://github.com/zenwarr/notes/actions/workflows/publish.yml/badge.svg)](https://github.com/zenwarr/notes/actions/workflows/publish.yml)
+[![Publish](https://github.com/zenwarr/notanote/actions/workflows/publish.yml/badge.svg)](https://github.com/zenwarr/notanote/actions/workflows/publish.yml)
 
 # Configure dev env
 
