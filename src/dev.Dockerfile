@@ -9,6 +9,8 @@ RUN deluser --remove-home node && \
     addgroup notanote && \
     adduser --uid $CONTAINER_USER_ID --ingroup notanote --shell /bin/sh --disabled-password notanote
 
+COPY container_data/known_hosts /home/notanote/.ssh/known_hosts
+
 USER notanote
 
 WORKDIR /app

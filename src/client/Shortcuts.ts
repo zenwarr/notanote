@@ -2,6 +2,9 @@ import { useEffect } from "react";
 import { PaletteMode, togglePalette } from "./PaletteProvider";
 import { SystemBackend } from "./backend/SystemBackend";
 import { Backend } from "./backend/Backend";
+import ky from "ky";
+import { WorkspaceBackend } from "./backend/WorkspaceBackend";
+import { WorkspaceManager } from "./WorkspaceManager";
 
 
 function runShortcutAction(e: KeyboardEvent) {
@@ -40,6 +43,16 @@ export const COMMANDS: Command[] = [
     name: "version.show",
     description: "Show version",
     action: showVersion
+  },
+  {
+    name: "github.init",
+    description: "Init GitHub integration",
+    action: initGithub
+  },
+  {
+    name: "github push",
+    description: "Push changes to GitHub",
+    action: pushGithub
   }
 ];
 
@@ -47,6 +60,26 @@ export const COMMANDS: Command[] = [
 async function showVersion() {
   const version = await Backend.get(SystemBackend).getLatestVersion();
   alert(`Your version: ${ process.env.CLIENT_VERSION }\nLatest version: ${ version }`);
+}
+
+
+async function initGithub() {
+  const email = prompt("your email", "zenw@yandex.ru");
+  if (!email) {
+    return;
+  }
+
+  const remote = prompt("remote", "git@github.com:zenwarr/notanote-sync-test.git");
+  if (!remote) {
+    return;
+  }
+
+  await Backend.get(WorkspaceBackend).initGithub(WorkspaceManager.instance.id, email, remote);
+}
+
+
+async function pushGithub() {
+  await Backend.get(WorkspaceBackend).githubPush(WorkspaceManager.instance.id);
 }
 
 

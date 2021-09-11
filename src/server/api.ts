@@ -4,6 +4,7 @@ import { Workspace } from "./workspace";
 import S from "fluent-json-schema";
 import { EntryType } from "../common/WorkspaceEntry";
 import { ErrorCode, LogicError } from "../common/errors";
+import { commitAndPushChanges, initGithubIntegration } from "./github/Github";
 
 
 type WorkspaceRouteParams = {
@@ -111,5 +112,37 @@ export default async function initApiRoutes(app: FastifyInstance) {
     return {
       version: require("../package.json").version
     };
+  });
+
+
+  app.post<{
+    Params: WorkspaceRouteParams,
+    Body: { email: string, remote: string }
+  }>("/api/workspaces/:workspaceID/github/init", {
+    schema: {
+      params: S.object().prop("workspaceID", S.string().required()),
+      body: S.object().prop("email", S.string().required()).prop("remote", S.string().required())
+    }
+  }, async (req, res) => {
+    const ws = getWorkspace(req);
+
+    await initGithubIntegration(ws, req.body.email, req.body.remote)
+
+    return {};
+  });
+
+
+  app.post<{
+    Params: WorkspaceRouteParams
+  }>("/api/workspaces/:workspaceID/github/push", {
+    schema: {
+      params: S.object().prop("workspaceID", S.string().required())
+    }
+  }, async (req, res) => {
+    const ws = getWorkspace(req);
+
+    await commitAndPushChanges(ws, undefined, true);
+
+    return {};
   });
 }

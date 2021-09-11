@@ -10,6 +10,8 @@ RUN mkdir /yarn-cache && \
     addgroup notanote && \
     adduser --uid 1000 --ingroup notanote --shell /bin/sh --disabled-password notanote
 
+COPY container_data/known_hosts /home/notanote/.ssh/known_hosts
+
 COPY . /app
 
 WORKDIR /app

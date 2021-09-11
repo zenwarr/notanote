@@ -202,6 +202,45 @@ export class Workspace {
   }
 
 
+  getSecretsDirectoryPath(): string {
+    return path.join(".note", "secrets");
+  }
+
+
+  async getSecretsDirectoryPathAndEnsureItExists(): Promise<string> {
+    const p = this.getSecretsDirectoryPath();
+    await this.ensureDirectoryExists(p);
+    return p;
+  }
+
+
+  toAbsolutePath(p: string): string | undefined {
+    return joinNestedPathSecure(this.root, p);
+  }
+
+
+  async ensureDirectoryExists(dir: string): Promise<void> {
+    const absolutePath = joinNestedPathSecure(this.root, dir);
+    if (!absolutePath) {
+      throw new LogicError(ErrorCode.NotFound, "directory does not exist");
+    }
+
+    await fs.promises.mkdir(absolutePath, {
+      recursive: true
+    });
+  }
+
+
+  async fileExists(dir: string): Promise<boolean> {
+    const abs = this.toAbsolutePath(dir);
+    if (!abs) {
+      return false;
+    }
+
+    return fileExists(abs);
+  }
+
+
   static getForId(userId: string, id: string): Workspace | undefined {
     const root = getWorkspacePath(userId, id);
     if (!root) {
@@ -295,4 +334,18 @@ async function getFsEntries(dir: string, rootDir: string): Promise<WorkspaceEntr
   }
 
   return result;
+}
+
+
+export async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.promises.stat(filePath);
+    return true;
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      return false;
+    } else {
+      throw err;
+    }
+  }
 }

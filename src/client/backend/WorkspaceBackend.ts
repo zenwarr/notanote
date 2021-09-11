@@ -37,6 +37,21 @@ export class WorkspaceBackend {
   async removeEntry(wsId: string, entryPath: string): Promise<WorkspaceEntry[]> {
     return ky.delete(`/api/workspaces/${ wsId }/files/${ entryPath }`).json<WorkspaceEntry[]>();
   }
+
+
+  async initGithub(wsId: string, email: string, remote: string): Promise<void> {
+    await ky.post(`/api/workspaces/${ wsId }/github/init`, {
+      json: {
+        email,
+        remote
+      }
+    }).json();
+  }
+
+
+  async githubPush(wsId: string): Promise<void> {
+    await ky.post(`/api/workspaces/${wsId}/github/push`).json();
+  }
 }
 
 
@@ -150,5 +165,15 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
     console.log("delete entry", entryPath);
     await timeout(1000);
     return DEMO_WORKSPACE;
+  }
+
+
+  async initGithub(wsId: string, email: string, remote: string): Promise<void> {
+    console.log("init github", email, remote);
+  }
+
+
+  async githubPush(wsId: string): Promise<void> {
+    console.log("github push");
   }
 }
