@@ -5,10 +5,7 @@ ARG CONTAINER_USER_ID
 EXPOSE 8080
 ENV PORT=8080
 
-RUN mkdir /yarn-cache && \
-    chmod 777 /yarn-cache && \
-    yarn config set cache-folder /yarn-cache --global && \
-    deluser --remove-home node && \
+RUN deluser --remove-home node && \
     addgroup notanote && \
     adduser --uid $CONTAINER_USER_ID --ingroup notanote --shell /bin/sh --disabled-password notanote
 

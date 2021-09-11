@@ -8,21 +8,21 @@ RUN mkdir /yarn-cache && \
     yarn config set cache-folder /yarn-cache --global && \
     deluser --remove-home node && \
     addgroup notanote && \
-    adduser --uid $CONTAINER_USER_ID --ingroup notanote --shell /bin/sh --disabled-password notanote
+    adduser --uid 1000 --ingroup notanote --shell /bin/sh --disabled-password notanote
 
 COPY . /app
 
-USER notanote
-
 WORKDIR /app
 
-RUN cd /app && \
+RUN --mount=type=cache,target=/yarn-cache cd /app && \
     yarn install --frozen-lockfile --production=false && \
     yarn build-client && \
     yarn build && \
     rm -rf node_modules && \
     yarn install --frozen-lockfile --production=true
 
-RUN cd /app && yarn --frozen-lockfile --production=true
+RUN --mount=type=cache,target=/yarn-cache cd /app && yarn --frozen-lockfile --production=true
+
+USER notanote
 
 ENTRYPOINT [ "node", "/app/index.js" ]
