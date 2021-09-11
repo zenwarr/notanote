@@ -47,7 +47,7 @@ module.exports = (env) => [
         chunkFilename: "[id]-[contenthash].css"
       }),
       new webpack.DefinePlugin({
-        CLIENT_VERSION: JSON.stringify(require("./package.json").version)
+        "process.env.CLIENT_VERSION": JSON.stringify(require("./package.json").version)
       })
     ]
   },
