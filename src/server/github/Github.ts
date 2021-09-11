@@ -87,7 +87,13 @@ export async function initGithubIntegration(ws: Workspace, userEmail: string, re
       cwd: ws.root
     });
 
-    await commitAndPushChanges(ws, "initial commit", false);
+    await runCommand("git", [ "add", "." ], {
+      cwd: ws.root
+    });
+
+    await runCommand("git", [ "commit", "-m", "initial commit" ], {
+      cwd: ws.root
+    });
   }
 }
 
