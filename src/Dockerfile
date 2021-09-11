@@ -14,8 +14,6 @@ COPY . /app
 
 WORKDIR /app
 
-USER notanote
-
 RUN --mount=type=cache,target=/yarn-cache cd /app && \
     yarn install --frozen-lockfile --production=false && \
     yarn build-client && \
@@ -24,5 +22,7 @@ RUN --mount=type=cache,target=/yarn-cache cd /app && \
     yarn install --frozen-lockfile --production=true && \
     cd /app && \
     yarn --frozen-lockfile --production=true
+
+USER notanote
 
 ENTRYPOINT [ "node", "/app/index.js" ]
