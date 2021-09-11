@@ -1,3 +1,5 @@
+[![Publish](https://github.com/zenwarr/notes/actions/workflows/publish.yml/badge.svg)](https://github.com/zenwarr/notes/actions/workflows/publish.yml)
+
 # Configure dev env
 
 Copy `.env-template` to `.env` and configure required variables.
