@@ -83,7 +83,7 @@ export class Workspace {
     const settingFilePath = path.join(this.root, ".note", "settings.json");
     try {
       return JSON.parse(await fs.promises.readFile(settingFilePath, "utf-8"));
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === "ENOENT") {
         console.error("failed to load workspace settings", error);
       }
@@ -100,7 +100,7 @@ export class Workspace {
       }
 
       return true;
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === "ENOENT") {
         return false;
       } else {
@@ -177,7 +177,7 @@ export class Workspace {
     let content: string | undefined;
     try {
       content = await fs.promises.readFile(entryPath, "utf-8");
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === "ENOENT") {
         throw new LogicError(ErrorCode.NotFound, "entry not found");
       } else {
@@ -341,7 +341,7 @@ export async function fileExists(filePath: string): Promise<boolean> {
   try {
     await fs.promises.stat(filePath);
     return true;
-  } catch (err) {
+  } catch (err: any) {
     if (err.code === "ENOENT") {
       return false;
     } else {

@@ -2,7 +2,7 @@ import * as React from "react";
 import * as path from "path";
 import { useState } from "react";
 import { WorkspaceManager } from "./WorkspaceManager";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@material-ui/core";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
 import { EntryType } from "../common/WorkspaceEntry";
 
 
@@ -30,21 +30,22 @@ export function CreateEntryDialog(props: CreateEntryDialogProps) {
     try {
       await WorkspaceManager.instance.createEntry(inputPath, props.type);
       props.onClose();
-    } catch (error) {
-      alert("Failed to create: " + error.message);
+    } catch (err: any) {
+      alert("Failed to create: " + err.message);
     } finally {
       setLoading(false);
     }
   }
 
-  return <Dialog open={ props.open } onClose={ props.onClose } aria-labelledby="form-dialog-title" keepMounted={ false }>
-    <DialogTitle id="form-dialog-title">
-      Create new { props.type === "dir" ? "directory" : "file" }
-    </DialogTitle>
+  return (
+    <Dialog open={ props.open } onClose={ props.onClose } aria-labelledby="form-dialog-title" keepMounted={ false }>
+      <DialogTitle id="form-dialog-title">
+        Create new { props.type === "dir" ? "directory" : "file" }
+      </DialogTitle>
 
-    <form onSubmit={ onCreate }>
-      <DialogContent>
-        <TextField
+      <form onSubmit={ onCreate }>
+        <DialogContent>
+          <TextField
             autoFocus
             margin="dense"
             id="name"
@@ -53,17 +54,18 @@ export function CreateEntryDialog(props: CreateEntryDialogProps) {
             value={ inputPath }
             onChange={ onChange }
             fullWidth
-        />
-      </DialogContent>
+            variant="standard" />
+        </DialogContent>
 
-      <DialogActions>
-        <Button onClick={ props.onClose } color="primary" type={ "button" }>
-          Cancel
-        </Button>
-        <Button type={ "submit" } color="primary" disabled={ loading }>
-          Create
-        </Button>
-      </DialogActions>
-    </form>
-  </Dialog>;
+        <DialogActions>
+          <Button onClick={ props.onClose } color="primary" type={ "button" }>
+            Cancel
+          </Button>
+          <Button type={ "submit" } color="primary" disabled={ loading }>
+            Create
+          </Button>
+        </DialogActions>
+      </form>
+    </Dialog>
+  );
 }

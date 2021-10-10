@@ -1,6 +1,7 @@
-import { Dialog, Input, List, ListItem, ListItemText, makeStyles, TextField } from "@material-ui/core";
+import { Dialog, Input, List, ListItem, ListItemText} from "@mui/material";
+import makeStyles from '@mui/styles/makeStyles';
 import * as React from "react";
-import { createRef, useEffect, useLayoutEffect, useState } from "react";
+import { createRef, useEffect, useState } from "react";
 
 
 export interface PaletteOption {
@@ -121,7 +122,7 @@ const useStyles = makeStyles(theme => ({
     maxWidth: "80vw"
   },
   dialogPaper: {
-    position: "absolute",
+    position: "absolute !important" as any,
     top: 100
   },
   list: {

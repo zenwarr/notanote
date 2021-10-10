@@ -1,21 +1,20 @@
 import * as path from "path";
 import * as React from "react";
-import { useEffect, useState, useRef } from "react";
-import { TreeItem, TreeView } from "@material-ui/lab";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import { useState, useRef } from "react";
+import { TreeItem, TreeView } from "@mui/lab";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { WorkspaceEntry } from "../common/WorkspaceEntry";
-import { Box, IconButton, makeStyles, Menu } from "@material-ui/core";
+import { Box, IconButton} from "@mui/material";
+import makeStyles from '@mui/styles/makeStyles';
 import { WorkspaceManager } from "./WorkspaceManager";
 import { observer } from "mobx-react-lite";
 import { CreateEntryDialog } from "./CreateEntryDialog";
-import { CreateNewFolderOutlined, DeleteForever, LocalHospital, PostAddOutlined } from "@material-ui/icons";
+import { CreateNewFolderOutlined, DeleteForever, PostAddOutlined } from "@mui/icons-material";
 import { EntryType } from "../common/WorkspaceEntry";
 import { useHistory } from "react-router";
-import DescriptionIcon from "@material-ui/icons/Description";
-import FolderIcon from "@material-ui/icons/Folder";
-import { WorkspaceBackend } from "./backend/WorkspaceBackend";
-import { Backend } from "./backend/Backend";
+import DescriptionIcon from "@mui/icons-material/Description";
+import FolderIcon from "@mui/icons-material/Folder";
 
 
 export interface WorkspaceViewProps {
@@ -132,39 +131,45 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
     text: classes.entryText
   };
 
-  return <div className={ classes.container }>
-    { createOptions.current && <CreateEntryDialog open={ entryDialogOpened }
-                                                  onClose={ onCreateDialogClose }
-                                                  type={ createOptions.current.type }
-                                                  suggestedName={ createOptions.current.suggestedName }
-                                                  parentPath={ createOptions.current.parentPath }/> }
+  return (
+    <div className={ classes.container }>
+      { createOptions.current && <CreateEntryDialog open={ entryDialogOpened }
+                                                    onClose={ onCreateDialogClose }
+                                                    type={ createOptions.current.type }
+                                                    suggestedName={ createOptions.current.suggestedName }
+                                                    parentPath={ createOptions.current.parentPath }/> }
 
-    <Box mb={ 2 } display={ "flex" } justifyContent={ "space-between" } className={ classes.toolbar }>
-      <Box>
-        <IconButton onClick={ createFile } title={ "Create file" }>
-          <PostAddOutlined/>
-        </IconButton>
+      <Box mb={ 2 } display={ "flex" } justifyContent={ "space-between" } className={ classes.toolbar }>
+        <Box>
+          <IconButton onClick={ createFile } title={ "Create file" } size="large">
+            <PostAddOutlined/>
+          </IconButton>
 
-        <IconButton onClick={ createFolder } title={ "Create folder" }>
-          <CreateNewFolderOutlined/>
-        </IconButton>
+          <IconButton onClick={ createFolder } title={ "Create folder" } size="large">
+            <CreateNewFolderOutlined/>
+          </IconButton>
+        </Box>
+
+        <Box>
+          <IconButton
+            onClick={ remove }
+            title={ "Remove selected" }
+            disabled={ !workspaceManager.selectedEntry }
+            size="large">
+            <DeleteForever color={ "secondary" }/>
+          </IconButton>
+        </Box>
       </Box>
 
-      <Box>
-        <IconButton onClick={ remove } title={ "Remove selected" } disabled={ !workspaceManager.selectedEntry }>
-          <DeleteForever color={ "secondary" }/>
-        </IconButton>
+      <Box p={ props.treeWithPadding ? 1 : undefined }>
+        <TreeView defaultCollapseIcon={ <ExpandMoreIcon/> } defaultExpandIcon={ <ChevronRightIcon/> } onNodeSelect={ onNodeSelect }
+                  expanded={ expand.expanded } onNodeToggle={ expand.onToggle }
+                  selected={ workspaceManager.selectedEntry || "" }>
+          { workspaceManager.entries.map(e => renderTreeEntry(e, labelClasses)) }
+        </TreeView>
       </Box>
-    </Box>
-
-    <Box p={ props.treeWithPadding ? 1 : undefined }>
-      <TreeView defaultCollapseIcon={ <ExpandMoreIcon/> } defaultExpandIcon={ <ChevronRightIcon/> } onNodeSelect={ onNodeSelect }
-                expanded={ expand.expanded } onNodeToggle={ expand.onToggle }
-                selected={ workspaceManager.selectedEntry || "" }>
-        { workspaceManager.entries.map(e => renderTreeEntry(e, labelClasses)) }
-      </TreeView>
-    </Box>
-  </div>;
+    </div>
+  );
 });
 
 

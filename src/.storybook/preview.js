@@ -1,6 +1,6 @@
 import { initTestBackend } from '../client/backend/TestBackend';
-import { CssBaseline } from '@material-ui/core';
 import { configure } from 'mobx';
+import { AppThemeProvider } from '../client/Theme';
 
 
 configure({
@@ -11,10 +11,9 @@ configure({
 export const decorators = [
   (Story) => {
     initTestBackend();
-    return <>
-      <CssBaseline/>
+    return <AppThemeProvider>
       <Story/>
-    </>
+    </AppThemeProvider>
   }
 ]
 

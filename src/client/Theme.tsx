@@ -1,4 +1,5 @@
-import { createTheme, useTheme } from "@material-ui/core";
+import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
+import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 
 
@@ -22,6 +23,24 @@ function useMeta(name: string, value: string | undefined) {
 }
 
 
+export interface AppThemeCtxData {
+  isDark: boolean;
+  setIsDark: (isDark: boolean) => void;
+}
+
+
+export const AppThemeContext = React.createContext<AppThemeCtxData | undefined>(undefined);
+
+export function useAppThemeContext() {
+  const ctx = React.useContext(AppThemeContext);
+  if (!ctx) {
+    throw new Error("Expected to be inside AppThemeContext");
+  }
+
+  return ctx;
+}
+
+
 export function useThemeController() {
   const [ isDark, setIsDark ] = useState(isSystemThemeDark);
 
@@ -30,11 +49,11 @@ export function useThemeController() {
   const theme = useMemo(() => createTheme(
       {
         palette: {
-          type: isDark ? "dark" : "light"
+          mode: isDark ? "dark" : "light"
         },
-        overrides: {
+        components: {
           MuiCssBaseline: {
-            "@global": {
+            styleOverrides: {
               html: {
                 colorScheme: isDark ? "dark" : "auto"
               }
@@ -45,7 +64,7 @@ export function useThemeController() {
   ), [ isDark ]);
 
   return {
-    theme: theme,
+    theme,
     isDark,
     setIsDark
   };
@@ -53,6 +72,18 @@ export function useThemeController() {
 
 
 export function useCurrentThemeIsDark() {
-  const theme = useTheme();
-  return theme.palette.type === "dark";
+  const appTheme = useAppThemeContext();
+  return appTheme.isDark;
+}
+
+
+export function AppThemeProvider(props: React.PropsWithChildren<{}>) {
+  const theme = useThemeController();
+
+  return <ThemeProvider theme={ theme.theme }>
+    <CssBaseline/>
+    <AppThemeContext.Provider value={ { isDark: theme.isDark, setIsDark: theme.setIsDark } }>
+      { props.children }
+    </AppThemeContext.Provider>
+  </ThemeProvider>;
 }

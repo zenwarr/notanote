@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { PaletteMode, togglePalette } from "./PaletteProvider";
 import { SystemBackend } from "./backend/SystemBackend";
 import { Backend } from "./backend/Backend";
-import ky from "ky";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { WorkspaceManager } from "./WorkspaceManager";
 

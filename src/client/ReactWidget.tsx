@@ -1,7 +1,7 @@
 import { Decoration, DecorationSet, EditorView, Range, ViewPlugin, ViewUpdate, WidgetType } from "@codemirror/view";
 import * as ReactDOM from "react-dom";
 import { ReactElement } from "react";
-import { Checkbox } from "@material-ui/core";
+import { Checkbox } from "@mui/material";
 import { syntaxTree } from "@codemirror/language";
 
 

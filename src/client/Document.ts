@@ -75,7 +75,7 @@ export class Document {
       this.saveState = this.hadChangesWhileSaving ? SaveState.UnsavedChanges : SaveState.NoChanges;
       DocumentManager.instance.onDocumentSaved(this);
       return true;
-    } catch (err) {
+    } catch (err: any) {
       this.lastSaveError = err;
       this.saveState = SaveState.UnsavedChanges;
 

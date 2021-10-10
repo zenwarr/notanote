@@ -1,10 +1,10 @@
 import * as ReactDOM from "react-dom";
 import { App } from "./App";
 import { configure } from "mobx";
-import { CssBaseline } from "@material-ui/core";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { ProfileManager } from "./ProfileManager";
 import { Workbox } from "workbox-window";
+import { AppThemeProvider } from "./Theme";
 
 
 if ("serviceWorker" in navigator) {
@@ -27,6 +27,7 @@ WorkspaceManager.instance.id = params.workspaceId;
 ProfileManager.instance.userName = params.userName;
 
 ReactDOM.render(<>
-  <CssBaseline/>
-  <App/>
+  <AppThemeProvider>
+    <App/>
+  </AppThemeProvider>
 </>, root);

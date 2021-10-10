@@ -2,7 +2,7 @@ import { observer } from "mobx-react-lite";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { DocumentManager } from "./DocumentManager";
 import { SaveState } from "./Document";
-import { makeStyles } from "@material-ui/core";
+import makeStyles from '@mui/styles/makeStyles';
 import cn from "classnames";
 
 

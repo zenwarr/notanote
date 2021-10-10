@@ -1,12 +1,13 @@
 import { observer } from "mobx-react-lite";
-import { Box, Hidden, IconButton, makeStyles } from "@material-ui/core";
+import { Box, Hidden, IconButton } from "@mui/material";
+import makeStyles from '@mui/styles/makeStyles';
 import { SyncPanel } from "./SyncPanel";
 import { ProfileHeader } from "./ProfileHeader";
-import MenuIcon from "@material-ui/icons/Menu";
-import Brightness4Icon from "@material-ui/icons/Brightness4";
-import Brightness7Icon from "@material-ui/icons/Brightness7";
+import MenuIcon from "@mui/icons-material/Menu";
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { PaletteMode, togglePalette } from "./PaletteProvider";
-import CallToActionIcon from "@material-ui/icons/CallToAction";
+import CallToActionIcon from "@mui/icons-material/CallToAction";
 
 
 export interface HeaderProps {
@@ -19,30 +20,37 @@ export interface HeaderProps {
 export const Header = observer((props: HeaderProps) => {
   const classes = useStyles();
 
-  return <Box display={ "flex" } alignItems={ "center" } justifyContent={ "space-between" }>
-    <Hidden mdUp>
-      <IconButton onClick={ props.onToggleDrawer }>
-        <MenuIcon/>
+  return (
+    <Box display={ "flex" } alignItems={ "center" } justifyContent={ "space-between" }>
+      <Hidden mdUp>
+        <IconButton onClick={ props.onToggleDrawer } size="large">
+          <MenuIcon/>
+        </IconButton>
+      </Hidden>
+
+      <div className={ classes.syncPanel }>
+        <SyncPanel/>
+      </div>
+
+      <IconButton
+        onClick={ () => togglePalette(PaletteMode.File) }
+        title={ "Show file palette (Ctrl+P)" }
+        size="large">
+        <CallToActionIcon/>
       </IconButton>
-    </Hidden>
 
-    <div className={ classes.syncPanel }>
-      <SyncPanel/>
-    </div>
+      <IconButton
+        onClick={ () => props.setIsDark(!props.isDarkTheme) }
+        title={ props.isDarkTheme ? "Turn off dark theme" : "Turn on dark theme" }
+        size="large">
+        {
+          props.isDarkTheme ? <Brightness4Icon/> : <Brightness7Icon/>
+        }
+      </IconButton>
 
-    <IconButton onClick={ () => togglePalette(PaletteMode.File) } title={ "Show file palette (Ctrl+P)" }>
-      <CallToActionIcon/>
-    </IconButton>
-
-    <IconButton onClick={ () => props.setIsDark(!props.isDarkTheme) }
-                title={ props.isDarkTheme ? "Turn off dark theme" : "Turn on dark theme" }>
-      {
-        props.isDarkTheme ? <Brightness4Icon/> : <Brightness7Icon/>
-      }
-    </IconButton>
-
-    <ProfileHeader/>
-  </Box>;
+      <ProfileHeader/>
+    </Box>
+  );
 });
 
 

@@ -1,6 +1,7 @@
-import { IconButton, makeStyles, Menu, MenuItem } from "@material-ui/core";
+import { IconButton, Menu} from "@mui/material";
+import makeStyles from '@mui/styles/makeStyles';
 import { ProfileManager } from "./ProfileManager";
-import { AccountCircle } from "@material-ui/icons";
+import { AccountCircle } from "@mui/icons-material";
 import { useState } from "react";
 
 
@@ -9,13 +10,14 @@ export function ProfileHeader() {
   const [ menuAnchor, setMenuAnchor ] = useState<HTMLElement | undefined>(undefined);
 
   return <>
-    <IconButton title={ ProfileManager.instance.userName }
-                onClick={ e => setMenuAnchor(e.currentTarget) }>
+    <IconButton
+      title={ ProfileManager.instance.userName }
+      onClick={ e => setMenuAnchor(e.currentTarget) }
+      size="large">
       <AccountCircle/>
     </IconButton>
 
     <Menu open={ menuAnchor != null } onClose={ () => setMenuAnchor(undefined) } anchorEl={ menuAnchor || null }
-          getContentAnchorEl={ null }
           anchorOrigin={ { vertical: "bottom", horizontal: "left" } }
     >
       <div className={ classes.profileName }>
