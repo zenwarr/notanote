@@ -5,6 +5,7 @@ import S from "fluent-json-schema";
 import { EntryType } from "../common/WorkspaceEntry";
 import { ErrorCode, LogicError } from "../common/errors";
 import { commitAndPushChanges, initGithubIntegration } from "./github/Github";
+import { createSecretStorageToken } from "./SecretStorageToken";
 
 
 type WorkspaceRouteParams = {
@@ -32,6 +33,7 @@ function getWorkspace(req: FastifyRequest<{
 
 export default async function initApiRoutes(app: FastifyInstance) {
   requireAuthenticatedUser(app);
+
 
   app.get<{
     Params: WorkspaceRouteParams
@@ -61,11 +63,13 @@ export default async function initApiRoutes(app: FastifyInstance) {
 
 
   app.get<{
-    Params: WorkspaceRouteParams & FileRouteParams
+    Params: WorkspaceRouteParams & FileRouteParams,
+    Body: { token: string }
   }>("/api/workspaces/:workspaceID/files/*", {
     schema: {
       params: S.object().prop("workspaceID", S.string().required())
-      .prop("*", S.string().required())
+      .prop("*", S.string().required()),
+      body: S.object().prop("token", S.string())
     }
   }, async (req, res) => {
     const ws = getWorkspace(req);
@@ -126,9 +130,28 @@ export default async function initApiRoutes(app: FastifyInstance) {
   }, async (req, res) => {
     const ws = getWorkspace(req);
 
-    await initGithubIntegration(ws, req.body.email, req.body.remote)
+    await initGithubIntegration(ws, req.body.email, req.body.remote);
 
     return {};
+  });
+
+
+  app.post<{
+    Params: WorkspaceRouteParams
+  }>("/api/workspaces/:workspaceID/create_secret_token", {
+    schema: {
+      params: S.object().prop("workspaceID", S.string().required())
+    }
+  }, async (req, res) => {
+    const ws = getWorkspace(req);
+
+    const profile = getProfile(req);
+    return {
+      result: createSecretStorageToken({
+        user: profile.id,
+        ws: ws.id
+      })
+    };
   });
 
 

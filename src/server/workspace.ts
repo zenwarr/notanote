@@ -37,7 +37,7 @@ export class Workspace {
     const exists = await this.exists(workspaceRoot);
 
     if (exists) {
-      return new Workspace(userId, workspaceId);
+      return new Workspace(workspaceRoot, workspaceId);
     }
 
     try {
@@ -111,7 +111,13 @@ export class Workspace {
 
 
   async getAllEntries(): Promise<WorkspaceEntry[]> {
-    return getFsEntries(this.root, this.root);
+    return getFsEntries(this.root, this.root, relPath => {
+      if (relPath.startsWith(".note/secrets")) {
+        return { protected: true };
+      } else {
+        return undefined;
+      }
+    });
   }
 
 
@@ -141,7 +147,7 @@ export class Workspace {
       await fs.promises.writeFile(absoluteEntryPath, "", "utf-8");
     }
 
-    const entries = await getFsEntries(this.root, this.root);
+    const entries = await this.getAllEntries();
     return {
       path: path.relative(this.root, absoluteEntryPath),
       entries
@@ -310,7 +316,8 @@ function isPathInsideRoot(root: string, nested: string): boolean {
 }
 
 
-async function getFsEntries(dir: string, rootDir: string): Promise<WorkspaceEntry[]> {
+async function getFsEntries(dir: string, rootDir: string,
+                            getOptions?: (rootRelativePath: string, stat: fs.Stats) => Partial<WorkspaceEntry> | undefined): Promise<WorkspaceEntry[]> {
   const result: WorkspaceEntry[] = [];
 
   for (const entry of await fs.promises.readdir(dir)) {
@@ -321,15 +328,17 @@ async function getFsEntries(dir: string, rootDir: string): Promise<WorkspaceEntr
     const fullPath = path.join(dir, entry);
     const stats = await fs.promises.stat(fullPath);
 
+    const rootRelativePath = path.relative(rootDir, fullPath);
     const wEntry: WorkspaceEntry = {
-      id: path.relative(rootDir, fullPath),
+      id: rootRelativePath,
       name: entry,
-      type: stats.isDirectory() ? "dir" : "file"
+      type: stats.isDirectory() ? "dir" : "file",
+      ...getOptions?.(rootRelativePath, stats)
     };
     result.push(wEntry);
 
     if (stats.isDirectory()) {
-      wEntry.children = await getFsEntries(fullPath, rootDir);
+      wEntry.children = await getFsEntries(fullPath, rootDir, getOptions);
     }
   }
 
