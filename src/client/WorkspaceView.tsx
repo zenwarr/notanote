@@ -193,7 +193,7 @@ function renderTreeEntry(e: WorkspaceEntry, classes: { [name: string]: string })
 
 function getTooltipText(e: WorkspaceEntry): React.ReactChild {
   function formatDate(date: number | undefined) {
-    return date != null ? format(new Date(date), "yyyy-MM-dd hh:mm:ss") : "?";
+    return date != null ? format(new Date(date), "yyyy-MMM-dd hh:mm:ss") : "?";
   }
 
   return <>
