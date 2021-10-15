@@ -156,7 +156,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
             title={ "Remove selected" }
             disabled={ !workspaceManager.selectedEntry }
             size="large">
-            <DeleteForever color={ "secondary" }/>
+            <DeleteForever color={ "error" }/>
           </IconButton>
         </Box>
       </Box>
