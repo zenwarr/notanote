@@ -31,13 +31,6 @@ export interface Command {
 
 
 export const COMMANDS: Command[] = [
-  { name: "theme.set_dark", description: "Set dark theme", action: async () => console.log("set dark theme") },
-  { name: "theme.set_light", description: "Set light theme", action: async () => console.log("set light theme") },
-  {
-    name: "theme.set_follow_system",
-    description: "Set theme to follow system dark mode",
-    action: async () => console.log("set theme follow system")
-  },
   {
     name: "version.show",
     description: "Show version",
@@ -49,7 +42,7 @@ export const COMMANDS: Command[] = [
     action: initGithub
   },
   {
-    name: "github push",
+    name: "github.push",
     description: "Push changes to GitHub",
     action: pushGithub
   }
