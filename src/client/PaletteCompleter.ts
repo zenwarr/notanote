@@ -10,6 +10,10 @@ const COMPLETE_RESULT_COUNT = 10;
 
 
 export function filePaletteCompleter(value: string): PaletteOption[] {
+  if (value.startsWith(":")) {
+    return commandPaletteCompleter(value.slice(1));
+  }
+
   if (!value) {
     const recentDocs = RecentDocStorage.instance.getRecentDocs();
     let recentEntries: (WorkspaceEntry | undefined)[] = [];
