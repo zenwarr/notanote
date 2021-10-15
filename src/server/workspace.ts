@@ -325,7 +325,7 @@ async function getFsEntries(dir: string, rootDir: string): Promise<WorkspaceEntr
       id: path.relative(rootDir, fullPath),
       name: entry,
       type: stats.isDirectory() ? "dir" : "file",
-      createTs: stats.ctimeMs,
+      createTs: stats.birthtimeMs,
       updateTs: stats.mtimeMs
     };
     result.push(wEntry);
