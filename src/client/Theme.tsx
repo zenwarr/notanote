@@ -1,11 +1,6 @@
-import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
+import { createTheme, CssBaseline, ThemeProvider, useMediaQuery } from "@mui/material";
 import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
-
-
-function isSystemThemeDark(): boolean {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
-}
 
 
 function useMeta(name: string, value: string | undefined) {
@@ -42,7 +37,10 @@ export function useAppThemeContext() {
 
 
 export function useThemeController() {
-  const [ isDark, setIsDark ] = useState(isSystemThemeDark);
+  const [ darkModeOverride, setDarkModeOverride ] = useState<boolean | undefined>();
+  const systemDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
+
+  const isDark = darkModeOverride ?? systemDarkMode;
 
   useMeta("theme-color", isDark ? "#303030" : "#fafafa");
 
@@ -66,7 +64,7 @@ export function useThemeController() {
   return {
     theme,
     isDark,
-    setIsDark
+    setIsDark: (mode: boolean) => setDarkModeOverride(mode)
   };
 }
 
