@@ -42,7 +42,7 @@ export function useThemeController() {
 
   const isDark = darkModeOverride ?? systemDarkMode;
 
-  useMeta("theme-color", isDark ? "#303030" : "#fafafa");
+  useMeta("theme-color", isDark ? "#000" : "#fff");
 
   const theme = useMemo(() => createTheme(
       {
