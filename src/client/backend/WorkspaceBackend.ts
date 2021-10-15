@@ -60,33 +60,45 @@ const DEMO_WORKSPACE: WorkspaceEntry[] = [
     type: "dir",
     id: ".note",
     name: ".note",
+    createTs: new Date().valueOf(),
+    updateTs: new Date().valueOf(),
     children: [
       {
         type: "file",
         id: ".note/settings.json",
-        name: "settings.json"
+        name: "settings.json",
+        createTs: new Date().valueOf(),
+        updateTs: new Date().valueOf(),
       }
     ]
   },
   {
     type: "file",
     id: "file.md",
-    name: "file.md file.md file.md file.md file.md file.md file.md vv"
+    name: "file.md file.md file.md file.md file.md file.md file.md vv",
+    createTs: new Date().valueOf(),
+    updateTs: new Date().valueOf(),
   },
   {
     type: "dir",
     id: "another-dir",
-    name: "another-dir"
+    name: "another-dir",
+    createTs: new Date().valueOf(),
+    updateTs: new Date().valueOf(),
   },
   {
     type: "dir",
     id: "dir",
     name: "dir",
+    createTs: new Date().valueOf(),
+    updateTs: new Date().valueOf(),
     children: [
       {
         type: "file",
         id: "dir/nested.md",
-        name: "nested.md"
+        name: "nested.md",
+        createTs: new Date().valueOf(),
+        updateTs: new Date().valueOf(),
       }
     ]
   },
@@ -94,11 +106,15 @@ const DEMO_WORKSPACE: WorkspaceEntry[] = [
     type: "dir",
     id: "second-dir",
     name: "second-dir",
+    createTs: new Date().valueOf(),
+    updateTs: new Date().valueOf(),
     children: [
       {
         type: "file",
         id: "second-dir/nested.md",
-        name: "nested.md"
+        name: "nested.md",
+        createTs: new Date().valueOf(),
+        updateTs: new Date().valueOf(),
       }
     ]
   }

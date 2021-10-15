@@ -324,7 +324,9 @@ async function getFsEntries(dir: string, rootDir: string): Promise<WorkspaceEntr
     const wEntry: WorkspaceEntry = {
       id: path.relative(rootDir, fullPath),
       name: entry,
-      type: stats.isDirectory() ? "dir" : "file"
+      type: stats.isDirectory() ? "dir" : "file",
+      createTs: stats.ctimeMs,
+      updateTs: stats.mtimeMs
     };
     result.push(wEntry);
 

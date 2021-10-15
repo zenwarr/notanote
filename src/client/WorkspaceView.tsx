@@ -1,20 +1,20 @@
 import * as path from "path";
 import * as React from "react";
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { TreeItem, TreeView } from "@mui/lab";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { WorkspaceEntry } from "../common/WorkspaceEntry";
-import { Box, IconButton} from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
+import { EntryType, WorkspaceEntry } from "../common/WorkspaceEntry";
+import { Box, IconButton, Tooltip } from "@mui/material";
+import makeStyles from "@mui/styles/makeStyles";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { observer } from "mobx-react-lite";
 import { CreateEntryDialog } from "./CreateEntryDialog";
 import { CreateNewFolderOutlined, DeleteForever, PostAddOutlined } from "@mui/icons-material";
-import { EntryType } from "../common/WorkspaceEntry";
 import { useHistory } from "react-router";
 import DescriptionIcon from "@mui/icons-material/Description";
 import FolderIcon from "@mui/icons-material/Folder";
+import { format, formatRelative } from "date-fns";
 
 
 export interface WorkspaceViewProps {
@@ -132,60 +132,81 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   };
 
   return (
-    <div className={ classes.container }>
-      { createOptions.current && <CreateEntryDialog open={ entryDialogOpened }
-                                                    onClose={ onCreateDialogClose }
-                                                    type={ createOptions.current.type }
-                                                    suggestedName={ createOptions.current.suggestedName }
-                                                    parentPath={ createOptions.current.parentPath }/> }
+      <div className={ classes.container }>
+        { createOptions.current && <CreateEntryDialog open={ entryDialogOpened }
+                                                      onClose={ onCreateDialogClose }
+                                                      type={ createOptions.current.type }
+                                                      suggestedName={ createOptions.current.suggestedName }
+                                                      parentPath={ createOptions.current.parentPath }/> }
 
-      <Box mb={ 2 } display={ "flex" } justifyContent={ "space-between" } className={ classes.toolbar }>
-        <Box>
-          <IconButton onClick={ createFile } title={ "Create file" } size="large">
-            <PostAddOutlined/>
-          </IconButton>
+        <Box mb={ 2 } display={ "flex" } justifyContent={ "space-between" } className={ classes.toolbar }>
+          <Box>
+            <IconButton onClick={ createFile } title={ "Create file" } size="large">
+              <PostAddOutlined/>
+            </IconButton>
 
-          <IconButton onClick={ createFolder } title={ "Create folder" } size="large">
-            <CreateNewFolderOutlined/>
-          </IconButton>
+            <IconButton onClick={ createFolder } title={ "Create folder" } size="large">
+              <CreateNewFolderOutlined/>
+            </IconButton>
+          </Box>
+
+          <Box>
+            <IconButton
+                onClick={ remove }
+                title={ "Remove selected" }
+                disabled={ !workspaceManager.selectedEntry }
+                size="large">
+              <DeleteForever color={ "error" }/>
+            </IconButton>
+          </Box>
         </Box>
 
-        <Box>
-          <IconButton
-            onClick={ remove }
-            title={ "Remove selected" }
-            disabled={ !workspaceManager.selectedEntry }
-            size="large">
-            <DeleteForever color={ "error" }/>
-          </IconButton>
+        <Box p={ props.treeWithPadding ? 1 : undefined }>
+          <TreeView defaultCollapseIcon={ <ExpandMoreIcon/> } defaultExpandIcon={ <ChevronRightIcon/> } onNodeSelect={ onNodeSelect }
+                    expanded={ expand.expanded } onNodeToggle={ expand.onToggle }
+                    selected={ workspaceManager.selectedEntry || "" }>
+            { workspaceManager.entries.map(e => renderTreeEntry(e, labelClasses)) }
+          </TreeView>
         </Box>
-      </Box>
-
-      <Box p={ props.treeWithPadding ? 1 : undefined }>
-        <TreeView defaultCollapseIcon={ <ExpandMoreIcon/> } defaultExpandIcon={ <ChevronRightIcon/> } onNodeSelect={ onNodeSelect }
-                  expanded={ expand.expanded } onNodeToggle={ expand.onToggle }
-                  selected={ workspaceManager.selectedEntry || "" }>
-          { workspaceManager.entries.map(e => renderTreeEntry(e, labelClasses)) }
-        </TreeView>
-      </Box>
-    </div>
+      </div>
   );
 });
 
 
 function renderTreeEntry(e: WorkspaceEntry, classes: { [name: string]: string }) {
-  const label = <span title={ e.name } className={ classes.label }>
-    { e.type === "dir"
-        ? <FolderIcon className={ classes.icon } fontSize={ "small" }/>
-        : <DescriptionIcon className={ classes.icon } fontSize={ "small" }/> }
-    <span className={ classes.text }>
-      { e.name }
+  const label = <Tooltip title={ getTooltipText(e) }>
+    <span className={ classes.label }>
+      { e.type === "dir"
+          ? <FolderIcon className={ classes.icon } fontSize={ "small" }/>
+          : <DescriptionIcon className={ classes.icon } fontSize={ "small" }/> }
+      <span className={ classes.text }>
+        { e.name }
+      </span>
     </span>
-  </span>;
+  </Tooltip>;
 
   return <TreeItem nodeId={ e.id } key={ e.id } label={ label }>
     { e.children && e.children.map(c => renderTreeEntry(c, classes)) }
   </TreeItem>;
+}
+
+
+function getTooltipText(e: WorkspaceEntry): React.ReactChild {
+  function formatDate(date: number | undefined) {
+    return date != null ? format(new Date(date), "yyyy-MM-dd hh:mm:ss") : "?";
+  }
+
+  return <>
+    <div>
+      { e.name }
+    </div>
+    <div>
+      Created: { formatDate(e.createTs) }
+    </div>
+    <div>
+      Last updated: { formatDate(e.updateTs) }
+    </div>
+  </>;
 }
 
 

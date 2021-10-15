@@ -3,6 +3,8 @@ export interface WorkspaceEntry {
   name: string;
   children?: WorkspaceEntry[];
   type: "file" | "dir";
+  createTs: number | undefined;
+  updateTs: number | undefined;
 }
 
 
