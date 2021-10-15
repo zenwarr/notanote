@@ -174,7 +174,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 
 
 function renderTreeEntry(e: WorkspaceEntry, classes: { [name: string]: string }) {
-  const label = <Tooltip title={ getTooltipText(e) }>
+  const label = <Tooltip title={ getTooltipText(e) } arrow disableInteractive enterDelay={ 500 }>
     <span className={ classes.label }>
       { e.type === "dir"
           ? <FolderIcon className={ classes.icon } fontSize={ "small" }/>
