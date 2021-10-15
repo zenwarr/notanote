@@ -174,6 +174,7 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
 
 
   async githubPush(wsId: string): Promise<void> {
+    await timeout(3000);
     console.log("github push");
   }
 }

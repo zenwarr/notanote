@@ -2,8 +2,8 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { Palette, PaletteCompleter } from "./Palette";
 import { WorkspaceManager } from "./WorkspaceManager";
-import { commandPaletteCompleter, filePaletteCompleter } from "./PaletteCompleter";
-import { runCommandInBackground } from "./Shortcuts";
+import { filePaletteCompleter } from "./PaletteCompleter";
+import { CommandManager, commandPaletteCompleter } from "./commands/CommandManager";
 
 
 export enum PaletteMode {
@@ -36,7 +36,7 @@ export function PaletteProvider(props: React.PropsWithChildren<{}>) {
     if (mode === PaletteMode.File) {
       WorkspaceManager.instance.selectedEntry = value;
     } else if (mode === PaletteMode.Command) {
-      runCommandInBackground(value);
+      CommandManager.instance.run(value);
     }
 
     setMode(undefined);

@@ -3,17 +3,13 @@ import { RecentDocStorage } from "./RecentDocStorage";
 import { WorkspaceEntry } from "../common/WorkspaceEntry";
 import levenshtein from "js-levenshtein";
 import { WorkspaceManager } from "./WorkspaceManager";
-import { COMMANDS } from "./Shortcuts";
+import { commandPaletteCompleter } from "./commands/CommandManager";
 
 
 const COMPLETE_RESULT_COUNT = 10;
 
 
 export function filePaletteCompleter(value: string): PaletteOption[] {
-  if (value.startsWith(":")) {
-    return commandPaletteCompleter(value.slice(1));
-  }
-
   if (!value) {
     const recentDocs = RecentDocStorage.instance.getRecentDocs();
     let recentEntries: (WorkspaceEntry | undefined)[] = [];
@@ -93,14 +89,5 @@ function getClosestEntries(value: string, count: number, exclude: string[]): Pal
     value: entry.id,
     content: entry.name,
     description: entry.id
-  }));
-}
-
-
-export function commandPaletteCompleter(value: string): PaletteOption[] {
-  return COMMANDS.filter(c => c.name.includes(value)).map(c => ({
-    value: c.name,
-    content: "/" + c.name,
-    description: c.description
   }));
 }
