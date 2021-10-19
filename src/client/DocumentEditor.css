@@ -19,3 +19,7 @@
 .cm-editor {
   height: 100%;
 }
+
+.cm-whitespace {
+  color: gray;
+}

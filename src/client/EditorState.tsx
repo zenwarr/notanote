@@ -1,4 +1,4 @@
-import { EditorSelection, EditorState } from "@codemirror/state";
+import { EditorSelection, EditorState, Extension } from "@codemirror/state";
 import { history, historyKeymap } from "@codemirror/history";
 import { indentOnInput } from "@codemirror/language";
 import { defaultHighlightStyle, HighlightStyle } from "@codemirror/highlight";
@@ -6,7 +6,7 @@ import { bracketMatching } from "@codemirror/matchbrackets";
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/closebrackets";
 import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
-import { EditorView, keymap, placeholder, scrollPastEnd, ViewPlugin, ViewUpdate } from "@codemirror/view";
+import { EditorView, highlightSpecialChars, keymap, placeholder, scrollPastEnd, ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { createHighlightStyle } from "./Highlight";
 import { FileSettings } from "../common/WorkspaceEntry";
@@ -20,6 +20,25 @@ function getEditorPluginForFile(fileId: string) {
   } else {
     return markdown();
   }
+}
+
+
+function getPluginsFromSettings(settings: FileSettings): Extension[] {
+  const r: Extension[] = [];
+
+  if (settings.drawWhitespace) {
+    r.push(highlightSpecialChars({
+      specialChars: /[ \n]/gi,
+      render: () => {
+        const el = document.createElement("span");
+        el.textContent = "·";
+        el.className = "cm-whitespace";
+        return el;
+      }
+    }));
+  }
+
+  return r;
 }
 
 
@@ -88,7 +107,8 @@ export function createEditorState(content: string, fileId: string, settings: Fil
         }
       }),
       EditorState.tabSize.of(settings.tabWidth ?? 2),
-      scrollPastEnd()
+      scrollPastEnd(),
+      ...getPluginsFromSettings(settings)
     ]
   });
 }

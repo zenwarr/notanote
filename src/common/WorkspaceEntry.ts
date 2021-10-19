@@ -11,7 +11,8 @@ export interface WorkspaceEntry {
 export type FileSettings = BlockSettings & {
   tabWidth?: number;
   lang?: string;
-  blocks?: { [name: string]: BlockSettings }
+  blocks?: { [name: string]: BlockSettings };
+  drawWhitespace?: boolean;
 }
 
 
