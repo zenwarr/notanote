@@ -28,8 +28,8 @@ function getPluginsFromSettings(settings: FileSettings): Extension[] {
 
   if (settings.drawWhitespace) {
     r.push(highlightSpecialChars({
-      specialChars: /[ \t]/gi,
-      render: () => {
+      specialChars: /[ ]/gi,
+      render: code => {
         const el = document.createElement("span");
         el.textContent = "·";
         el.className = "cm-whitespace";

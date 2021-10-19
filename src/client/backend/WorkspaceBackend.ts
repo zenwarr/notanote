@@ -156,7 +156,8 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
           blocks: {
             ...r,
             processingInstruction: { color: "lightgray" }
-          }
+          },
+          drawWhitespace: true
         },
         content: "true"
       };
