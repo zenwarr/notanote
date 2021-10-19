@@ -21,6 +21,6 @@
 }
 
 .cm-whitespace {
-  color: gray;
+  color: var(--editor-whitespace-color);
   word-break: break-all;
 }
