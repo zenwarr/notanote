@@ -28,7 +28,7 @@ function getPluginsFromSettings(settings: FileSettings): Extension[] {
 
   if (settings.drawWhitespace) {
     r.push(highlightSpecialChars({
-      specialChars: /[ \n]/gi,
+      specialChars: /[ \t]/gi,
       render: () => {
         const el = document.createElement("span");
         el.textContent = "·";

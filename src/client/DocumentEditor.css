@@ -22,4 +22,5 @@
 
 .cm-whitespace {
   color: gray;
+  word-break: break-all;
 }
