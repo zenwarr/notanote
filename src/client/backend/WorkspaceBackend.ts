@@ -159,7 +159,7 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
           },
           drawWhitespace: true
         },
-        content: "true"
+        content: "[x] some checkbox"
       };
     } else if (entryPath === ".note/settings.json") {
       return {

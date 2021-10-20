@@ -1,18 +1,29 @@
-import { EditorSelection, EditorState, Extension, StateField } from "@codemirror/state";
+import { EditorSelection, EditorState, Extension, StateCommand, StateField } from "@codemirror/state";
 import { history, historyKeymap } from "@codemirror/history";
-import { indentOnInput } from "@codemirror/language";
+import { getIndentation, IndentContext, indentOnInput, indentString, syntaxTree } from "@codemirror/language";
 import { defaultHighlightStyle, HighlightStyle } from "@codemirror/highlight";
 import { bracketMatching } from "@codemirror/matchbrackets";
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/closebrackets";
 import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
-import { EditorView, highlightSpecialChars, keymap, placeholder, scrollPastEnd, ViewPlugin, ViewUpdate } from "@codemirror/view";
+import {
+  EditorView,
+  highlightSpecialChars,
+  KeyBinding,
+  keymap,
+  placeholder,
+  scrollPastEnd,
+  ViewPlugin,
+  ViewUpdate
+} from "@codemirror/view";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { createHighlightStyle } from "./Highlight";
 import { FileSettings } from "../common/WorkspaceEntry";
 import { json } from "@codemirror/lang-json";
 import { markdown } from "@codemirror/lang-markdown";
-import { Tooltip, showTooltip } from "@codemirror/tooltip";
+import { CHECKBOX_RE, checkboxPlugin } from "./ReactWidget";
+import { Text } from "@codemirror/text";
+import { NodeProp } from "@lezer/common";
 
 
 function getEditorPluginForFile(fileId: string) {
@@ -93,6 +104,7 @@ export function createEditorState(content: string, fileId: string, settings: Fil
       placeholder("< your note here >"),
       EditorView.lineWrapping,
       keymap.of([
+        ...customKeymap,
         ...closeBracketsKeymap,
         ...defaultKeymap,
         ...searchKeymap,
@@ -110,48 +122,115 @@ export function createEditorState(content: string, fileId: string, settings: Fil
       EditorState.tabSize.of(settings.tabWidth ?? 2),
       scrollPastEnd(),
       ...getPluginsFromSettings(settings),
+      checkboxPlugin,
       autocompletion({
         activateOnTyping: true,
         override: [
-            ctx => {
-              const match = ctx.matchBefore(/\/[a-z]*/i);
-              if (!match) {
-                return null
-              }
-
-              return {
-                from: match.from,
-                to: match.to,
-                options: [
-                  {
-                    label: "/check",
-                    apply: "[ ] "
-                  },
-                  {
-                    label: "/todo",
-                    apply: "[ ] "
-                  },
-                  {
-                    label: "/header1",
-                    apply: "# "
-                  },
-                  {
-                    label: "/header2",
-                    apply: "## "
-                  },
-                  {
-                    label: "/header3",
-                    apply: "### "
-                  },
-                  {
-                    label: "/header4",
-                    apply: "#### "
-                  }
-                ]
-              }
+          ctx => {
+            const match = ctx.matchBefore(/\/[a-z]*/i);
+            if (!match) {
+              return null;
             }
+
+            return {
+              from: match.from,
+              to: match.to,
+              options: [
+                {
+                  label: "/check",
+                  apply: "[ ] "
+                },
+                {
+                  label: "/todo",
+                  apply: "[ ] "
+                },
+                {
+                  label: "/header1",
+                  apply: "# "
+                },
+                {
+                  label: "/header2",
+                  apply: "## "
+                },
+                {
+                  label: "/header3",
+                  apply: "### "
+                },
+                {
+                  label: "/header4",
+                  apply: "#### "
+                }
+              ]
+            };
+          }
         ]
       })
     ]
   });
 }
+
+
+function isBetweenBrackets(state: EditorState, pos: number): { from: number, to: number } | null {
+  if (/\(\)|\[\]|\{\}/.test(state.sliceDoc(pos - 1, pos + 1))) return { from: pos, to: pos };
+  let context = syntaxTree(state).resolveInner(pos);
+  let before = context.childBefore(pos), after = context.childAfter(pos), closedBy;
+  if (before && after && before.to <= pos && after.from >= pos &&
+      (closedBy = before.type.prop(NodeProp.closedBy)) && closedBy.indexOf(after.name) > -1 &&
+      state.doc.lineAt(before.to).from == state.doc.lineAt(after.from).from)
+    return { from: before.to, to: after.from };
+  return null;
+}
+
+
+const newlineEditorCommand: StateCommand = ctx => {
+  const { state } = ctx;
+
+  if (state.readOnly) {
+    return false;
+  }
+
+  let changes = state.changeByRange(range => {
+    let { from, to } = range,
+        line = state.doc.lineAt(from);
+
+    let explode = from == to && isBetweenBrackets(state, from);
+
+    let cx = new IndentContext(state, { simulateBreak: from, simulateDoubleBreak: !!explode });
+    let indent = getIndentation(cx, from);
+
+    const curLineText = state.doc.lineAt(from).text;
+    if (indent == null) {
+      indent = /^\s*/.exec(curLineText)![0].length;
+    }
+
+    while (to < line.to && /\s/.test(line.text[to - line.from])) {
+      to++;
+    }
+
+    if (explode) {
+      ({ from, to } = explode);
+    } else if (from > line.from && from < line.from + 100 && !/\S/.test(line.text.slice(0, from))) {
+      from = line.from;
+    }
+
+    const isCheckboxLine = curLineText.slice(indent, indent + 3).match(CHECKBOX_RE) != null;
+    let insert = [ "", indentString(state, indent) + (isCheckboxLine ? "[ ] " : "") ];
+
+    if (explode) {
+      insert.push(indentString(state, cx.lineIndent(line.from, -1)));
+    }
+
+    return {
+      changes: { from, to, insert: Text.of(insert) },
+      range: EditorSelection.cursor(from + 1 + insert[1].length)
+    };
+  });
+
+  ctx.dispatch(state.update(changes, { scrollIntoView: true, userEvent: "input" }));
+  return true;
+};
+
+
+const customKeymap: KeyBinding[] = [
+  { key: "Enter", run: newlineEditorCommand }
+];

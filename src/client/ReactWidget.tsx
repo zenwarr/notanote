@@ -1,14 +1,17 @@
-import { Decoration, DecorationSet, EditorView, Range, ViewPlugin, ViewUpdate, WidgetType } from "@codemirror/view";
+import { Decoration, DecorationSet, EditorView, MatchDecorator, Range, ViewPlugin, ViewUpdate, WidgetType } from "@codemirror/view";
 import * as ReactDOM from "react-dom";
 import { ReactElement } from "react";
 import { Checkbox } from "@mui/material";
-import { syntaxTree } from "@codemirror/language";
 
 
 abstract class ReactWidget<StateType> extends WidgetType {
-  constructor(private readonly state: StateType) {
+  constructor(state: StateType) {
     super();
+    this.state = state;
   }
+
+
+  readonly state: StateType;
 
 
   eq(other: ReactWidget<StateType>): boolean {
@@ -28,68 +31,64 @@ abstract class ReactWidget<StateType> extends WidgetType {
 
 
 class CheckboxWidget extends ReactWidget<boolean> {
-  render(props: boolean, view: EditorView) {
-    function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-      toggleBoolean(view, view.posAtDOM(e.target));
+  render(isChecked: boolean, view: EditorView) {
+    const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      this.toggleBoolean(view, view.posAtDOM(e.target));
     }
 
-    return <Checkbox checked={ props } onChange={ onChange }/>;
+    return <Checkbox checked={ isChecked } onChange={ onChange } style={ { padding: 0, verticalAlign: "bottom" } }/>;
+  }
+
+  toggleBoolean(view: EditorView, pos: number) {
+    let before = view.state.doc.sliceString(pos, pos + 3);
+
+    let change;
+    if (before == "[ ]") {
+      change = { from: pos, to: pos + 3, insert: "[x]" };
+    } else if (before === "[x]") {
+      change = { from: pos, to: pos + 3, insert: "[ ]" };
+    } else {
+      return false;
+    }
+
+    view.dispatch({ changes: change });
+    return true;
   }
 }
 
 
-function checkboxes(view: EditorView) {
-  let widgets: Range<Decoration>[] = [];
+export const CHECKBOX_RE = /\[[ x]]/g;
 
-  for (let { from, to } of view.visibleRanges) {
-    syntaxTree(view.state).iterate({
-      from,
-      to,
-      enter: (type, from, to) => {
-        const value = view.state.doc.sliceString(from, to);
-        if (value === "[ ]" || value === "[x]") {
-          let isTrue = value === "[ ]";
-
-          let decorator = Decoration.replace({
-            widget: new CheckboxWidget(isTrue)
-          });
-          widgets.push(decorator.range(from, to));
-        }
-      }
-    });
-  }
-
-  return Decoration.set(widgets);
-}
 
 export const checkboxPlugin = ViewPlugin.fromClass(class {
   decorations: DecorationSet;
+  decorator: MatchDecorator;
 
 
   constructor(view: EditorView) {
-    this.decorations = checkboxes(view);
+    this.decorator = this.makeDecorator();
+    this.decorations = this.decorator.createDeco(view);
   }
 
 
   update(update: ViewUpdate) {
-    if (update.docChanged || update.viewportChanged)
-      this.decorations = checkboxes(update.view);
+    if (update.docChanged || update.viewportChanged) {
+      this.decorations = this.decorator.updateDeco(update, this.decorations);
+    }
+  }
+
+
+  protected makeDecorator() {
+    return new MatchDecorator({
+      regexp: CHECKBOX_RE,
+      decoration: match => {
+        return Decoration.replace({
+          widget: new CheckboxWidget(match[0] === "[x]"),
+          inclusive: true
+        });
+      }
+    });
   }
 }, {
   decorations: v => v.decorations
 });
-
-function toggleBoolean(view: EditorView, pos: number) {
-  console.log("toggleBoolean", pos);
-
-  let before = view.state.doc.sliceString(Math.max(0, pos - 5), pos);
-  let change;
-  if (before == "[ ]")
-    change = { from: pos - 3, to: pos, insert: "[x]" };
-  else if (before == "[x]")
-    change = { from: pos - 3, to: pos, insert: "[ ]" };
-  else
-    return false;
-  view.dispatch({ changes: change });
-  return true;
-}

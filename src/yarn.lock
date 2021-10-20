@@ -1729,7 +1729,7 @@
     "@types/yargs" "^16.0.0"
     chalk "^4.0.0"
 
-"@lezer/common@^0.15.0", "@lezer/common@^0.15.5":
+"@lezer/common@^0.15.0", "@lezer/common@^0.15.5", "@lezer/common@^0.15.7":
   version "0.15.7"
   resolved "https://registry.npmjs.org/@lezer/common/-/common-0.15.7.tgz#8b445dae9777f689783132cf490770ece3c03d7b"
   integrity sha512-Rw8TDJnBzZnkyzIXs1Tmmd241FrBLJBj8gkdy3y0joGFb8Z4I/joKEsR+gv1pb13o1TMsZxm3fmP+d/wPt2CTQ==
