@@ -1,4 +1,4 @@
-import { EditorSelection, EditorState, Extension } from "@codemirror/state";
+import { EditorSelection, EditorState, Extension, StateField } from "@codemirror/state";
 import { history, historyKeymap } from "@codemirror/history";
 import { indentOnInput } from "@codemirror/language";
 import { defaultHighlightStyle, HighlightStyle } from "@codemirror/highlight";
@@ -12,6 +12,7 @@ import { createHighlightStyle } from "./Highlight";
 import { FileSettings } from "../common/WorkspaceEntry";
 import { json } from "@codemirror/lang-json";
 import { markdown } from "@codemirror/lang-markdown";
+import { Tooltip, showTooltip } from "@codemirror/tooltip";
 
 
 function getEditorPluginForFile(fileId: string) {
@@ -108,7 +109,49 @@ export function createEditorState(content: string, fileId: string, settings: Fil
       }),
       EditorState.tabSize.of(settings.tabWidth ?? 2),
       scrollPastEnd(),
-      ...getPluginsFromSettings(settings)
+      ...getPluginsFromSettings(settings),
+      autocompletion({
+        activateOnTyping: true,
+        override: [
+            ctx => {
+              const match = ctx.matchBefore(/\/[a-z]+/i);
+              if (!match) {
+                return null
+              }
+
+              return {
+                from: match.from,
+                to: match.to,
+                options: [
+                  {
+                    label: "/check",
+                    apply: "[ ] "
+                  },
+                  {
+                    label: "/todo",
+                    apply: "[ ] "
+                  },
+                  {
+                    label: "/header1",
+                    apply: "# "
+                  },
+                  {
+                    label: "/header2",
+                    apply: "## "
+                  },
+                  {
+                    label: "/header3",
+                    apply: "### "
+                  },
+                  {
+                    label: "/header4",
+                    apply: "#### "
+                  }
+                ]
+              }
+            }
+        ]
+      })
     ]
   });
 }
