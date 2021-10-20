@@ -114,7 +114,7 @@ export function createEditorState(content: string, fileId: string, settings: Fil
         activateOnTyping: true,
         override: [
             ctx => {
-              const match = ctx.matchBefore(/\/[a-z]+/i);
+              const match = ctx.matchBefore(/\/[a-z]*/i);
               if (!match) {
                 return null
               }
