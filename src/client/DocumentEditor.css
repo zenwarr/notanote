@@ -24,3 +24,7 @@
   color: var(--editor-whitespace-color);
   word-break: break-all;
 }
+
+.cm-editor .cm-placeholder {
+  display: inline;
+}
