@@ -1094,13 +1094,13 @@
   resolved "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@codemirror/autocomplete@^0.19.0", "@codemirror/autocomplete@^0.19.3":
-  version "0.19.3"
-  resolved "https://registry.npmjs.org/@codemirror/autocomplete/-/autocomplete-0.19.3.tgz#0266ac29617277d2d8cc7dcfb600c1e50c332d35"
-  integrity sha512-5juP6hVrHAogzQ0JUTQuibE8j1seqeGNJ98qLUPuliI6kLBg5INS4qvUI1Brqye+wYPFu7UHqrrn13RLh5YSzw==
+"@codemirror/autocomplete@^0.19.0", "@codemirror/autocomplete@^0.19.4":
+  version "0.19.4"
+  resolved "https://registry.npmjs.org/@codemirror/autocomplete/-/autocomplete-0.19.4.tgz#2faff94d5a566864444b22fb765d12a3d328bc02"
+  integrity sha512-Wuuf4xZ9opIpUwMvxFMknC1C202qtTx1q5bS1GuMnTK4lBYoG+tekpAqlLBF3x6fEe2+fw6dRLwYTigtCuS7pQ==
   dependencies:
     "@codemirror/language" "^0.19.0"
-    "@codemirror/state" "^0.19.0"
+    "@codemirror/state" "^0.19.2"
     "@codemirror/text" "^0.19.2"
     "@codemirror/tooltip" "^0.19.0"
     "@codemirror/view" "^0.19.0"
@@ -1214,23 +1214,10 @@
     "@codemirror/language" "^0.19.0"
     "@lezer/json" "^0.15.0"
 
-"@codemirror/lang-markdown@^0.19.0":
+"@codemirror/lang-markdown@^0.19.0", "@codemirror/lang-markdown@^0.19.2":
   version "0.19.2"
   resolved "https://registry.npmjs.org/@codemirror/lang-markdown/-/lang-markdown-0.19.2.tgz#d475cee6e716f29bf90e3f687498c8ae06eefeb2"
   integrity sha512-LFzY5TEPmKEBe9ABpG7XujW5pXZwyreunsROOwxewsri0XpupKj3WDfM8U7RwgM0aVc2pXP1u7R1C2MdQPOwPQ==
-  dependencies:
-    "@codemirror/highlight" "^0.19.0"
-    "@codemirror/lang-html" "^0.19.0"
-    "@codemirror/language" "^0.19.0"
-    "@codemirror/state" "^0.19.0"
-    "@codemirror/view" "^0.19.0"
-    "@lezer/common" "^0.15.0"
-    "@lezer/markdown" "^0.15.0"
-
-"@codemirror/lang-markdown@^0.19.1":
-  version "0.19.1"
-  resolved "https://registry.npmjs.org/@codemirror/lang-markdown/-/lang-markdown-0.19.1.tgz#4d03378cad8939394b54a991d534c906e779b6b0"
-  integrity sha512-J79Y27G7rlDtEEe5ObtRhHeSpyHCClQUEin9D+22jQf41SDdND1f4Qxm2Q5itQGF9IvWBhqbfvSRYfj+1sTZrg==
   dependencies:
     "@codemirror/highlight" "^0.19.0"
     "@codemirror/lang-html" "^0.19.0"
