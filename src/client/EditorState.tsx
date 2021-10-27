@@ -20,17 +20,21 @@ import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { createHighlightStyle } from "./Highlight";
 import { FileSettings } from "../common/WorkspaceEntry";
 import { json } from "@codemirror/lang-json";
-import { markdown } from "@codemirror/lang-markdown";
+import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { CHECKBOX_RE, checkboxPlugin } from "./ReactWidget";
 import { Text } from "@codemirror/text";
 import { NodeProp } from "@lezer/common";
+import { languages } from "@codemirror/language-data"
 
 
 function getEditorPluginForFile(fileId: string) {
   if (fileId.endsWith(".json")) {
     return json();
   } else {
-    return markdown();
+    return markdown({
+      base: markdownLanguage,
+      codeLanguages: languages
+    });
   }
 }
 
