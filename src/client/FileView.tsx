@@ -5,6 +5,8 @@ import { DocumentEditor } from "./DocumentEditor";
 import { observer } from "mobx-react-lite";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { useWindowTitle } from "./useWindowTitle";
+import { CircularProgress } from "@mui/material";
+import { makeStyles } from "@mui/styles";
 
 
 export type FileViewProps = {
@@ -14,13 +16,14 @@ export type FileViewProps = {
 
 
 export function FileView(props: FileViewProps) {
+  const classes = useStyles();
   const contentLoad = useLoad(useCallback(async () => {
     return DocumentManager.instance.create(props.fileID);
   }, [ props.fileID ]));
 
   if (!contentLoad.isLoaded) {
-    return <div>
-      loading...
+    return <div className={ classes.loader }>
+      <CircularProgress />
     </div>;
   }
 
@@ -41,3 +44,12 @@ export const ConnectedFileView = observer((props: ConnectedFileViewProps) => {
 
   return openedDoc ? <FileView fileID={ openedDoc?.id } className={ props.className }/> : null;
 });
+
+
+const useStyles = makeStyles(theme => ({
+  loader: {
+    padding: theme.spacing(2),
+    display: "flex",
+    justifyContent: "center"
+  }
+}));
