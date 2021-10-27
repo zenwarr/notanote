@@ -34,19 +34,23 @@ class CheckboxWidget extends ReactWidget<boolean> {
   render(isChecked: boolean, view: EditorView) {
     const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       this.toggleBoolean(view, view.posAtDOM(e.target));
-    }
+    };
 
-    return <Checkbox checked={ isChecked } onChange={ onChange } style={ { padding: 0, verticalAlign: "bottom" } }/>;
+    return <input type={ "checkbox" } checked={ isChecked } onChange={ onChange } style={ { verticalAlign: "middle" } }/>;
   }
 
+
   toggleBoolean(view: EditorView, pos: number) {
-    let before = view.state.doc.sliceString(pos, pos + 3);
+    const start = pos - 3;
+    const end = pos;
+
+    let checkText = view.state.doc.sliceString(start, end);
 
     let change;
-    if (before == "[ ]") {
-      change = { from: pos, to: pos + 3, insert: "[x]" };
-    } else if (before === "[x]") {
-      change = { from: pos, to: pos + 3, insert: "[ ]" };
+    if (checkText == "[ ]") {
+      change = { from: start, to: end, insert: "[x]" };
+    } else if (checkText === "[x]") {
+      change = { from: start, to: end, insert: "[ ]" };
     } else {
       return false;
     }
