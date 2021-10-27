@@ -23,7 +23,7 @@ export const Header = observer((props: HeaderProps) => {
 
   return (
       <Box display={ "flex" } alignItems={ "center" } justifyContent={ "space-between" }>
-        <Hidden mdUp>
+        <Hidden lgUp>
           <IconButton onClick={ props.onToggleDrawer } size="large">
             <MenuIcon/>
           </IconButton>

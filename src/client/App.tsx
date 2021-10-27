@@ -45,13 +45,13 @@ export function App() {
     <PaletteProvider>
       <div className={ classes.root }>
         <div className={ classes.workspaceView }>
-          <Hidden mdDown>
+          <Hidden lgDown>
             <Box p={ 2 } className={ classes.workspaceViewContainer }>
               <WorkspaceView/>
             </Box>
           </Hidden>
 
-          <Hidden mdUp>
+          <Hidden lgUp>
             <SwipeableDrawer open={ drawerOpen } onOpen={ () => setDrawerOpen(true) } onClose={ () => setDrawerOpen(false) }
                              disableBackdropTransition={ !iOS } disableDiscovery={ iOS }>
               <Box className={ classes.workspaceViewContainer }>
@@ -101,14 +101,14 @@ const useStyles = makeStyles(theme => ({
     top: 0,
     left: 0,
     paddingRight: theme.spacing(2),
-    [theme.breakpoints.down("md")]: {
+    [theme.breakpoints.down("lg")]: {
       display: "none"
     }
   },
   workspaceViewContainer: {
     maxWidth: "300px",
     minWidth: "300px",
-    [theme.breakpoints.down("md")]: {
+    [theme.breakpoints.down("lg")]: {
       width: 500,
       maxWidth: "90vw"
     }
@@ -120,7 +120,7 @@ const useStyles = makeStyles(theme => ({
     display: "flex",
     flexDirection: "column",
     marginBottom: theme.spacing(3),
-    [theme.breakpoints.down("md")]: {
+    [theme.breakpoints.down("lg")]: {
       padding: theme.spacing(2)
     }
   },
