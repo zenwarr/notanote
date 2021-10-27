@@ -62,7 +62,7 @@ export function App() {
         </div>
 
         <div className={ classes.docView }>
-          <div className={ classes.syncPanel }>
+          <div className={ classes.header }>
             <Header onToggleDrawer={ () => setDrawerOpen(!drawerOpen) } isDarkTheme={ appTheme.isDark } setIsDark={ appTheme.setIsDark }/>
           </div>
 
@@ -121,18 +121,18 @@ const useStyles = makeStyles(theme => ({
     flexDirection: "column",
     marginBottom: theme.spacing(3),
     [theme.breakpoints.down("lg")]: {
-      padding: theme.spacing(2)
+      paddingTop: 0
     }
   },
   docEditor: {
     height: "calc(100% - 40px)",
-    width: "100%",
-    maxWidth: 900,
-    marginLeft: "auto",
-    marginRight: "auto"
+    width: "100%"
   },
-  syncPanel: {
+  header: {
     marginBottom: theme.spacing(2),
-    marginRight: theme.spacing(2)
+    marginRight: theme.spacing(2),
+    [theme.breakpoints.down("lg")]: {
+      padding: theme.spacing(2)
+    }
   }
 }));

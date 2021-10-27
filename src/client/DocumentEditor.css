@@ -28,3 +28,9 @@
 .cm-editor .cm-placeholder {
   display: inline;
 }
+
+.cm-editor .cm-content {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
