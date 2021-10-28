@@ -1,7 +1,15 @@
-import { Decoration, DecorationSet, EditorView, MatchDecorator, Range, ViewPlugin, ViewUpdate, WidgetType } from "@codemirror/view";
+import {
+  Decoration,
+  DecorationSet,
+  EditorView,
+  MatchDecorator,
+  PluginField,
+  ViewPlugin,
+  ViewUpdate,
+  WidgetType
+} from "@codemirror/view";
 import * as ReactDOM from "react-dom";
 import { ReactElement } from "react";
-import { Checkbox } from "@mui/material";
 
 
 abstract class ReactWidget<StateType> extends WidgetType {
@@ -94,5 +102,6 @@ export const checkboxPlugin = ViewPlugin.fromClass(class {
     });
   }
 }, {
-  decorations: v => v.decorations
+  decorations: v => v.decorations,
+  provide: PluginField.atomicRanges.from(v => v.decorations)
 });
