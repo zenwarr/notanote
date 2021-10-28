@@ -34,3 +34,12 @@
   margin-left: auto;
   margin-right: auto;
 }
+
+.cm-editor .cm-selectionBackground,
+.cm-editor .cm-focused .cm-selectionBackground {
+  background-color: var(--editor-selection-color) !important;
+}
+
+.cm-editor .cm-cursor-primary {
+  border-color: var(--editor-cursor-color) !important;
+}

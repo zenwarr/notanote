@@ -76,6 +76,8 @@ function setEditorVars(el: HTMLElement, settings: FileSettings, isDarkTheme: boo
   el.style.setProperty("--editor-font-family", settings.fontFamily ?? null);
   el.style.setProperty("--editor-caret-color", isDarkTheme ? "lightgray" : "black");
   el.style.setProperty("--editor-whitespace-color", isDarkTheme ? "gray" : "#b5b5b5");
+  el.style.setProperty("--editor-selection-color", isDarkTheme ? "#464646" : "#d7d4f0");
+  el.style.setProperty("--editor-cursor-color", isDarkTheme ? "white" : "black");
 
   document.documentElement.lang = settings.lang || "en";
 }
