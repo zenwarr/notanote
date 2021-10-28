@@ -1,4 +1,4 @@
-import { EditorSelection, EditorState, Extension, StateCommand, StateField } from "@codemirror/state";
+import { EditorSelection, EditorState, Extension, StateCommand } from "@codemirror/state";
 import { history, historyKeymap } from "@codemirror/history";
 import { getIndentation, IndentContext, indentOnInput, indentString, syntaxTree } from "@codemirror/language";
 import { defaultHighlightStyle, HighlightStyle } from "@codemirror/highlight";
@@ -25,7 +25,8 @@ import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { CHECKBOX_RE, checkboxPlugin } from "./ReactWidget";
 import { Text } from "@codemirror/text";
 import { NodeProp } from "@lezer/common";
-import { languages } from "@codemirror/language-data"
+import { languages } from "@codemirror/language-data";
+import { format } from "date-fns";
 
 
 function getEditorPluginForFile(fileId: string) {
@@ -160,6 +161,12 @@ export function createEditorState(content: string, fileId: string, settings: Fil
                 {
                   label: "/header4",
                   apply: "#### "
+                },
+                {
+                  label: "/date",
+                  apply: (view, completion, from, to) => {
+                    view.dispatch({ changes: { from, to, insert: getCurrentDate() } });
+                  }
                 }
               ]
             };
@@ -168,6 +175,11 @@ export function createEditorState(content: string, fileId: string, settings: Fil
       })
     ]
   });
+}
+
+
+function getCurrentDate(): string {
+  return format(new Date(), "dd.LL.yyyy");
 }
 
 
