@@ -13,10 +13,3 @@ services:
       - ENV_FILE=/env/.env
       - CONFIG_DIR=/config
     init: true
-    networks:
-      - default
-
-networks:
-  default:
-    external:
-      name: vps-network

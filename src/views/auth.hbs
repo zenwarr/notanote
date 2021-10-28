@@ -18,8 +18,10 @@
   </button>
 </form>
 
-<div>
-  <a href="/auth/google">Login with Google</a>
-</div>
+{{#if oauthEnabled}}
+  <div>
+    <a href="/auth/google">Login with Google</a>
+  </div>
+{{/if}}
 </body>
 </html>

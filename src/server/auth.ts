@@ -20,18 +20,23 @@ const LOCAL_ADMIN_PROFILE_ID = "admin";
 const ALLOWED_GOOGLE_PROFILES = (process.env["ALLOWED_GOOGLE_PROFILES"] ?? "").split(",");
 
 
+const OAUTH_ENABLED = process.env["OAUTH_CLIENT_ID"] != null;
+
+
 export async function configureAuth(app: FastifyInstance) {
-  fastifyPassport.use("google", new GoogleStrategy({
-    clientID: process.env["OAUTH_CLIENT_ID"]!,
-    clientSecret: process.env["OAUTH_SECRET"]!,
-    callbackURL: process.env["OAUTH_REDIRECT_URL"]
-  }, (accessToken: string, refreshToken: string, profile: any, cb: (err?: Error, user?: UserInfo) => void) => {
-    if (!ALLOWED_GOOGLE_PROFILES.includes(profile.id) && !ALLOWED_GOOGLE_PROFILES.includes("*")) {
-      cb(new Error("you are not allowed to use this application"));
-    } else {
-      cb(undefined, { id: profile.id, name: profile.displayName });
-    }
-  }));
+  if (OAUTH_ENABLED) {
+    fastifyPassport.use("google", new GoogleStrategy({
+      clientID: process.env["OAUTH_CLIENT_ID"]!,
+      clientSecret: process.env["OAUTH_SECRET"]!,
+      callbackURL: process.env["OAUTH_REDIRECT_URL"]
+    }, (accessToken: string, refreshToken: string, profile: any, cb: (err?: Error, user?: UserInfo) => void) => {
+      if (!ALLOWED_GOOGLE_PROFILES.includes(profile.id) && !ALLOWED_GOOGLE_PROFILES.includes("*")) {
+        cb(new Error("you are not allowed to use this application"));
+      } else {
+        cb(undefined, { id: profile.id, name: profile.displayName });
+      }
+    }));
+  }
 
   fastifyPassport.use("local", new LocalStrategy({
     usernameField: "password",
@@ -105,7 +110,9 @@ export function getProfile(req: FastifyRequest): UserInfo {
 
 export default async function initAuth(app: FastifyInstance) {
   app.get("/auth", (req, res) => {
-    res.view("auth");
+    res.view("auth", {
+      oauthEnabled: OAUTH_ENABLED
+    });
   });
 
   app.post(
@@ -122,28 +129,30 @@ export default async function initAuth(app: FastifyInstance) {
       }
   );
 
-  app.get(
-      "/auth/google",
-      {
-        preValidation: fastifyPassport.authenticate("google", {
-          scope: [ "profile" ]
-        })
-      },
-      () => {
-        // do nothing
-      }
-  );
+  if (OAUTH_ENABLED) {
+    app.get(
+        "/auth/google",
+        {
+          preValidation: fastifyPassport.authenticate("google", {
+            scope: [ "profile" ]
+          })
+        },
+        () => {
+          // do nothing
+        }
+    );
 
-  app.get(
-      "/auth/oauth_callback",
-      {
-        preValidation: fastifyPassport.authenticate("google", {
-          successMessage: "you are successfully logged in",
-          successRedirect: "/"
-        })
-      },
-      () => {
-        // do nothing
-      }
-  );
+    app.get(
+        "/auth/oauth_callback",
+        {
+          preValidation: fastifyPassport.authenticate("google", {
+            successMessage: "you are successfully logged in",
+            successRedirect: "/"
+          })
+        },
+        () => {
+          // do nothing
+        }
+    );
+  }
 }
