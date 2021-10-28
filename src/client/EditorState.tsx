@@ -7,6 +7,7 @@ import { closeBrackets, closeBracketsKeymap } from "@codemirror/closebrackets";
 import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import {
+  drawSelection,
   EditorView,
   highlightSpecialChars,
   KeyBinding,
@@ -96,7 +97,7 @@ export function createEditorState(content: string, fileId: string, settings: Fil
     selection: getStoredSelectionForFile(fileId, content) || { anchor: 0 },
     extensions: [
       history(),
-      // drawSelection(),
+      drawSelection(),
       // EditorState.allowMultipleSelections.of(true),
       indentOnInput(),
       defaultHighlightStyle.fallback,
