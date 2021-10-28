@@ -146,10 +146,6 @@ export function createEditorState(content: string, fileId: string, settings: Fil
                   apply: "[ ] "
                 },
                 {
-                  label: "/todo",
-                  apply: "[ ] "
-                },
-                {
                   label: "/header1",
                   apply: "# "
                 },
