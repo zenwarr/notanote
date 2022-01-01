@@ -27,6 +27,7 @@ import { Text } from "@codemirror/text";
 import { NodeProp } from "@lezer/common";
 import { languages } from "@codemirror/language-data";
 import { format } from "date-fns";
+import { Document, DocumentEditorStateAdapter } from "./Document";
 
 
 function getEditorPluginForFile(fileId: string) {
@@ -247,3 +248,26 @@ const newlineEditorCommand: StateCommand = ctx => {
 const customKeymap: KeyBinding[] = [
   { key: "Enter", run: newlineEditorCommand }
 ];
+
+
+export class CmDocumentEditorStateAdapter implements DocumentEditorStateAdapter {
+  constructor(doc: Document) {
+    this.doc = doc;
+    const self = this;
+    this.state = createEditorState(doc.initialContent, doc.fileId, doc.settings, {
+      onUpdate: upd => {
+        if (upd.docChanged) {
+          self.doc.onChanges();
+        }
+        self.state = upd.state;
+      }
+    });
+  }
+
+  getContent() {
+    return this.state.doc.toString();
+  }
+
+  state: EditorState;
+  private readonly doc: Document;
+}

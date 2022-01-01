@@ -1,42 +1,50 @@
-import { EditorState } from "@codemirror/state";
 import { makeObservable, observable } from "mobx";
 import * as luxon from "luxon";
 import { Backend } from "./backend/Backend";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { FileSettings } from "../common/WorkspaceEntry";
-import { createEditorState } from "./EditorState";
 import { DocumentManager } from "./DocumentManager";
 
 
 const AUTO_SAVE_TIMEOUT = luxon.Duration.fromObject({ seconds: 5 });
 
 
+export interface DocumentEditorStateAdapter {
+  getContent(): string;
+}
+
+
 export class Document {
   constructor(content: string, fileId: string, settings: FileSettings) {
     this.fileId = fileId;
     this.settings = settings;
+    this.initialContent = content;
 
     makeObservable(this, {
       lastSave: observable,
       lastSaveError: observable,
       saveState: observable
     });
-
-    const self = this;
-    this.editorState = createEditorState(content, fileId, settings, {
-      onUpdate: upd => {
-        if (upd.docChanged) {
-          self.onChanges();
-        }
-        self.editorState = upd.state;
-      }
-    });
   }
 
 
-  getContents() {
-    return this.editorState.doc.toString();
+  setEditorStateAdapter(adapter: DocumentEditorStateAdapter) {
+    this.adapter = adapter;
+  }
+
+
+  getEditorStateAdapter() {
+    return this.adapter;
+  }
+
+
+  getContent(): string {
+    if (this.adapter) {
+      return this.adapter.getContent();
+    } else {
+      return this.initialContent;
+    }
   }
 
 
@@ -68,7 +76,7 @@ export class Document {
     this.saveState = SaveState.Saving;
 
     try {
-      await Backend.get(WorkspaceBackend).saveEntry(WorkspaceManager.instance.id, this.fileId, this.getContents());
+      await Backend.get(WorkspaceBackend).saveEntry(WorkspaceManager.instance.id, this.fileId, this.getContent());
 
       this.lastSaveError = undefined;
       this.lastSave = new Date();
@@ -87,11 +95,12 @@ export class Document {
   }
 
 
-  editorState: EditorState;
   private hadChangesWhileSaving = false;
   private saveTimer: any = undefined;
   readonly fileId: string;
   readonly settings: FileSettings;
+  readonly initialContent: string;
+  private adapter: DocumentEditorStateAdapter | undefined;
 
   lastSave: Date | undefined = undefined;
   lastSaveError: string | undefined = undefined;

@@ -1,9 +1,10 @@
-import { Document, SaveState } from "./Document";
+import { Document, DocumentEditorStateAdapter, SaveState } from "./Document";
 import { computed, makeObservable, observable } from "mobx";
 import { WorkspaceBackend } from "./backend/WorkspaceBackend";
 import { Backend } from "./backend/Backend";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { SpecialFiles } from "../common/SpecialFiles";
+import { CmDocumentEditorStateAdapter } from "./EditorState";
 
 
 export class DocumentManager {
@@ -28,6 +29,7 @@ export class DocumentManager {
     const entryInfo = await Backend.get(WorkspaceBackend).getEntry(WorkspaceManager.instance.id, fileId);
 
     const document = new Document(entryInfo.content, fileId, entryInfo.settings);
+    document.setEditorStateAdapter(this.getStateAdapterForFile(document));
     this.documents.set(fileId, { doc: document, usageCount: 1 });
     return document;
   }
@@ -60,6 +62,11 @@ export class DocumentManager {
         }
       }
     }
+  }
+
+
+  protected getStateAdapterForFile(doc: Document): DocumentEditorStateAdapter {
+    return new CmDocumentEditorStateAdapter(doc)
   }
 
 

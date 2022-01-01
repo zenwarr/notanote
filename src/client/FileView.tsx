@@ -1,7 +1,7 @@
 import { useLoad } from "./useLoad";
 import { useCallback} from "react";
 import { DocumentManager } from "./DocumentManager";
-import { DocumentEditor } from "./DocumentEditor";
+import { TextDocumentEditor } from "./TextDocumentEditor";
 import { observer } from "mobx-react-lite";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { useWindowTitle } from "./useWindowTitle";
@@ -27,7 +27,7 @@ export function FileView(props: FileViewProps) {
     </div>;
   }
 
-  return <DocumentEditor doc={ contentLoad.data } fileId={ props.fileID } className={ props.className }/>;
+  return <TextDocumentEditor doc={ contentLoad.data } className={ props.className }/>;
 }
 
 
