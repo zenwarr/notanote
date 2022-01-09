@@ -5,6 +5,7 @@ import { Backend } from "./backend/Backend";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { SpecialFiles } from "../common/SpecialFiles";
 import { CmDocumentEditorStateAdapter } from "./EditorState";
+import { PluginManager } from "./plugin/PluginManager";
 
 
 export class DocumentManager {
@@ -29,7 +30,7 @@ export class DocumentManager {
     const entryInfo = await Backend.get(WorkspaceBackend).getEntry(WorkspaceManager.instance.id, fileId);
 
     const document = new Document(entryInfo.content, fileId, entryInfo.settings);
-    document.setEditorStateAdapter(this.getStateAdapterForFile(document));
+    document.setEditorStateAdapter(await this.getStateAdapterForFile(document));
     this.documents.set(fileId, { doc: document, usageCount: 1 });
     return document;
   }
@@ -65,8 +66,19 @@ export class DocumentManager {
   }
 
 
-  protected getStateAdapterForFile(doc: Document): DocumentEditorStateAdapter {
-    return new CmDocumentEditorStateAdapter(doc)
+  protected async getStateAdapterForFile(doc: Document): Promise<DocumentEditorStateAdapter> {
+    if (doc.settings.editor != null) {
+      const editorName = doc.settings.editor.name;
+      const editor = await PluginManager.instance.getEditor(editorName);
+      if (!editor) {
+        console.error(`Failed to find matching editor: ${editorName}`)
+        return new CmDocumentEditorStateAdapter(doc);
+      } else {
+        return new editor.stateAdapter(doc);
+      }
+    } else {
+      return new CmDocumentEditorStateAdapter(doc);
+    }
   }
 
 

@@ -11,7 +11,7 @@ const AUTO_SAVE_TIMEOUT = luxon.Duration.fromObject({ seconds: 5 });
 
 
 export interface DocumentEditorStateAdapter {
-  getContent(): string;
+  serializeContent(): string | Promise<string>;
 }
 
 
@@ -19,7 +19,7 @@ export class Document {
   constructor(content: string, fileId: string, settings: FileSettings) {
     this.fileId = fileId;
     this.settings = settings;
-    this.initialContent = content;
+    this.initialSerializedContent = content;
 
     makeObservable(this, {
       lastSave: observable,
@@ -39,11 +39,11 @@ export class Document {
   }
 
 
-  getContent(): string {
+  serializeContent(): string | Promise<string> {
     if (this.adapter) {
-      return this.adapter.getContent();
+      return this.adapter.serializeContent();
     } else {
-      return this.initialContent;
+      return this.initialSerializedContent;
     }
   }
 
@@ -76,7 +76,7 @@ export class Document {
     this.saveState = SaveState.Saving;
 
     try {
-      await Backend.get(WorkspaceBackend).saveEntry(WorkspaceManager.instance.id, this.fileId, this.getContent());
+      await Backend.get(WorkspaceBackend).saveEntry(WorkspaceManager.instance.id, this.fileId, await this.serializeContent());
 
       this.lastSaveError = undefined;
       this.lastSave = new Date();
@@ -99,7 +99,7 @@ export class Document {
   private saveTimer: any = undefined;
   readonly fileId: string;
   readonly settings: FileSettings;
-  readonly initialContent: string;
+  readonly initialSerializedContent: string;
   private adapter: DocumentEditorStateAdapter | undefined;
 
   lastSave: Date | undefined = undefined;

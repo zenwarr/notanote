@@ -254,7 +254,7 @@ export class CmDocumentEditorStateAdapter implements DocumentEditorStateAdapter 
   constructor(doc: Document) {
     this.doc = doc;
     const self = this;
-    this.state = createEditorState(doc.initialContent, doc.fileId, doc.settings, {
+    this.state = createEditorState(doc.initialSerializedContent, doc.fileId, doc.settings, {
       onUpdate: upd => {
         if (upd.docChanged) {
           self.doc.onChanges();
@@ -264,7 +264,7 @@ export class CmDocumentEditorStateAdapter implements DocumentEditorStateAdapter 
     });
   }
 
-  getContent() {
+  serializeContent() {
     return this.state.doc.toString();
   }
 

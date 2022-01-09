@@ -1,5 +1,5 @@
 import { useLoad } from "./useLoad";
-import { useCallback} from "react";
+import { useCallback } from "react";
 import { DocumentManager } from "./DocumentManager";
 import { TextDocumentEditor } from "./TextDocumentEditor";
 import { observer } from "mobx-react-lite";
@@ -7,6 +7,7 @@ import { WorkspaceManager } from "./WorkspaceManager";
 import { useWindowTitle } from "./useWindowTitle";
 import { CircularProgress } from "@mui/material";
 import { makeStyles } from "@mui/styles";
+import { PluginManager, EditorProps } from "./plugin/PluginManager";
 
 
 export type FileViewProps = {
@@ -21,13 +22,28 @@ export function FileView(props: FileViewProps) {
     return DocumentManager.instance.create(props.fileID);
   }, [ props.fileID ]));
 
-  if (!contentLoad.isLoaded) {
+  const componentLoad = useLoad<React.ComponentType<EditorProps> | undefined>(useCallback(async () => {
+    if (!contentLoad.isLoaded) {
+      return undefined;
+    }
+
+    const editorName = contentLoad.data?.settings.editor?.name;
+
+    if (!editorName) {
+      return TextDocumentEditor;
+    } else {
+      const editor = await PluginManager.instance.getEditor(editorName);
+      return editor?.component ?? TextDocumentEditor;
+    }
+  }, [ contentLoad.data?.settings.editor?.name, contentLoad.isLoaded ]));
+
+  if (!contentLoad.isLoaded || !componentLoad.isLoaded || !componentLoad.data) {
     return <div className={ classes.loader }>
-      <CircularProgress />
+      <CircularProgress/>
     </div>;
   }
 
-  return <TextDocumentEditor doc={ contentLoad.data } className={ props.className }/>;
+  return <componentLoad.data doc={contentLoad.data} className={props.className} />
 }
 
 
