@@ -3,7 +3,6 @@ import { RecentDocStorage } from "./RecentDocStorage";
 import { WorkspaceEntry } from "../common/WorkspaceEntry";
 import levenshtein from "js-levenshtein";
 import { WorkspaceManager } from "./WorkspaceManager";
-import { commandPaletteCompleter } from "./commands/CommandManager";
 
 
 const COMPLETE_RESULT_COUNT = 10;

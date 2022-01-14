@@ -1,6 +1,3 @@
-import { PluginLoadSpec } from "../client/plugin/PluginManager";
-
-
 export interface RemotePluginSpec {
   name: string;
 

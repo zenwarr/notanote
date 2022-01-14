@@ -1,5 +1,5 @@
 import { diaryPlugin } from "./DiaryEditorPlugin";
-import { PluginLoadSpec, PluginManager } from "./PluginManager";
+import { PluginManager } from "./PluginManager";
 import { RemotePluginSpec } from "../../common/plugin";
 import { pluginConfigPlugin } from "./PluginConfigPlugin";
 
