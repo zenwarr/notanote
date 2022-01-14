@@ -133,7 +133,8 @@ const useStyles = makeStyles(theme => ({
     marginRight: theme.spacing(2),
     [theme.breakpoints.down("lg")]: {
       padding: theme.spacing(2),
-      marginBottom: 0
+      marginBottom: 0,
+      marginRight: 0
     }
   }
 }));

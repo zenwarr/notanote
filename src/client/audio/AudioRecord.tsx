@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as mobx from "mobx";
 import { observer } from "mobx-react-lite";
 
@@ -30,18 +30,25 @@ class AudioRecorder {
   }
 
 
+  stop() {
+    this.recorder?.stop();
+  }
+
+
   pause() {
     this.recorder?.pause();
   }
 
 
-  resume() {
-    this.recorder?.resume();
+  get state(): string {
+    return this.recorder?.state || "inactive";
   }
 
 
-  get state(): string {
-    return this.recorder?.state || "inactive";
+  getAudioUrl() {
+    return URL.createObjectURL(new Blob(this.chunks, {
+      type: "audio/ogg; codecs=opus"
+    }));
   }
 
 
@@ -51,19 +58,50 @@ class AudioRecorder {
 
 
 export const AudioRecord = observer(() => {
-  const recorderRef = useRef<AudioRecorder>(new AudioRecorder());
+  const recorderRef = useRef<AudioRecorder | undefined>(new AudioRecorder());
+  const [ ready, setReady ] = useState(false);
 
   useEffect(() => {
-    recorderRef.current.init();
+    recorderRef.current?.init();
+
+    return () => {
+      recorderRef.current?.stop();
+      recorderRef.current = undefined;
+    };
   }, []);
 
+  function onStop() {
+    recorderRef.current?.stop();
+    setReady(true);
+  }
+
+  function onStart() {
+    recorderRef.current?.start();
+    setReady(false);
+  }
+
+  const recorder = recorderRef.current;
+  if (!recorder) {
+    return <></>;
+  }
+
   return <div>
-    { recorderRef.current.state }
+    { recorder.state }
 
-    { recorderRef.current.chunks.length }
+    { recorder.chunks.length }
 
-    <button onClick={ () => recorderRef.current.start() }>
+    <button onClick={ onStart }>
       Record
     </button>
+
+    <button onClick={ onStop }>
+      Stop
+    </button>
+
+    {
+      ready && <div>
+        <audio src={ recorder.getAudioUrl() } controls/>
+      </div>
+    }
   </div>;
 });
