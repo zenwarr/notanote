@@ -184,7 +184,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
       throw new LogicError(ErrorCode.AlreadyExists, `Plugin ${req.body.name} already exists`);
     }
 
-    await clone(req.body.url, pluginDir);
+    await clone(ws, req.body.url, pluginDir);
 
     // const buildDirs = getBuildDirs(getProfile(req).id, ws.id, req.body.name);
     // await buildPlugin(pluginDir, req.body.name, buildDirs);

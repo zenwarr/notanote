@@ -15,6 +15,7 @@ export interface CommandResult {
 export interface RunCommandOptions {
   ignoreExitCode?: boolean;
   cwd?: string;
+  env?: { [name: string]: string };
 }
 
 
@@ -22,7 +23,11 @@ async function runCommand(bin: string, args: string[], options?: RunCommandOptio
   return new Promise((resolve, reject) => {
     let proc = child_process.spawn(bin, args, {
       stdio: "pipe",
-      cwd: options?.cwd
+      cwd: options?.cwd,
+      env: {
+        ...process.env,
+        ...options?.env
+      }
     } as const);
 
     let stdout = "";
@@ -149,13 +154,27 @@ async function isGitRepositoryRoot(checkDir: string): Promise<boolean> {
 
 
 async function getPrivateKeyPathAndEnsureParentExists(ws: Workspace): Promise<string> {
-  let secretsPath = ws.toAbsolutePath(await ws.getSecretsDirectoryPathAndEnsureItExists());
-  assert(secretsPath);
-
-  return path.join(secretsPath, "ssh_key");
+  const p = await getPrivateKeyPath(ws);
+  assert(p != null);
+  return p;
 }
 
 
-export async function clone(url: string, dir: string): Promise<void> {
-  await runCommand("git", [ "clone", url, dir ]);
+async function getPrivateKeyPath(ws: Workspace): Promise<string | undefined> {
+  let secretsPath = ws.toAbsolutePath(await ws.getSecretsDirectoryPathAndEnsureItExists());
+  if (secretsPath) {
+    return path.join(secretsPath, "ssh_key");
+  } else {
+    return undefined;
+  }
+}
+
+
+export async function clone(ws: Workspace, url: string, dir: string): Promise<void> {
+  const privateKeyPath = await getPrivateKeyPath(ws);
+  await runCommand("git", [ "clone", url, dir ], {
+    env: privateKeyPath ? {
+      GIT_SSH_COMMAND: `ssh -i ${ privateKeyPath } -o IdentitiesOnly=yes`
+    } : {}
+  });
 }
