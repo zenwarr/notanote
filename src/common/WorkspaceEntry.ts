@@ -13,6 +13,10 @@ export type FileSettings = BlockSettings & {
   lang?: string;
   blocks?: { [name: string]: BlockSettings };
   drawWhitespace?: boolean;
+  editor?: {
+    name: string;
+    [name: string]: unknown;
+  }
 }
 
 

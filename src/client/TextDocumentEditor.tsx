@@ -1,32 +1,35 @@
-import * as React from "react";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { Document } from "./Document";
 import { DocumentManager } from "./DocumentManager";
-import "./DocumentEditor.css";
+import "./TextDocumentEditor.css";
 import { EditorView } from "@codemirror/view";
 import { FileSettings } from "../common/WorkspaceEntry";
 import { useCurrentThemeIsDark } from "./Theme";
+import { CmDocumentEditorStateAdapter } from "./EditorState";
+import assert from "assert";
 
 
-export type DocumentEditorProps = {
-  fileId: string;
+export type TextDocumentEditorProps = {
   doc: Document;
   className?: string;
 }
 
 
-export function DocumentEditor(props: DocumentEditorProps) {
+export function TextDocumentEditor(props: TextDocumentEditorProps) {
   const containerRef = useRef<any>();
   const viewRef = useRef<EditorView>();
   const isDarkTheme = useCurrentThemeIsDark();
+  const stateAdapter = useRef<CmDocumentEditorStateAdapter>(props.doc.getEditorStateAdapter() as CmDocumentEditorStateAdapter);
+  assert(stateAdapter.current instanceof CmDocumentEditorStateAdapter);
+  const editorState = stateAdapter.current.state;
 
   useEffect(() => {
     const view = new EditorView({
-      state: props.doc.editorState,
+      state: editorState,
       parent: containerRef.current
     });
 
-    const cursorPos = props.doc.editorState.selection.ranges[0]?.head;
+    const cursorPos = editorState.selection.ranges[0]?.head;
     if (cursorPos != null) {
       view.scrollPosIntoView(cursorPos);
     }
@@ -35,7 +38,7 @@ export function DocumentEditor(props: DocumentEditorProps) {
 
     return () => {
       view.destroy();
-      DocumentManager.instance.close(props.fileId);
+      DocumentManager.instance.close(props.doc.fileId);
     };
   }, []);
 

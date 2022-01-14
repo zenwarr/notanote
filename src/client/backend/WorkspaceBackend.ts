@@ -157,9 +157,16 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
             ...r,
             processingInstruction: { color: "lightgray" }
           },
-          drawWhitespace: true
+          drawWhitespace: true,
+          editor: {
+            name: "diary",
+            columns: [
+              { type: "text", label: "First" },
+              { type: "text", label: "Second" }
+            ]
+          }
         },
-        content: "[x] some checkbox"
+        content: "1,2,3,3\n1,2,3,4\n1,2,3,5\n1,2,3,6\n"
       };
     } else if (entryPath === ".note/settings.json") {
       return {
