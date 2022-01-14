@@ -1,6 +1,7 @@
 import { getProfile, requireAuthenticatedUser } from "./auth";
 import { FastifyInstance } from "fastify";
 import { Workspace } from "./workspace";
+import { getWorkspacePlugins } from "./plugin/PluginBuilder";
 
 
 export default async function initUiRoutes(app: FastifyInstance) {
@@ -13,7 +14,8 @@ export default async function initUiRoutes(app: FastifyInstance) {
     return res.view("index", {
       params: {
         userName: profile.name,
-        workspaceId: workspace.id
+        workspaceId: workspace.id,
+        plugins: await getWorkspacePlugins(workspace.id, workspace.root)
       }
     });
   });

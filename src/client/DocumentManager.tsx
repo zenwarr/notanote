@@ -68,10 +68,8 @@ export class DocumentManager {
 
   protected async getStateAdapterForFile(doc: Document): Promise<DocumentEditorStateAdapter> {
     if (doc.settings.editor != null) {
-      const editorName = doc.settings.editor.name;
-      const editor = await PluginManager.instance.getEditor(editorName);
+      const editor = await PluginManager.instance.getCustomEditorForDocument(doc);
       if (!editor) {
-        console.error(`Failed to find matching editor: ${editorName}`)
         return new CmDocumentEditorStateAdapter(doc);
       } else {
         return new editor.stateAdapter(doc);

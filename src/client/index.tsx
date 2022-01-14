@@ -5,7 +5,7 @@ import { WorkspaceManager } from "./WorkspaceManager";
 import { ProfileManager } from "./ProfileManager";
 import { Workbox } from "workbox-window";
 import { AppThemeProvider } from "./Theme";
-import { registerBuiltInPlugins } from "./plugin/BuiltInPlugins";
+import { registerPlugins } from "./plugin/BuiltInPlugins";
 
 
 if ("serviceWorker" in navigator) {
@@ -26,7 +26,7 @@ const params = JSON.parse(root?.dataset.params ?? "{}");
 
 WorkspaceManager.instance.id = params.workspaceId;
 ProfileManager.instance.userName = params.userName;
-registerBuiltInPlugins();
+registerPlugins(params.plugins);
 
 ReactDOM.render(<>
   <AppThemeProvider>

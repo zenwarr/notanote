@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "target": "ES6",
+    "esModuleInterop": true,
+    "noEmitOnError": true,
+    "noImplicitReturns": true,
+    "strict": true,
+    "declaration": false,
+    "allowSyntheticDefaultImports": true,
+    "noFallthroughCasesInSwitch": true,
+    "removeComments": true,
+    "lib": [
+      "ES5",
+      "DOM"
+    ],
+    "jsx": "react"
+  },
+  "include": [
+    "./**/*.*"
+  ]
+}

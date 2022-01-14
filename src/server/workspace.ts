@@ -37,7 +37,7 @@ export class Workspace {
     const exists = await this.exists(workspaceRoot);
 
     if (exists) {
-      return new Workspace(userId, workspaceId);
+      return new Workspace(workspaceRoot, workspaceId);
     }
 
     try {
@@ -72,6 +72,15 @@ export class Workspace {
       specificSettings = {
         ...specificSettings,
         ...m.settings
+      };
+    }
+
+    if (fileId === ".note/plugins.json") {
+      specificSettings = {
+        ...specificSettings,
+        editor: {
+          name: "pluginConfig"
+        }
       };
     }
 

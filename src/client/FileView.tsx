@@ -27,14 +27,8 @@ export function FileView(props: FileViewProps) {
       return undefined;
     }
 
-    const editorName = contentLoad.data?.settings.editor?.name;
-
-    if (!editorName) {
-      return TextDocumentEditor;
-    } else {
-      const editor = await PluginManager.instance.getEditor(editorName);
-      return editor?.component ?? TextDocumentEditor;
-    }
+    const editor = await PluginManager.instance.getCustomEditorForDocument(contentLoad.data);
+    return editor?.component ?? TextDocumentEditor;
   }, [ contentLoad.data?.settings.editor?.name, contentLoad.isLoaded ]));
 
   if (!contentLoad.isLoaded || !componentLoad.isLoaded || !componentLoad.data) {

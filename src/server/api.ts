@@ -4,7 +4,10 @@ import { Workspace } from "./workspace";
 import S from "fluent-json-schema";
 import { EntryType } from "../common/WorkspaceEntry";
 import { ErrorCode, LogicError } from "../common/errors";
-import { commitAndPushChanges, initGithubIntegration } from "./github/Github";
+import { clone, commitAndPushChanges, initGithubIntegration } from "./github/Github";
+import { asyncExists, buildPlugin, getBuildDirs } from "./plugin/PluginBuilder";
+import * as path from "path";
+import * as fs from "fs";
 
 
 type WorkspaceRouteParams = {
@@ -142,6 +145,49 @@ export default async function initApiRoutes(app: FastifyInstance) {
     const ws = getWorkspace(req);
 
     await commitAndPushChanges(ws, undefined, true);
+
+    return {};
+  });
+
+
+  app.get<{
+    Params: WorkspaceRouteParams & { pluginID: string }
+  }>("/api/workspaces/:workspaceID/plugins/:pluginID", {
+    schema: {
+      params: S.object().prop("workspaceID", S.string().required()).prop("pluginID", S.string().required())
+    }
+  }, async (req, res) => {
+    const ws = getWorkspace(req);
+
+    const pluginDir = path.join(ws.root, ".note/plugins", req.params.pluginID);
+    const buildDirs = getBuildDirs(getProfile(req).id, ws.id, req.params.pluginID);
+    const plugin = await buildPlugin(pluginDir, req.params.pluginID, buildDirs);
+
+    res.header("Content-Type", "application/javascript");
+    return fs.promises.readFile(plugin.entryPointPath);
+  });
+
+
+  app.post<{
+    Params: WorkspaceRouteParams,
+    Body: { name: string, url: string }
+  }>("/api/workspaces/:workspaceID/plugins", {
+    schema: {
+      params: S.object().prop("workspaceID", S.string().required()),
+      body: S.object().prop("name", S.string().required()).prop("url", S.string().required())
+    }
+  }, async (req, res) => {
+    const ws = getWorkspace(req);
+
+    const pluginDir = path.join(ws.root, ".note/plugins", req.body.name);
+    if (await asyncExists(pluginDir)) {
+      throw new LogicError(ErrorCode.AlreadyExists, `Plugin ${req.body.name} already exists`);
+    }
+
+    await clone(req.body.url, pluginDir);
+
+    // const buildDirs = getBuildDirs(getProfile(req).id, ws.id, req.body.name);
+    // await buildPlugin(pluginDir, req.body.name, buildDirs);
 
     return {};
   });

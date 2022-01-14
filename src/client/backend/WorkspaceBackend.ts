@@ -159,14 +159,21 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
           },
           drawWhitespace: true,
           editor: {
-            name: "diary",
+            name: "pluginConfig",
             columns: [
               { type: "text", label: "First" },
               { type: "text", label: "Second" }
             ]
           }
         },
-        content: "1,2,3,3\n1,2,3,4\n1,2,3,5\n1,2,3,6\n"
+        content: JSON.stringify({
+          plugins: [
+            {
+              name: "default",
+              gitCloneUrl: "clone url"
+            }
+          ]
+        })
       };
     } else if (entryPath === ".note/settings.json") {
       return {

@@ -1,12 +1,12 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import assert from "assert";
-import { Document, DocumentEditorStateAdapter } from "./Document";
+import { Document, DocumentEditorStateAdapter } from "../Document";
 import * as csv from "csv";
 import * as mobx from "mobx";
 import { observer } from "mobx-react-lite";
 import { differenceInDays, differenceInMinutes, startOfDay, startOfYear } from "date-fns";
 import { Box, Button, Grid, TextField } from "@mui/material";
-import type { PluginMeta } from "./plugin/PluginManager";
+import type { PluginMeta } from "./PluginManager";
 
 
 function parseCsv(input: string): Promise<string[][]> {
@@ -159,7 +159,7 @@ export interface DiaryEditorProps {
 }
 
 
-export const DiaryEditor = observer((props: DiaryEditorProps) => {
+export const DiaryEditorPlugin = observer((props: DiaryEditorProps) => {
   const stateAdapter = useRef<DiaryEditorStateAdapter>(props.doc.getEditorStateAdapter() as DiaryEditorStateAdapter);
   assert(stateAdapter.current instanceof DiaryEditorStateAdapter);
   const state = stateAdapter.current;
@@ -241,7 +241,7 @@ export const diaryPlugin: PluginMeta = {
   load: class DiaryPlugin {
     editors = {
       diary: {
-        component: DiaryEditor,
+        component: DiaryEditorPlugin,
         stateAdapter: DiaryEditorStateAdapter
       }
     }

@@ -1,16 +1,12 @@
 import * as React from "react";
 import { Document, DocumentEditorStateAdapter } from "../Document";
-import * as nanoid from "nanoid";
+import { setupPluginDeps } from "./SetupPluginDeps";
+import { EditorMeta } from "../../common/plugin";
 
 
 export interface EditorProps {
   doc: Document;
   className?: string;
-}
-
-
-export interface EditorMeta {
-
 }
 
 
@@ -33,38 +29,52 @@ export interface PluginMeta {
 
 
 export class PluginManager {
-  async getEditor(name: string) {
-    const editorPlugin = await this.loadPluginForEditor(name);
+  constructor() {
+    setupPluginDeps();
+  }
+
+
+  async getCustomEditorForDocument(doc: Document) {
+    const editorName = doc.settings.editor?.name;
+    if (!editorName) {
+      return undefined;
+    }
+
+    const editorPlugin = await this.loadPluginForEditor(editorName);
     if (editorPlugin) {
-      return editorPlugin.editors[name];
+      return editorPlugin.editors[editorName];
     } else {
       return undefined;
     }
   }
 
+
   registerPlugin(plugin: PluginMeta) {
     if (this.plugins.some(x => x.name === plugin.name)) {
-      throw new Error(`Cannot register plugin ${plugin.name}: another plugin with this name already exists`)
+      throw new Error(`Cannot register plugin ${ plugin.name }: another plugin with this name already exists`);
     }
 
-    this.plugins.push(plugin)
+    this.plugins.push(plugin);
   }
+
 
   getPlugins() {
     return this.plugins;
   }
 
+
   protected async loadPluginForEditor(name: string): Promise<LoadedPlugin | undefined> {
     for (const plugin of this.plugins) {
       if (plugin.editors && Object.keys(plugin.editors).includes(name)) {
-        return this.loadPlugin(plugin.load);
+        return this.loadPlugin(plugin.name, plugin.load);
       }
     }
 
     return undefined;
   }
 
-  protected async loadPlugin(loadSpec: PluginLoadSpec): Promise<LoadedPlugin> {
+
+  protected async loadPlugin(name: string, loadSpec: PluginLoadSpec): Promise<LoadedPlugin> {
     const cached = this.loadedPlugins.get(loadSpec);
     if (cached != null) {
       return cached;
@@ -79,10 +89,8 @@ export class PluginManager {
     return new Promise((resolve, reject) => {
       const script = document.createElement("script");
       script.src = loadSpec;
-      const exportName = nanoid.nanoid();
-      script.dataset.export = exportName;
       script.onload = () => {
-        const loadedPlugin = (window as any)[exportName];
+        const loadedPlugin = (window as any)[`plugin_${ name }`];
         if (!loadedPlugin) {
           reject(new Error("Cannot load plugin: something went wrong during load, no export found"));
         } else {
@@ -94,6 +102,7 @@ export class PluginManager {
       document.body.appendChild(script);
     });
   }
+
 
   private readonly plugins: PluginMeta[] = [];
   private readonly loadedPlugins = new Map<PluginLoadSpec, LoadedPlugin>();
@@ -107,5 +116,5 @@ export interface LoadedPlugin {
       component: React.ComponentType<EditorProps>
       stateAdapter: new (doc: Document) => DocumentEditorStateAdapter;
     }
-  }
+  };
 }

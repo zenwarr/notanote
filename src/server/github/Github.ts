@@ -154,3 +154,8 @@ async function getPrivateKeyPathAndEnsureParentExists(ws: Workspace): Promise<st
 
   return path.join(secretsPath, "ssh_key");
 }
+
+
+export async function clone(url: string, dir: string): Promise<void> {
+  await runCommand("git", [ "clone", url, dir ]);
+}
