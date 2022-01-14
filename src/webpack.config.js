@@ -18,7 +18,8 @@ module.exports = (env) => [
     resolve: {
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
       fallback: {
-        path: require.resolve("path-browserify")
+        path: require.resolve("path-browserify"),
+        stream: require.resolve("stream-browserify")
       }
     },
 
@@ -48,6 +49,9 @@ module.exports = (env) => [
       }),
       new webpack.DefinePlugin({
         "process.env.CLIENT_VERSION": JSON.stringify(require("./package.json").version)
+      }),
+      new webpack.ProvidePlugin({
+        Buffer: ['buffer', 'Buffer']
       })
     ]
   },
