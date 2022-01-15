@@ -1,4 +1,4 @@
-import { fileExists, Workspace } from "../workspace";
+import { fileExists, SpecialEntry, Workspace } from "../storage/workspace";
 import child_process from "child_process";
 import path from "path";
 import assert from "assert";
@@ -71,33 +71,34 @@ export async function initGithubIntegration(ws: Workspace, userEmail: string, re
     await runCommand("ssh-keygen", [ "-t", "ed25519", "-C", userEmail, "-f", privateKeyPath, "-N", "" ]);
   }
 
-  if (!await isGitRepositoryRoot(ws.root)) {
+  const wsDir = ws.root;
+  if (!await isGitRepositoryRoot(wsDir)) {
     await runCommand("git", [ "init" ], {
-      cwd: ws.root
+      cwd: wsDir
     });
 
     await runCommand("git", [ "config", "--add", "core.sshCommand", `ssh -i ${ privateKeyPath }` ], {
-      cwd: ws.root
+      cwd: wsDir
     });
 
     await runCommand("git", [ "config", "user.email", userEmail ], {
-      cwd: ws.root
+      cwd: wsDir
     });
 
     await runCommand("git", [ "config", "user.name", "notanote" ], {
-      cwd: ws.root
+      cwd: wsDir
     });
 
     await runCommand("git", [ "remote", "add", "origin", remote ], {
-      cwd: ws.root
+      cwd: wsDir
     });
 
     await runCommand("git", [ "add", "." ], {
-      cwd: ws.root
+      cwd: wsDir
     });
 
     await runCommand("git", [ "commit", "-m", "initial commit" ], {
-      cwd: ws.root
+      cwd: wsDir
     });
   }
 }
@@ -105,16 +106,17 @@ export async function initGithubIntegration(ws: Workspace, userEmail: string, re
 
 export async function commitAndPushChanges(ws: Workspace, commitName: string | undefined, checkForChanges: boolean): Promise<void> {
   if (!checkForChanges || await repositoryHasChanges(ws)) {
+    const wsDir = ws.root;
     await runCommand("git", [ "add", "." ], {
-      cwd: ws.root
+      cwd: wsDir
     });
 
     await runCommand("git", [ "commit", "-m", commitName || generateCommitName() ], {
-      cwd: ws.root
+      cwd: wsDir
     });
 
     await runCommand("git", [ "push", "-u", "origin", "master" ], {
-      cwd: ws.root
+      cwd: wsDir
     });
   }
 }
@@ -126,8 +128,9 @@ function generateCommitName(): string {
 
 
 async function repositoryHasChanges(ws: Workspace) {
+  const wsDir = ws.root;
   const result = await runCommand("git", [ "diff-index", "--quiet", "--exit-code", "HEAD" ], {
-    cwd: ws.root,
+    cwd: wsDir,
     ignoreExitCode: true
   });
   if (result.exitCode === 0) {
@@ -161,7 +164,8 @@ async function getPrivateKeyPathAndEnsureParentExists(ws: Workspace): Promise<st
 
 
 async function getPrivateKeyPath(ws: Workspace): Promise<string | undefined> {
-  let secretsPath = ws.toAbsolutePath(await ws.getSecretsDirectoryPathAndEnsureItExists());
+  await ws.ensureDirExists(SpecialEntry.Secrets);
+  let secretsPath = ws.toAbsolutePath(SpecialEntry.Secrets);
   if (secretsPath) {
     return path.join(secretsPath, "ssh_key");
   } else {
@@ -176,5 +180,26 @@ export async function clone(ws: Workspace, url: string, dir: string): Promise<vo
     env: privateKeyPath ? {
       GIT_SSH_COMMAND: `ssh -i ${ privateKeyPath } -o IdentitiesOnly=yes`
     } : {}
+  });
+}
+
+
+export async function getRemoteOrigin(dir: string): Promise<string | undefined> {
+  const result = await runCommand("git", [ "remote", "get-url", "origin" ], {
+    cwd: dir,
+    ignoreExitCode: true
+  });
+
+  if (result.exitCode === 0) {
+    return result.stdout.trim();
+  } else {
+    return undefined;
+  }
+}
+
+
+export async function pullChanges(dir: string): Promise<void> {
+  await runCommand("git", [ "pull" ], {
+    cwd: dir
   });
 }

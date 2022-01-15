@@ -79,25 +79,41 @@ export class CommandManager {
   operations = new Map<string, Operation>();
 
 
+  isCommandRunning(name: string) {
+    for (const op of this.operations.values()) {
+      if (op.command === name) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+
   async run(command: string) {
     const cmd = CommandManager.commands.find(c => c.name === command);
 
     if (cmd) {
-      const operationId = nanoid.nanoid();
-      this.operations.set(operationId, {
-        startedAt: new Date(),
-        command
-      });
-
-      try {
-        await cmd.action();
-      } catch (err: any) {
-        alert(`Failed to run command ${ name }: ${ err.message }`);
-      } finally {
-        this.operations.delete(operationId);
-      }
+      return this.runAction(command, cmd.action);
     } else {
       alert(`command ${ command } not found`);
+    }
+  }
+
+
+  async runAction(name: string, action: () => Promise<void>): Promise<void> {
+    const operationId = nanoid.nanoid();
+    this.operations.set(operationId, {
+      startedAt: new Date(),
+      command: name
+    });
+
+    try {
+      await action();
+    } catch (err: any) {
+      alert(`Failed to run command ${ name }: ${ err.message }`);
+    } finally {
+      this.operations.delete(operationId);
     }
   }
 }

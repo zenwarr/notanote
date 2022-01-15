@@ -1,13 +1,14 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
 import { getProfile, requireAuthenticatedUser } from "./auth";
-import { Workspace } from "./workspace";
+import { SpecialEntry, Workspace } from "./storage/workspace";
 import S from "fluent-json-schema";
 import { EntryType } from "../common/WorkspaceEntry";
 import { ErrorCode, LogicError } from "../common/errors";
-import { clone, commitAndPushChanges, initGithubIntegration } from "./github/Github";
+import { clone, commitAndPushChanges, initGithubIntegration, pullChanges } from "./github/Github";
 import { asyncExists, buildPlugin, getBuildDirs } from "./plugin/PluginBuilder";
 import * as path from "path";
 import * as fs from "fs";
+import { StoragePath } from "./storage/StoragePath";
 
 
 type WorkspaceRouteParams = {
@@ -59,7 +60,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     }
   }, async (req, res) => {
     const ws = getWorkspace(req);
-    return ws.createEntry(req.body.entryPath, req.body.type as EntryType);
+    return ws.createEntry(new StoragePath(req.body.entryPath), req.body.type as EntryType);
   });
 
 
@@ -74,7 +75,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     const ws = getWorkspace(req);
 
     const fileID = decodeURIComponent(req.params["*"]);
-    return ws.getEntry(fileID);
+    return ws.getEntry(new StoragePath(fileID));
   });
 
 
@@ -89,7 +90,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     const ws = getWorkspace(req);
 
     const fileID = decodeURIComponent(req.params["*"]);
-    return ws.removeEntry(fileID);
+    return ws.removeEntry(new StoragePath(fileID));
   });
 
 
@@ -106,7 +107,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
 
     const ws = getWorkspace(req);
 
-    await ws.saveEntry(fileID, req.body.content);
+    await ws.saveEntry(new StoragePath(fileID), req.body.content);
     return {};
   });
 
@@ -129,7 +130,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
   }, async (req, res) => {
     const ws = getWorkspace(req);
 
-    await initGithubIntegration(ws, req.body.email, req.body.remote)
+    await initGithubIntegration(ws, req.body.email, req.body.remote);
 
     return {};
   });
@@ -159,12 +160,29 @@ export default async function initApiRoutes(app: FastifyInstance) {
   }, async (req, res) => {
     const ws = getWorkspace(req);
 
-    const pluginDir = path.join(ws.root, ".note/plugins", req.params.pluginID);
+    const pluginDir = ws.toAbsolutePath(SpecialEntry.Plugins.child(req.params.pluginID));
     const buildDirs = getBuildDirs(getProfile(req).id, ws.id, req.params.pluginID);
     const plugin = await buildPlugin(pluginDir, req.params.pluginID, buildDirs);
 
     res.header("Content-Type", "application/javascript");
     return fs.promises.readFile(plugin.entryPointPath);
+  });
+
+
+  app.post<{
+    Params: WorkspaceRouteParams & { pluginID: string }
+  }>("/api/workspaces/:workspaceID/plugins/:pluginID/update", {
+    schema: {
+      params: S.object().prop("workspaceID", S.string().required()).prop("pluginID", S.string().required())
+    }
+  }, async (req, res) => {
+    const ws = getWorkspace(req);
+
+    const pluginDir = ws.toAbsolutePath(SpecialEntry.Plugins.child(req.params.pluginID));
+    console.log("Pulling changes from remote repository...");
+    await pullChanges(pluginDir);
+
+    return {};
   });
 
 
@@ -179,9 +197,9 @@ export default async function initApiRoutes(app: FastifyInstance) {
   }, async (req, res) => {
     const ws = getWorkspace(req);
 
-    const pluginDir = path.join(ws.root, ".note/plugins", req.body.name);
+    const pluginDir = ws.toAbsolutePath(SpecialEntry.Plugins.child(req.body.name));
     if (await asyncExists(pluginDir)) {
-      throw new LogicError(ErrorCode.AlreadyExists, `Plugin ${req.body.name} already exists`);
+      throw new LogicError(ErrorCode.AlreadyExists, `Plugin ${ req.body.name } already exists`);
     }
 
     await clone(ws, req.body.url, pluginDir);

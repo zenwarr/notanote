@@ -23,6 +23,7 @@ import { TextField } from "mui-rff";
 import { PluginBackend } from "../backend/PluginBackend";
 import { Backend } from "../backend/Backend";
 import { WorkspaceManager } from "../WorkspaceManager";
+import { CommandManager } from "../commands/CommandManager";
 
 
 export interface PluginManagerConfig {
@@ -40,9 +41,19 @@ function useEditorState(doc: Document) {
 }
 
 
+function getUpdatePluginCommandName(plugin: string) {
+  return `Update plugin ${ plugin }`;
+}
+
+
 export const PluginConfigEditor = observer((props: { doc: Document }) => {
   const state = useEditorState(props.doc);
   const [ cloneDialogOpen, setCloneDialogOpen ] = useState(false);
+
+  async function update(pluginName: string) {
+    const wsId = WorkspaceManager.instance.id;
+    await CommandManager.instance.runAction(getUpdatePluginCommandName(pluginName), () => Backend.get(PluginBackend).update(wsId, pluginName));
+  }
 
   return <Box p={ 2 }>
     <Box mb={ 2 }>
@@ -59,6 +70,7 @@ export const PluginConfigEditor = observer((props: { doc: Document }) => {
           <TableRow>
             <TableCell>Name</TableCell>
             <TableCell>Git Clone URL</TableCell>
+            <TableCell/>
           </TableRow>
         </TableHead>
 
@@ -67,6 +79,12 @@ export const PluginConfigEditor = observer((props: { doc: Document }) => {
             state.data.plugins?.map((plugin, i) => <TableRow key={ i }>
               <TableCell>{ plugin.name }</TableCell>
               <TableCell>{ plugin.gitCloneUrl }</TableCell>
+              <TableCell>
+                { plugin.gitCloneUrl != null && <Button variant={ "contained" } onClick={ () => update(plugin.name) }
+                                                        disabled={ CommandManager.instance.isCommandRunning(getUpdatePluginCommandName(plugin.name)) }>
+                  Update
+                </Button> }
+              </TableCell>
             </TableRow>)
           }
         </TableBody>
@@ -77,8 +95,6 @@ export const PluginConfigEditor = observer((props: { doc: Document }) => {
 
 
 function CloneDialog(props: { open: boolean, onClose: () => void, doc: Document }) {
-  const state = useEditorState(props.doc);
-
   async function clone(params: { url: string | undefined, name: string | undefined }) {
     if (!params.url) {
       alert("Please enter a Git URL");
@@ -92,16 +108,6 @@ function CloneDialog(props: { open: boolean, onClose: () => void, doc: Document 
 
     try {
       await Backend.get(PluginBackend).clone(WorkspaceManager.instance.id, params.name, params.url);
-
-      if (!state.data.plugins) {
-        state.data.plugins = [];
-      }
-      state.data.plugins.push({
-        name: params.name,
-        gitCloneUrl: params.url
-      });
-      props.doc.onChanges();
-
       props.onClose();
     } catch (error: any) {
       alert(`Failed to clone plugin: ${ error.message }`);

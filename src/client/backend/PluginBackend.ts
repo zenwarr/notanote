@@ -10,6 +10,11 @@ export class PluginBackend {
       }
     });
   }
+
+
+  async update(workspaceId: string, pluginId: string): Promise<void> {
+    await ky.post(`/api/workspaces/${ encodeURIComponent(workspaceId) }/plugins/${pluginId}/update`);
+  }
 }
 
 
@@ -17,5 +22,10 @@ export class TestPluginBackend {
   async clone(workspaceId: string, name: string, url: string): Promise<void> {
     await timeout(3000);
     console.log("clone plugin");
+  }
+
+  async update(workspaceId: string, pluginId: string): Promise<void> {
+    await timeout(3000);
+    console.log("update plugin");
   }
 }

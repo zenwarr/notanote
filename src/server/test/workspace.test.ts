@@ -1,5 +1,5 @@
 import * as path from "path";
-import { Workspace } from "../workspace";
+import { Workspace } from "../storage/workspace";
 
 
 beforeAll(() => {
