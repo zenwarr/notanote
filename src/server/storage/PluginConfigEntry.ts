@@ -1,9 +1,9 @@
 import { getWorkspacePlugins } from "../plugin/PluginBuilder";
 import { getRemoteOrigin } from "../github/Github";
 import path from "path";
-import { Workspace } from "./workspace";
-import { RuntimeStorageEntry } from "./RuntimeStorageEntry";
-import { StoragePath } from "./StoragePath";
+import { Workspace } from "../../common/storage/Workspace";
+import { RuntimeStorageEntry } from "../../common/storage/RuntimeStorageEntry";
+import { StoragePath } from "../../common/storage/StoragePath";
 
 
 export class PluginConfigStorageEntry extends RuntimeStorageEntry {

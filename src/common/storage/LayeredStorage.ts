@@ -1,10 +1,10 @@
-import { AbstractStorageLayer, StorageEntry, StorageEntryFlag, StorageLayerFlag } from "./AbstractStorageLayer";
+import { StorageLayer, StorageEntry, StorageEntryFlag, StorageLayerFlag } from "./StorageLayer";
 import * as p from "path";
 import { StoragePath } from "./StoragePath";
 
 
 export class LayeredStorage {
-  constructor(private layers: AbstractStorageLayer[]) {
+  constructor(private layers: StorageLayer[]) {
 
   }
 
@@ -109,7 +109,7 @@ export class LayeredStorage {
   }
 
 
-  private getWritableLayer(): AbstractStorageLayer | undefined {
+  private getWritableLayer(): StorageLayer | undefined {
     for (const layer of this.layers) {
       if (layer.flags() & StorageLayerFlag.Writable) {
         return layer;

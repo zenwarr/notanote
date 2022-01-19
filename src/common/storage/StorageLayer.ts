@@ -7,7 +7,7 @@ export enum StorageLayerFlag {
 }
 
 
-export abstract class AbstractStorageLayer {
+export abstract class StorageLayer {
   abstract createDir(path: StoragePath): Promise<StorageEntry>;
 
 

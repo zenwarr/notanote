@@ -1,14 +1,14 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
 import { getProfile, requireAuthenticatedUser } from "./auth";
-import { SpecialEntry, Workspace } from "./storage/workspace";
+import { SpecialEntry, Workspace } from "../common/storage/Workspace";
 import S from "fluent-json-schema";
 import { EntryType } from "../common/WorkspaceEntry";
 import { ErrorCode, LogicError } from "../common/errors";
 import { clone, commitAndPushChanges, initGithubIntegration, pullChanges } from "./github/Github";
 import { asyncExists, buildPlugin, getBuildDirs } from "./plugin/PluginBuilder";
-import * as path from "path";
 import * as fs from "fs";
-import { StoragePath } from "./storage/StoragePath";
+import { StoragePath } from "../common/storage/StoragePath";
+import { ServerWorkspaceFactory } from "./storage/ServerWorkspaceFactory";
 
 
 type WorkspaceRouteParams = {
@@ -25,7 +25,7 @@ function getWorkspace(req: FastifyRequest<{
   Params: WorkspaceRouteParams
 }>): Workspace {
   const profile = getProfile(req);
-  const ws = Workspace.getForId(profile.id, req.params.workspaceID);
+  const ws = ServerWorkspaceFactory.instance.getForId(profile.id, req.params.workspaceID);
   if (!ws) {
     throw new LogicError(ErrorCode.NotFound, "workspace not found");
   }

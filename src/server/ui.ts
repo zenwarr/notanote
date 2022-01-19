@@ -1,7 +1,8 @@
 import { getProfile, requireAuthenticatedUser } from "./auth";
 import { FastifyInstance } from "fastify";
-import { Workspace } from "./storage/workspace";
+import { Workspace } from "../common/storage/Workspace";
 import { getWorkspacePlugins } from "./plugin/PluginBuilder";
+import { ServerWorkspaceFactory } from "./storage/ServerWorkspaceFactory";
 
 
 export default async function initUiRoutes(app: FastifyInstance) {
@@ -9,7 +10,7 @@ export default async function initUiRoutes(app: FastifyInstance) {
 
   app.get("/", async (req, res) => {
     const profile = getProfile(req);
-    const workspace = await Workspace.getOrCreateWorkspace(profile.id);
+    const workspace = await ServerWorkspaceFactory.instance.getOrCreateWorkspace(profile.id);
 
     return res.view("index", {
       params: {

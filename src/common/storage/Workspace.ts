@@ -1,13 +1,10 @@
-import { CreateEntryReply, EntryInfo, EntryType, FileSettings, WorkspaceEntry } from "../../common/WorkspaceEntry";
-import fs from "fs";
-import path from "path";
-import { ErrorCode, LogicError } from "../../common/errors";
+import { CreateEntryReply, EntryInfo, EntryType, FileSettings, WorkspaceEntry } from "../WorkspaceEntry";
+import { ErrorCode, LogicError } from "../errors";
 import * as micromatch from "micromatch";
 import { LayeredStorage } from "./LayeredStorage";
-import { StorageEntry, joinNestedPathSecure } from "./AbstractStorageLayer";
+import { joinNestedPathSecure, StorageEntry, StorageLayer } from "./StorageLayer";
 import assert from "assert";
-import { FsStorageLayer } from "./FsStorageLayer";
-import { PluginConfigStorageEntry } from "./PluginConfigEntry";
+import { PluginConfigStorageEntry } from "../../server/storage/PluginConfigEntry";
 import { StoragePath } from "./StoragePath";
 
 
@@ -30,42 +27,19 @@ export namespace SpecialEntry {
 
 
 export class Workspace {
-  private constructor(public readonly root: string, public readonly id: string) {
-    this.storage = new LayeredStorage([ new FsStorageLayer(root) ]);
+  constructor(baseLayer: StorageLayer, public readonly root: string, public readonly id: string) {
+    this.storage = new LayeredStorage([ baseLayer ]);
     this.storage.mount(new PluginConfigStorageEntry(this, SpecialEntry.PluginConfig));
   }
 
 
-  private async createDefaults() {
+  async createDefaults() {
     await this.storage.createDir(SpecialEntry.SpecialRoot);
     await this.storage.write(SpecialEntry.Settings, "{\n  \n}");
   }
 
 
   private readonly storage: LayeredStorage;
-
-
-  static getCommonWorkspacesRoot() {
-    return process.env["WORKSPACES_DIR"] ?? "/workspaces";
-  }
-
-
-  static async getOrCreateWorkspace(userId: string, workspaceId?: string): Promise<Workspace> {
-    workspaceId ??= "default";
-
-    const workspaceRoot = getWorkspacePath(userId, workspaceId);
-    if (!workspaceRoot) {
-      throw new LogicError(ErrorCode.NotFound, "workspace root not found");
-    }
-
-    if (await this.exists(workspaceRoot)) {
-      return new Workspace(workspaceRoot, workspaceId);
-    }
-
-    const ws = new Workspace(workspaceRoot, workspaceId);
-    await ws.createDefaults();
-    return ws;
-  }
 
 
   private async getSettingsForFile(fileId: StoragePath) {
@@ -114,24 +88,6 @@ export class Workspace {
     }
 
     return JSON.parse(text);
-  }
-
-
-  private static async exists(workspaceRoot: string): Promise<boolean> {
-    try {
-      const stat = await fs.promises.stat(workspaceRoot);
-      if (!stat.isDirectory()) {
-        throw new LogicError(ErrorCode.Internal, "expected to be a directory");
-      }
-
-      return true;
-    } catch (error: any) {
-      if (error.code === "ENOENT") {
-        return false;
-      } else {
-        throw new LogicError(ErrorCode.Internal, "error checking workspace presence");
-      }
-    }
   }
 
 
@@ -202,16 +158,6 @@ export class Workspace {
 
     return result;
   }
-
-
-  static getForId(userId: string, id: string): Workspace | undefined {
-    const root = getWorkspacePath(userId, id);
-    if (!root) {
-      return undefined;
-    }
-
-    return new Workspace(root, id);
-  }
 }
 
 
@@ -229,11 +175,6 @@ function matches(sp: StoragePath, pattern: string): boolean {
     basename: simpleMode,
     dot: true
   });
-}
-
-
-function getWorkspacePath(userId: string, workspaceId: string) {
-  return joinNestedPathSecure(Workspace.getCommonWorkspacesRoot(), path.join(userId, workspaceId));
 }
 
 
@@ -268,18 +209,4 @@ async function getFsEntries(fs: LayeredStorage, start: StoragePath): Promise<Wor
   }
 
   return result;
-}
-
-
-export async function fileExists(filePath: string): Promise<boolean> {
-  try {
-    await fs.promises.stat(filePath);
-    return true;
-  } catch (err: any) {
-    if (err.code === "ENOENT") {
-      return false;
-    } else {
-      throw err;
-    }
-  }
 }

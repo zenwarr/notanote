@@ -1,8 +1,8 @@
-import { LayeredStorage } from "../storage/LayeredStorage";
+import { LayeredStorage } from "../../common/storage/LayeredStorage";
 import { FsStorageLayer } from "../storage/FsStorageLayer";
 import * as path from "path";
-import { RuntimeStorageEntry } from "../storage/RuntimeStorageEntry";
-import { StoragePath } from "../storage/StoragePath";
+import { RuntimeStorageEntry } from "../../common/storage/RuntimeStorageEntry";
+import { StoragePath } from "../../common/storage/StoragePath";
 
 
 class TestFsEntry extends RuntimeStorageEntry {

@@ -1,4 +1,4 @@
-import { StorageEntry } from "./AbstractStorageLayer";
+import { StorageEntry } from "./StorageLayer";
 import { StoragePath } from "./StoragePath";
 
 

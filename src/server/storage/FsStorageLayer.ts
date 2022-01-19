@@ -1,10 +1,11 @@
-import { AbstractStorageLayer, StorageEntry, StorageLayerFlag, joinNestedPathSecure } from "./AbstractStorageLayer";
+import { StorageLayer, StorageEntry, StorageLayerFlag, joinNestedPathSecure } from "../../common/storage/StorageLayer";
 import * as fs from "fs";
 import * as p from "path";
-import { StoragePath } from "./StoragePath";
+import { StoragePath } from "../../common/storage/StoragePath";
+import { asyncExists } from "../plugin/PluginBuilder";
 
 
-export class FsStorageLayer extends AbstractStorageLayer {
+export class FsStorageLayer extends StorageLayer {
   constructor(private rootPath: string) {
     super();
   }
@@ -27,7 +28,11 @@ export class FsStorageLayer extends AbstractStorageLayer {
 
   override async get(path: StoragePath) {
     const realPath = this.toAbsolute(path);
-    return new FsStorageEntry(realPath, path);
+    if (await asyncExists(realPath)) {
+      return new FsStorageEntry(realPath, path);
+    } else {
+      return undefined
+    }
   }
 
 

@@ -1,5 +1,6 @@
 import * as path from "path";
-import { Workspace } from "../storage/workspace";
+import { Workspace } from "../../common/storage/Workspace";
+import { ServerWorkspaceFactory } from "../storage/ServerWorkspaceFactory";
 
 
 beforeAll(() => {
@@ -9,6 +10,6 @@ beforeAll(() => {
 
 describe("workspace", () => {
   it("creates workspace", async () => {
-    const ws = await Workspace.getOrCreateWorkspace("test_user", "default");
+    const ws = await ServerWorkspaceFactory.instance.getOrCreateWorkspace("test_user", "default");
   });
 });

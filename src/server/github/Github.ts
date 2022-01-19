@@ -1,7 +1,8 @@
-import { fileExists, SpecialEntry, Workspace } from "../storage/workspace";
+import { SpecialEntry, Workspace } from "../../common/storage/Workspace";
 import child_process from "child_process";
 import path from "path";
 import assert from "assert";
+import { fileExists } from "../storage/fsUtils";
 
 
 export interface CommandResult {
