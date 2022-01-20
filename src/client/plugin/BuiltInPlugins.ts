@@ -6,11 +6,11 @@ import { pluginConfigPlugin } from "./PluginConfigPlugin";
 
 export function registerPlugins(plugins: RemotePluginSpec[] = []) {
   const pm = PluginManager.instance;
-  pm.registerPlugin(diaryPlugin);
-  pm.registerPlugin(pluginConfigPlugin);
+  pm.registerPluginAndNotFail(diaryPlugin);
+  pm.registerPluginAndNotFail(pluginConfigPlugin);
 
   for (const plugin of plugins) {
-    pm.registerPlugin({
+    pm.registerPluginAndNotFail({
       ...plugin,
       load: plugin.url
     });

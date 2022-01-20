@@ -58,6 +58,15 @@ export class PluginManager {
   }
 
 
+  registerPluginAndNotFail(plugin: PluginMeta) {
+    try {
+      this.registerPlugin(plugin);
+    } catch (e: any) {
+      alert(`Failed to register plugin ${ plugin.name }: ${ e.message }`);
+    }
+  }
+
+
   getPlugins() {
     return this.plugins;
   }
