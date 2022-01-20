@@ -26,7 +26,12 @@ const params = JSON.parse(root?.dataset.params ?? "{}");
 
 WorkspaceManager.instance.id = params.workspaceId;
 ProfileManager.instance.userName = params.userName;
-registerPlugins(params.plugins);
+
+try {
+  registerPlugins(params.plugins);
+} catch (error: any) {
+  alert("Failed to register plugins: " + error.message);
+}
 
 ReactDOM.render(<>
   <AppThemeProvider>
