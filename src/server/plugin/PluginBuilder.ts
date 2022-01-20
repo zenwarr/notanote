@@ -235,10 +235,7 @@ async function getPluginSpec(workspaceId: string, pluginId: string, dir: string)
       editors: meta.editors
     };
   } catch (err: any) {
-    if (err.code === "ENOENT") {
-      return undefined;
-    } else {
-      throw err;
-    }
+    console.error(`Failed to load plugin ${ pluginId }: ${ err.message }`);
+    return undefined;
   }
 }
