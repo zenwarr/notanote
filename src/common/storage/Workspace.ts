@@ -109,7 +109,7 @@ export class Workspace {
     if (type === "dir") {
       entry = await this.storage.createDir(entryPath);
     } else {
-      await this.storage.createDir(entryPath.parentDir());
+      await this.storage.createDir(entryPath.parentDir);
       entry = await this.storage.write(entryPath, "");
     }
 

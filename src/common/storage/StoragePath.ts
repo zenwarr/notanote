@@ -22,13 +22,18 @@ export class StoragePath {
   }
 
 
-  parentDir(): StoragePath {
+  get parentDir(): StoragePath {
     return new StoragePath(p.dirname(this._normalized));
   }
 
 
   valueOf(): string {
     return this._normalized;
+  }
+
+
+  isEqual(other: StoragePath): boolean {
+    return this._normalized === other._normalized;
   }
 
 

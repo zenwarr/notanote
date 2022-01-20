@@ -11,9 +11,6 @@ export abstract class StorageLayer {
   abstract createDir(path: StoragePath): Promise<StorageEntry>;
 
 
-  abstract createFile(path: StoragePath, content: Buffer | string): Promise<StorageEntry>;
-
-
   abstract flags(): number; // FsLayerProperty
 
 

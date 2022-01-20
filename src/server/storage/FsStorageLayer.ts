@@ -18,14 +18,6 @@ export class FsStorageLayer extends StorageLayer {
   }
 
 
-  override async createFile(path: StoragePath, content: Buffer | string) {
-    const realPath = this.toAbsolute(path);
-    const entry = new FsStorageEntry(realPath, path);
-    await entry.write(content);
-    return entry;
-  }
-
-
   override async get(path: StoragePath) {
     const realPath = this.toAbsolute(path);
     if (await asyncExists(realPath)) {
