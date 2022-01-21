@@ -81,7 +81,7 @@ const defaultHighlightStyles: TagStyle[] = [
   {tag: [t.atom, t.bool, t.special(t.variableName)], color: whiskey },
   {tag: [t.processingInstruction, t.string, t.inserted], color: sage},
   {tag: t.invalid, color: invalid},
-  {tag: t.heading1, fontWeight: "bold", fontSize: "1.7em"},
+  {tag: t.heading1, fontWeight: "bold", fontSize: "1.9em"},
   {tag: t.heading2, fontWeight: "bold", fontSize: "1.6em"},
   {tag: t.heading3, fontWeight: "bold", fontSize: "1.4em"},
   {tag: t.monospace, fontFamily: "monospace"},
