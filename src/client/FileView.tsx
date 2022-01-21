@@ -8,6 +8,7 @@ import { useWindowTitle } from "./useWindowTitle";
 import { CircularProgress } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { PluginManager, EditorProps } from "./plugin/PluginManager";
+import { ErrorBoundary } from "./ErrorBoundary/ErrorBoundary";
 
 
 export type FileViewProps = {
@@ -37,7 +38,9 @@ export function FileView(props: FileViewProps) {
     </div>;
   }
 
-  return <componentLoad.data doc={contentLoad.data} className={props.className} />
+  return <ErrorBoundary>
+    <componentLoad.data doc={contentLoad.data} className={props.className} />
+  </ErrorBoundary>
 }
 
 

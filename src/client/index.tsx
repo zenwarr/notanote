@@ -6,6 +6,7 @@ import { ProfileManager } from "./ProfileManager";
 import { Workbox } from "workbox-window";
 import { AppThemeProvider } from "./Theme";
 import { registerPlugins } from "./plugin/BuiltInPlugins";
+import { ErrorBoundary } from "./ErrorBoundary/ErrorBoundary";
 
 
 if ("serviceWorker" in navigator) {
@@ -34,7 +35,9 @@ try {
 }
 
 ReactDOM.render(<>
-  <AppThemeProvider>
-    <App/>
-  </AppThemeProvider>
+  <ErrorBoundary>
+    <AppThemeProvider>
+      <App/>
+    </AppThemeProvider>
+  </ErrorBoundary>
 </>, root);
