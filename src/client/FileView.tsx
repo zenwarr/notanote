@@ -2,6 +2,7 @@ import { useLoad } from "./useLoad";
 import { useCallback } from "react";
 import { DocumentManager } from "./DocumentManager";
 import { TextDocumentEditor } from "./TextDocumentEditor";
+import { Document } from "./Document";
 import { observer } from "mobx-react-lite";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { useWindowTitle } from "./useWindowTitle";
@@ -17,10 +18,40 @@ export type FileViewProps = {
 }
 
 
+function fontTagExists(url: string) {
+  const links = document.head.getElementsByTagName("link");
+  for (let i = 0; i < links.length; i++) {
+    if (links[i].href === url) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
+function applyGlobalDocSettings(doc: Document) {
+  if (doc.settings.remoteFonts) {
+    for (const font of doc.settings.remoteFonts) {
+      if (fontTagExists(font)) {
+        continue;
+      }
+
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = font;
+      document.head.appendChild(link);
+    }
+  }
+}
+
+
 export function FileView(props: FileViewProps) {
   const classes = useStyles();
   const contentLoad = useLoad(useCallback(async () => {
-    return DocumentManager.instance.create(props.fileID);
+    const doc = await DocumentManager.instance.create(props.fileID);
+    applyGlobalDocSettings(doc);
+    return doc;
   }, [ props.fileID ]));
 
   const componentLoad = useLoad<React.ComponentType<EditorProps> | undefined>(useCallback(async () => {
@@ -39,8 +70,8 @@ export function FileView(props: FileViewProps) {
   }
 
   return <ErrorBoundary>
-    <componentLoad.data doc={contentLoad.data} className={props.className} />
-  </ErrorBoundary>
+    <componentLoad.data doc={ contentLoad.data } className={ props.className }/>
+  </ErrorBoundary>;
 }
 
 

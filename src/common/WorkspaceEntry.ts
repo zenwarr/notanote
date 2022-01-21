@@ -16,7 +16,8 @@ export type FileSettings = BlockSettings & {
   editor?: {
     name: string;
     [name: string]: unknown;
-  }
+  },
+  remoteFonts?: string[];
 }
 
 
