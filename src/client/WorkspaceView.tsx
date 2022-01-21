@@ -11,7 +11,7 @@ import { WorkspaceManager } from "./WorkspaceManager";
 import { observer } from "mobx-react-lite";
 import { CreateEntryDialog } from "./CreateEntryDialog";
 import { CreateNewFolderOutlined, DeleteForever, PostAddOutlined } from "@mui/icons-material";
-import { useHistory } from "react-router";
+import { useNavigate } from "react-router";
 import DescriptionIcon from "@mui/icons-material/Description";
 import FolderIcon from "@mui/icons-material/Folder";
 import { format} from "date-fns";
@@ -84,7 +84,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const expand = useExpanded(workspaceManager.selectedEntry);
   const createOptions = useRef<CreateOptions | undefined>(undefined);
 
-  const history = useHistory();
+  const navigate = useNavigate();
   const classes = useStyles();
 
   function onNodeSelect(_: unknown, value: string | string[]) {
@@ -93,7 +93,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 
       const selectedEntry = WorkspaceManager.instance.getEntryByPath(value);
       if (selectedEntry && selectedEntry.type !== "dir") {
-        history.push(`/f/${ value }`);
+        navigate(`/f/${ value }`);
       }
 
       if (selectedEntry) {

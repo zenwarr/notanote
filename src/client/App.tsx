@@ -1,10 +1,7 @@
 import {
   Box,
   Hidden,
-  SwipeableDrawer,
-
-
-
+  SwipeableDrawer
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { WorkspaceView } from "./WorkspaceView";
@@ -12,7 +9,7 @@ import { ConnectedFileView } from "./FileView";
 import { Header } from "./Header";
 import { usePreventClose } from "./usePreventClose";
 import { useEffect, useState } from "react";
-import { Route, Switch, useParams } from "react-router";
+import { Route, Routes, useLocation, useParams } from "react-router";
 import { HashRouter } from "react-router-dom";
 import { WorkspaceManager } from "./WorkspaceManager";
 import { WorkspaceEntry } from "../common/WorkspaceEntry";
@@ -66,9 +63,9 @@ export function App() {
             <Header onToggleDrawer={ () => setDrawerOpen(!drawerOpen) } isDarkTheme={ appTheme.isDark } setIsDark={ appTheme.setIsDark }/>
           </div>
 
-          <Switch>
-            <Route exact key={ "file" } path={ "/f/:segment+" } component={ FileViewRoute }/>
-          </Switch>
+          <Routes>
+            <Route path={ "/f/*" } element={ <FileViewRoute/> }/>
+          </Routes>
 
           <ConnectedFileView className={ classes.docEditor }/>
         </div>
@@ -79,11 +76,12 @@ export function App() {
 
 
 export function FileViewRoute() {
-  const params = useParams<{ segment: string }>();
+  const loc = useLocation();
+  const fileId = loc.pathname.startsWith("/f/") ? loc.pathname.substring("/f".length) : undefined;
 
   useEffect(() => {
-    WorkspaceManager.instance.selectedEntry = params.segment;
-  }, [ params.segment ]);
+    WorkspaceManager.instance.selectedEntry = fileId;
+  }, [ fileId ]);
 
   return null;
 }
