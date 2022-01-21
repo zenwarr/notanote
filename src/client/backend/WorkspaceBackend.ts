@@ -157,14 +157,7 @@ export class TestWorkspaceBackend implements WorkspaceBackend {
             ...r,
             processingInstruction: { color: "lightgray" }
           },
-          drawWhitespace: true,
-          editor: {
-            name: "pluginConfig",
-            columns: [
-              { type: "text", label: "First" },
-              { type: "text", label: "Second" }
-            ]
-          }
+          drawWhitespace: true
         },
         content: JSON.stringify({
           plugins: [

@@ -21,6 +21,7 @@ import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { createHighlightStyle } from "./Highlight";
 import { FileSettings } from "../common/WorkspaceEntry";
 import { json } from "@codemirror/lang-json";
+import { javascript } from "@codemirror/lang-javascript";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { CHECKBOX_RE, checkboxPlugin } from "./ReactWidget";
 import { Text } from "@codemirror/text";
@@ -33,6 +34,8 @@ import { Document, DocumentEditorStateAdapter } from "./Document";
 function getEditorPluginForFile(fileId: string) {
   if (fileId.endsWith(".json")) {
     return json();
+  } else if (fileId.endsWith(".js") || fileId.endsWith(".jsx")) {
+    return javascript();
   } else {
     return markdown({
       base: markdownLanguage,
@@ -264,9 +267,11 @@ export class CmDocumentEditorStateAdapter implements DocumentEditorStateAdapter 
     });
   }
 
+
   serializeContent() {
     return this.state.doc.toString();
   }
+
 
   state: EditorState;
   private readonly doc: Document;
