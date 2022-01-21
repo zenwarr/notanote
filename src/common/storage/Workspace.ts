@@ -1,6 +1,5 @@
 import { CreateEntryReply, EntryInfo, EntryType, FileSettings, WorkspaceEntry } from "../WorkspaceEntry";
 import { ErrorCode, LogicError } from "../errors";
-import * as micromatch from "micromatch";
 import { LayeredStorage } from "./LayeredStorage";
 import { joinNestedPathSecure, StorageEntry, StorageLayer } from "./StorageLayer";
 import assert from "assert";
@@ -46,9 +45,9 @@ export class Workspace {
     const settings = await this.loadSettings();
     const matching = settings?.patterns?.filter(pat => {
       if (typeof pat.files === "string") {
-        return matches(fileId, pat.files);
+        return patternMatches(fileId, pat.files);
       } else {
-        return pat.files.some(pattern => matches(fileId, pattern));
+        return pat.files.some(pattern => patternMatches(fileId, pattern));
       }
     });
 
@@ -168,13 +167,13 @@ const IGNORED_ENTRIES: string[] = [
 ];
 
 
-function matches(sp: StoragePath, pattern: string): boolean {
-  const simpleMode = pattern.match(/^\*\.\w+$/) != null;
+export function patternMatches(sp: StoragePath, pattern: string): boolean {
+  if (!pattern.startsWith("/")) {
+    pattern = "/" + pattern;
+  }
 
-  return micromatch.isMatch(sp.path, pattern, {
-    basename: simpleMode,
-    dot: true
-  });
+  const re = new RegExp(pattern);
+  return sp.path.match(re) != null;
 }
 
 
