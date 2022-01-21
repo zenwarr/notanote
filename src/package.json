@@ -5,6 +5,7 @@
   "author": "zenwarr <zenw@yandex.ru>",
   "license": "MIT",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "build-client": "webpack --env prod=true",
@@ -47,8 +48,6 @@
     "@types/passport-local": "^1.0.34",
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
-    "@types/react-router": "^5.1.18",
-    "@types/react-router-dom": "^5.3.3",
     "@types/webpack": "^5.28.0",
     "@types/wicg-file-system-access": "^2020.9.4",
     "classnames": "^2.3.1",
