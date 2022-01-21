@@ -1,7 +1,7 @@
 import { getProfile, requireAuthenticatedUser } from "./auth";
 import { FastifyInstance } from "fastify";
 import { Workspace } from "../common/storage/Workspace";
-import { getWorkspacePlugins } from "./plugin/PluginBuilder";
+import { getWorkspacePlugins } from "./plugin/PluginManager";
 import { ServerWorkspaceFactory } from "./storage/ServerWorkspaceFactory";
 
 

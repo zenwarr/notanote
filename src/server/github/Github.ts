@@ -20,7 +20,7 @@ export interface RunCommandOptions {
 }
 
 
-async function runCommand(bin: string, args: string[], options?: RunCommandOptions): Promise<CommandResult> {
+export async function runCommand(bin: string, args: string[], options?: RunCommandOptions): Promise<CommandResult> {
   return new Promise((resolve, reject) => {
     let proc = child_process.spawn(bin, args, {
       stdio: "pipe",

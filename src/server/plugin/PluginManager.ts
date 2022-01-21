@@ -5,6 +5,7 @@ import * as os from "os";
 import * as fs from "fs";
 import * as _ from "lodash";
 import { RemotePluginSpec } from "../../common/plugin";
+import { runCommand } from "../github/Github";
 
 
 const cssExtract = require("mini-css-extract-plugin");
@@ -43,6 +44,10 @@ export async function buildPlugin(pluginDir: string, pluginId: string, buildDirs
   }
 
   console.log("Rebuilding plugin...");
+  if (await asyncExists(path.join(pluginDir, "yarn.lock"))) {
+    await runCommand("yarn", [ "install", "--frozen-lockfile" ], { cwd: pluginDir });
+  }
+
   const entryPoint = await getFirstExistingFile([ "index.tsx", "index.ts", "index.jsx", "index.js" ].map(f => path.join(pluginDir, f)));
 
   return new Promise((resolve, reject) => {
@@ -223,6 +228,7 @@ export async function getWorkspacePlugins(workspaceId: string, workspaceRoot: st
     }
   }
 }
+
 
 async function getPluginSpec(workspaceId: string, pluginId: string, dir: string): Promise<RemotePluginSpec | undefined> {
   const metaFile = path.join(dir, "plugin.json");

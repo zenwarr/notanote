@@ -1,5 +1,5 @@
 import * as path from "path";
-import { buildPlugin, getBuildDirs, getWorkspacePlugins } from "../plugin/PluginBuilder";
+import { buildPlugin, getBuildDirs, getWorkspacePlugins } from "../plugin/PluginManager";
 
 
 it("builds plugin", async () => {

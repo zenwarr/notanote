@@ -2,7 +2,7 @@ import { StorageLayer, StorageEntry, StorageLayerFlag, joinNestedPathSecure } fr
 import * as fs from "fs";
 import * as p from "path";
 import { StoragePath } from "../../common/storage/StoragePath";
-import { asyncExists } from "../plugin/PluginBuilder";
+import { asyncExists } from "../plugin/PluginManager";
 
 
 export class FsStorageLayer extends StorageLayer {

@@ -5,7 +5,7 @@ import S from "fluent-json-schema";
 import { EntryType } from "../common/WorkspaceEntry";
 import { ErrorCode, LogicError } from "../common/errors";
 import { clone, commitAndPushChanges, initGithubIntegration, pullChanges } from "./github/Github";
-import { asyncExists, buildPlugin, getBuildDirs } from "./plugin/PluginBuilder";
+import { asyncExists, buildPlugin, getBuildDirs } from "./plugin/PluginManager";
 import * as fs from "fs";
 import { StoragePath } from "../common/storage/StoragePath";
 import { ServerWorkspaceFactory } from "./storage/ServerWorkspaceFactory";

@@ -1,4 +1,4 @@
-import { getWorkspacePlugins } from "../plugin/PluginBuilder";
+import { getWorkspacePlugins } from "../plugin/PluginManager";
 import { getRemoteOrigin } from "../github/Github";
 import path from "path";
 import { Workspace } from "../../common/storage/Workspace";
