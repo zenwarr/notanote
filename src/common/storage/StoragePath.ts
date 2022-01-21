@@ -45,6 +45,7 @@ export class StoragePath {
 
 
 function normalize(path: string): string {
+  path = path.trim();
   path = p.normalize(path);
   path = path.replace(/\\/g, "/");
   if (!path.startsWith("/")) {

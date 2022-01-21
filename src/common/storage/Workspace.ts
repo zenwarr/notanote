@@ -97,7 +97,7 @@ export class Workspace {
 
 
   async createEntry(entryPath: StoragePath, type: EntryType): Promise<CreateEntryReply> {
-    if (type === "file" && !entryPath.path.endsWith(".md")) {
+    if (type === "file" && !entryPath.path.match(/\.[a-z]+$/)) {
       entryPath = new StoragePath(entryPath.path + ".md");
     }
 
