@@ -34,8 +34,14 @@ import { Document, DocumentEditorStateAdapter } from "./Document";
 function getEditorPluginForFile(fileId: string) {
   if (fileId.endsWith(".json")) {
     return json();
-  } else if (fileId.endsWith(".js") || fileId.endsWith(".jsx")) {
-    return javascript();
+  } else if (fileId.endsWith(".js")) {
+    return javascript({ jsx: false, typescript: false });
+  } else if (fileId.endsWith(".jsx")) {
+    return javascript({ jsx: true, typescript: false });
+  } else if (fileId.endsWith(".ts")) {
+    return javascript({ jsx: false, typescript: true });
+  } else if (fileId.endsWith(".tsx")) {
+    return javascript({ jsx: true, typescript: true });
   } else {
     return markdown({
       base: markdownLanguage,
