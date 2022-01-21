@@ -7,13 +7,16 @@ const DEFAULT_BLOCK_SETTINGS: { [name: string]: BlockSettings } = {
     fontWeight: "bold"
   },
   heading1: {
-    fontSize: "1.5em"
+    fontSize: "1.7em",
+    fontWeight: "bold"
   },
   heading2: {
-    fontSize: "1.4em"
+    fontSize: "1.6em",
+    fontWeight: "bold"
   },
   heading3: {
-    fontSize: "1.2em"
+    fontSize: "1.4em",
+    fontWeight: "bold"
   },
   monospace: {
     fontFamily: "monospace"
