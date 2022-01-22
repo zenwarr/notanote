@@ -51,7 +51,7 @@ function getEditorPluginForFile(fileId: string) {
 }
 
 
-function getPluginsFromSettings(settings: FileSettings): Extension[] {
+function getPluginsFromSettings(fileId: string, settings: FileSettings): Extension[] {
   const r: Extension[] = [];
 
   if (settings.drawWhitespace) {
@@ -64,6 +64,10 @@ function getPluginsFromSettings(settings: FileSettings): Extension[] {
         return el;
       }
     }));
+  }
+
+  if (fileId.endsWith(".md")) {
+    r.push(checkboxPlugin);
   }
 
   return r;
@@ -137,8 +141,7 @@ export function createEditorState(content: string, fileId: string, settings: Fil
       }),
       EditorState.tabSize.of(settings.tabWidth ?? 2),
       scrollPastEnd(),
-      ...getPluginsFromSettings(settings),
-      checkboxPlugin,
+      ...getPluginsFromSettings(fileId, settings),
       autocompletion({
         activateOnTyping: true,
         override: [
