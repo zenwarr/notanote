@@ -257,14 +257,10 @@ export async function getWorkspacePlugins(storageId: string, realRootPath: strin
 
 
 async function getPluginSpec(wsId: string, pluginId: string, dir: string): Promise<RemotePluginSpec | undefined> {
-  const metaFile = path.join(dir, "plugin.json");
-
   try {
-    const meta = JSON.parse(await fs.promises.readFile(metaFile, "utf8"));
     return {
       name: pluginId,
-      url: `/api/storages/${ encodeURIComponent(wsId) }/plugins/${ encodeURIComponent(pluginId) }`,
-      editors: meta.editors
+      url: `/api/storages/${ encodeURIComponent(wsId) }/plugins/${ encodeURIComponent(pluginId) }`
     };
   } catch (err: any) {
     console.error(`Failed to load plugin ${ pluginId }: ${ err.message }`);

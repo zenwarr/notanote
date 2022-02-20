@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Document, DocumentEditorStateAdapter } from "../Document";
 import { setupPluginDeps } from "./SetupPluginDeps";
-import { EditorMeta } from "../../common/plugin";
 
 
 export interface EditorProps {
@@ -21,10 +20,6 @@ export interface PluginMeta {
    * If class, this plugin is built-in and loads from given class.
    */
   load: PluginLoadSpec;
-
-  editors: {
-    [name: string]: EditorMeta
-  } | undefined;
 }
 
 
@@ -35,12 +30,14 @@ export class PluginManager {
 
 
   async getCustomEditorForDocument(doc: Document) {
-    const editorName = doc.settings.editor?.name;
-    if (!editorName) {
+    const editorSpec = doc.settings.editor?.name;
+    if (!editorSpec) {
       return undefined;
     }
 
-    const editorPlugin = await this.loadPluginForEditor(editorName);
+    const [ pluginName, editorName ] = editorSpec.split(".");
+
+    const editorPlugin = await this.loadPluginByName(pluginName);
     if (editorPlugin) {
       return editorPlugin.editors[editorName];
     } else {
@@ -72,14 +69,13 @@ export class PluginManager {
   }
 
 
-  private async loadPluginForEditor(name: string): Promise<LoadedPlugin | undefined> {
-    for (const plugin of this.plugins) {
-      if (plugin.editors && Object.keys(plugin.editors).includes(name)) {
-        return this.loadPlugin(plugin.name, plugin.load);
-      }
+  private async loadPluginByName(name: string): Promise<LoadedPlugin | undefined> {
+    const plugin = this.plugins.find(x => x.name === name);
+    if (!plugin) {
+      return undefined;
     }
 
-    return undefined;
+    return this.loadPlugin(plugin.name, plugin.load);
   }
 
 

@@ -62,7 +62,7 @@ export class FileSettingsProvider {
       specificSettings = {
         ...specificSettings,
         editor: {
-          name: "pluginConfig"
+          name: "pluginConfig.editor"
         }
       };
     }

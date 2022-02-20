@@ -161,13 +161,10 @@ export const pluginConfigPlugin: PluginMeta = {
   name: "pluginConfig",
   load: class {
     editors = {
-      pluginConfig: {
+      editor: {
         component: PluginConfigEditor,
         stateAdapter: PluginConfigEditorState
       }
     };
-  },
-  editors: {
-    pluginConfig: {}
   }
 };
