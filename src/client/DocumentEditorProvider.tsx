@@ -6,7 +6,12 @@ import { Document, DocumentEditorStateAdapter } from "./Document";
 const TEXT_EXTS = [ ".md", ".txt" ];
 
 
-function isTextFile(filename: string): boolean {
+function shouldUseCodeMirror(filename: string): boolean {
+  if (isAndroidOrIOS()) {
+    // monaco-editor doesn't support Android or iOS
+    return true;
+  }
+
   const ext = filename.slice(filename.lastIndexOf("."));
   return TEXT_EXTS.indexOf(ext) >= 0;
 }
@@ -33,7 +38,7 @@ export class DocumentEditorProvider {
 
 
   private async getDefaultEditor(doc: Document) {
-    if (isTextFile(doc.entryPath.normalized)) {
+    if (shouldUseCodeMirror(doc.entryPath.normalized)) {
       return new (await this.loadCodeMirror()).state(doc);
     } else {
       return new (await this.loadMonaco()).state(doc);
@@ -46,7 +51,7 @@ export class DocumentEditorProvider {
     if (editor?.component) {
       return editor.component;
     } else {
-      if (isTextFile(doc.entryPath.normalized)) {
+      if (shouldUseCodeMirror(doc.entryPath.normalized)) {
         return (await this.loadCodeMirror()).editor;
       } else {
         return (await this.loadMonaco()).editor;
@@ -74,4 +79,9 @@ export class DocumentEditorProvider {
 
 
   static instance = new DocumentEditorProvider();
+}
+
+
+function isAndroidOrIOS() {
+  return /(android|ios)/i.test(navigator.userAgent);
 }
