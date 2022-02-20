@@ -42,7 +42,7 @@ export const decorators = [
         {
           path: "/file.md",
           stats: { isDirectory: false, createTs: undefined, updateTs: undefined },
-          textContent: "Lorem ipsum"
+          textContent: "# Lorem ipsum"
         }
       ]
     });

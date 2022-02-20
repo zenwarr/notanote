@@ -1,5 +1,5 @@
 import { Tag, tags as t, TagStyle } from "@codemirror/highlight";
-import { BlockSettings, FileSettings } from "../common/Settings";
+import { BlockSettings, FileSettings } from "../../common/Settings";
 
 
 const chalky = "#e5c07b",

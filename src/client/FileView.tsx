@@ -2,7 +2,6 @@ import { useLoad } from "./useLoad";
 import * as React from "react";
 import { useCallback } from "react";
 import { DocumentManager } from "./DocumentManager";
-import { TextDocumentEditor } from "./TextDocumentEditor";
 import { Document } from "./Document";
 import { observer } from "mobx-react-lite";
 import { ClientWorkspace } from "./ClientWorkspace";
@@ -10,8 +9,10 @@ import { useWindowTitle } from "./useWindowTitle";
 import { CircularProgress } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { EditorProps, PluginManager } from "./plugin/PluginManager";
-import { ErrorBoundary } from "./ErrorBoundary/ErrorBoundary";
+import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
 import { StoragePath } from "../common/storage/StoragePath";
+import { CodeEditor } from "./code-editor/CodeEditor";
+import { DocumentEditorProvider } from "./DocumentEditorProvider";
 
 
 export type FileViewProps = {
@@ -61,8 +62,7 @@ export function FileView(props: FileViewProps) {
       return undefined;
     }
 
-    const editor = await PluginManager.instance.getCustomEditorForDocument(contentLoad.data);
-    return editor?.component ?? TextDocumentEditor;
+    return DocumentEditorProvider.instance.getComponent(contentLoad.data);
   }, [ contentLoad.data?.settings.editor?.name, contentLoad.isLoaded ]));
 
   if (!contentLoad.isLoaded || !componentLoad.isLoaded || !componentLoad.data) {

@@ -6,7 +6,7 @@ import { ProfileManager } from "./ProfileManager";
 import { Workbox } from "workbox-window";
 import { AppThemeProvider } from "./Theme";
 import { registerPlugins } from "./plugin/BuiltInPlugins";
-import { ErrorBoundary } from "./ErrorBoundary/ErrorBoundary";
+import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
 import { RemoteHttpStorage } from "./storage/RemoteHttpStorage";
 import { MemoryCachedStorage } from "../common/storage/MemoryCachedStorage";
 import { FileSettingsProvider } from "../common/workspace/FileSettingsProvider";

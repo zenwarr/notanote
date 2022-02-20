@@ -1,6 +1,7 @@
 const path = require("path");
 const cssExtract = require("mini-css-extract-plugin");
 const webpack = require("webpack");
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 
 module.exports = (env) => [
@@ -9,7 +10,7 @@ module.exports = (env) => [
     output: {
       filename: "index.js",
       path: path.join(__dirname, "static"),
-      publicPath: "/static",
+      publicPath: "/static/",
       chunkFilename: "[name]-[contenthash].js"
     },
     target: "web",
@@ -53,6 +54,9 @@ module.exports = (env) => [
       }),
       new webpack.ProvidePlugin({
         Buffer: ['buffer', 'Buffer']
+      }),
+      new MonacoWebpackPlugin({
+        publicPath: "/static/"
       })
     ]
   },
@@ -61,7 +65,7 @@ module.exports = (env) => [
     output: {
       filename: "sw.js",
       path: path.join(__dirname, "static"),
-      publicPath: "/static",
+      publicPath: "/static/",
       chunkFilename: "[name]-[contenthash].js"
     },
     target: "web",

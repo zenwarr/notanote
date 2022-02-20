@@ -1,26 +1,26 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { Document } from "./Document";
-import { DocumentManager } from "./DocumentManager";
-import "./TextDocumentEditor.css";
+import { Document } from "../Document";
+import { DocumentManager } from "../DocumentManager";
+import "./CodeEditor.css";
 import { EditorView } from "@codemirror/view";
-import { FileSettings } from "../common/Settings";
-import { useCurrentThemeIsDark } from "./Theme";
-import { CmDocumentEditorStateAdapter } from "./EditorState";
+import { FileSettings } from "../../common/Settings";
+import { useCurrentThemeIsDark } from "../Theme";
+import { CodeEditorStateAdapter } from "./CodeEditorState";
 import assert from "assert";
 
 
-export type TextDocumentEditorProps = {
+export type CodeEditorProps = {
   doc: Document;
   className?: string;
 }
 
 
-export function TextDocumentEditor(props: TextDocumentEditorProps) {
+export function CodeEditor(props: CodeEditorProps) {
   const containerRef = useRef<any>();
   const viewRef = useRef<EditorView>();
   const isDarkTheme = useCurrentThemeIsDark();
-  const stateAdapter = useRef<CmDocumentEditorStateAdapter>(props.doc.getEditorStateAdapter() as CmDocumentEditorStateAdapter);
-  assert(stateAdapter.current instanceof CmDocumentEditorStateAdapter);
+  const stateAdapter = useRef<CodeEditorStateAdapter>(props.doc.getEditorStateAdapter() as CodeEditorStateAdapter);
+  assert(stateAdapter.current instanceof CodeEditorStateAdapter);
   const editorState = stateAdapter.current.state;
 
   useEffect(() => {

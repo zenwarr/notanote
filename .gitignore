@@ -3,6 +3,7 @@ node_modules
 src/static/*.js
 src/static/*.css
 src/static/*.txt
+src/static/*.ttf
 .env
 *.js
 *.js.map

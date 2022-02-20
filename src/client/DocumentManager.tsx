@@ -2,10 +2,11 @@ import { Document, DocumentEditorStateAdapter, SaveState } from "./Document";
 import { computed, makeObservable, observable } from "mobx";
 import { ClientWorkspace } from "./ClientWorkspace";
 import { SpecialFiles } from "../common/SpecialFiles";
-import { CmDocumentEditorStateAdapter } from "./EditorState";
 import { PluginManager } from "./plugin/PluginManager";
 import { StoragePath } from "../common/storage/StoragePath";
 import { FileSettingsProvider } from "../common/workspace/FileSettingsProvider";
+import { CodeEditorStateAdapter } from "./code-editor/CodeEditorState";
+import { DocumentEditorProvider } from "./DocumentEditorProvider";
 
 
 export class DocumentManager {
@@ -27,12 +28,11 @@ export class DocumentManager {
       return docInfo.doc;
     }
 
-    console.log("reading document text", path.normalized);
     const entry = ClientWorkspace.instance.storage.get(path);
     const content = await entry.readText();
 
     const document = new Document(content, path, FileSettingsProvider.instance.getSettingsForPath(path));
-    document.setEditorStateAdapter(await this.getStateAdapterForFile(document));
+    document.setEditorStateAdapter(await DocumentEditorProvider.instance.getStateAdapter(document));
     this.documents.set(path.normalized, { doc: document, usageCount: 1 });
     return document;
   }
@@ -64,20 +64,6 @@ export class DocumentManager {
           this.documents.delete(key);
         }
       }
-    }
-  }
-
-
-  private async getStateAdapterForFile(doc: Document): Promise<DocumentEditorStateAdapter> {
-    if (doc.settings.editor != null) {
-      const editor = await PluginManager.instance.getCustomEditorForDocument(doc);
-      if (!editor) {
-        return new CmDocumentEditorStateAdapter(doc);
-      } else {
-        return new editor.stateAdapter(doc);
-      }
-    } else {
-      return new CmDocumentEditorStateAdapter(doc);
     }
   }
 

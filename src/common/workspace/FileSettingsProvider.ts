@@ -21,7 +21,6 @@ export class FileSettingsProvider {
 
 
   async load(): Promise<void> {
-    console.log("Loading workspace settings...");
     try {
       const text = await this.fs.get(SpecialWorkspaceEntry.Settings).readText();
       if (!text) {

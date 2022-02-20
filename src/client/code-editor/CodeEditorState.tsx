@@ -19,7 +19,7 @@ import {
 } from "@codemirror/view";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { createHighlightStyle } from "./Highlight";
-import { FileSettings } from "../common/Settings";
+import { FileSettings } from "../../common/Settings";
 import { json } from "@codemirror/lang-json";
 import { javascript } from "@codemirror/lang-javascript";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
@@ -28,8 +28,8 @@ import { Text } from "@codemirror/text";
 import { NodeProp } from "@lezer/common";
 import { languages } from "@codemirror/language-data";
 import { format } from "date-fns";
-import { Document, DocumentEditorStateAdapter } from "./Document";
-import { StoragePath } from "../common/storage/StoragePath";
+import { Document, DocumentEditorStateAdapter } from "../Document";
+import { StoragePath } from "../../common/storage/StoragePath";
 
 
 function getEditorPluginForFile(entryPath: StoragePath) {
@@ -264,7 +264,7 @@ const customKeymap: KeyBinding[] = [
 ];
 
 
-export class CmDocumentEditorStateAdapter implements DocumentEditorStateAdapter {
+export class CodeEditorStateAdapter implements DocumentEditorStateAdapter {
   constructor(doc: Document) {
     this.doc = doc;
     const self = this;
