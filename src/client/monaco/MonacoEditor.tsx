@@ -26,13 +26,33 @@ function getLanguageFromFileName(filename: string) {
 }
 
 
+let themeDefined = false;
+
+function defineTheme() {
+  if (themeDefined) {
+    return;
+  }
+
+  themeDefined = true;
+  monaco.editor.defineTheme("pure-dark", {
+    base: "vs-dark",
+    inherit: true,
+    rules: [],
+    colors: {
+      "editor.background": "#121212"
+    }
+  });
+}
+
+
 export function MonacoEditor(props: MonacoEditorProps) {
   const containerRef = useRef<any>();
   const stateAdapter = useRef<MonacoEditorStateAdapter>(props.doc.getEditorStateAdapter() as MonacoEditorStateAdapter);
   const isDarkTheme = useCurrentThemeIsDark();
 
   useEffect(() => {
-    monaco.editor.setTheme(isDarkTheme ? "vs-dark" : "vs");
+    defineTheme();
+    monaco.editor.setTheme(isDarkTheme ? "pure-dark" : "vs");
     const editor = monaco.editor.create(containerRef.current, {
       value: stateAdapter.current.initialText,
       language: getLanguageFromFileName(props.doc.entryPath.normalized),
@@ -47,7 +67,7 @@ export function MonacoEditor(props: MonacoEditorProps) {
   }, []);
 
   useLayoutEffect(() => {
-    monaco.editor.setTheme(isDarkTheme ? "vs-dark" : "vs");
+    monaco.editor.setTheme(isDarkTheme ? "pure-dark" : "vs");
   }, [ isDarkTheme ]);
 
   return <div ref={ containerRef } className={ props.className }/>;
