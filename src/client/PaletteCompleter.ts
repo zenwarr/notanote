@@ -1,8 +1,8 @@
 import { PaletteOption } from "./Palette";
 import { RecentDocStorage } from "./RecentDocStorage";
-import { WorkspaceEntry } from "../common/WorkspaceEntry";
 import levenshtein from "js-levenshtein";
-import { WorkspaceManager } from "./WorkspaceManager";
+import { ClientWorkspace } from "./ClientWorkspace";
+import { StorageEntryPointer } from "../common/storage/StorageLayer";
 
 
 const COMPLETE_RESULT_COUNT = 10;
@@ -11,13 +11,13 @@ const COMPLETE_RESULT_COUNT = 10;
 export function filePaletteCompleter(value: string): PaletteOption[] {
   if (!value) {
     const recentDocs = RecentDocStorage.instance.getRecentDocs();
-    let recentEntries: (WorkspaceEntry | undefined)[] = [];
-    WorkspaceManager.instance.walk(entry => {
+    let recentEntries: (StorageEntryPointer | undefined)[] = [];
+    ClientWorkspace.instance.walk(entry => {
       if (entry.type !== "file") {
         return false;
       }
 
-      const recentIndex = recentDocs.indexOf(entry.id);
+      const recentIndex = recentDocs.indexOf(entry.path.normalized);
       if (recentIndex < 0) {
         return false;
       }
@@ -33,25 +33,28 @@ export function filePaletteCompleter(value: string): PaletteOption[] {
       recentEntries[1] = swap;
     }
 
-    return recentEntries.map(entry => ({
-      value: entry!.id,
-      content: entry!.name,
-      description: entry!.id
-    }));
+    return recentEntries.map(entry => {
+      const path = entry!.path;
+      return {
+        value: path.normalized,
+        content: path.basename,
+        description: path.normalized
+      };
+    });
   }
 
   value = value.toLowerCase();
 
   const result: PaletteOption[] = [];
   const resultIds: string[] = [];
-  WorkspaceManager.instance.walk(entry => {
-    if (entry.type === "file" && entry.id.toLowerCase().includes(value)) {
+  ClientWorkspace.instance.walk(entry => {
+    if (entry.type === "file" && entry.path.normalized.toLowerCase().includes(value)) {
       result.push({
-        value: entry.id,
-        content: entry.name,
-        description: entry.id
+        value: entry.path.normalized,
+        content: entry.path.basename,
+        description: entry.path.normalized
       });
-      resultIds.push(entry.id);
+      resultIds.push(entry.path.normalized);
       if (result.length === COMPLETE_RESULT_COUNT) {
         return true;
       }
@@ -71,22 +74,23 @@ export function filePaletteCompleter(value: string): PaletteOption[] {
 function getClosestEntries(value: string, count: number, exclude: string[]): PaletteOption[] {
   value = value.toLowerCase();
 
-  const allEntries: WorkspaceEntry[] = [];
+  const allEntries: StorageEntryPointer[] = [];
   const distance = new Map<string, number>();
-  WorkspaceManager.instance.walk(entry => {
-    if (entry.type === "file" && !exclude.includes(entry.id)) {
+  ClientWorkspace.instance.walk(entry => {
+    const entryPath = entry.path.normalized;
+    if (entry.type === "file" && !exclude.includes(entryPath)) {
       allEntries.push(entry);
-      distance.set(entry.id, levenshtein(value, entry.name.toLowerCase()));
+      distance.set(entryPath, levenshtein(value, entryPath.toLowerCase()));
     }
 
     return false;
   });
 
-  allEntries.sort((a, b) => distance.get(a.id)! - distance.get(b.id)!);
+  allEntries.sort((a, b) => distance.get(a.path.normalized)! - distance.get(b.path.normalized)!);
 
   return allEntries.slice(0, count).map(entry => ({
-    value: entry.id,
-    content: entry.name,
-    description: entry.id
+    value: entry.path.normalized,
+    content: entry.path.basename,
+    description: entry.path.normalized
   }));
 }

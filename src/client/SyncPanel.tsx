@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { WorkspaceManager } from "./WorkspaceManager";
+import { ClientWorkspace } from "./ClientWorkspace";
 import { DocumentManager } from "./DocumentManager";
 import { SaveState } from "./Document";
 import makeStyles from '@mui/styles/makeStyles';
@@ -9,8 +9,8 @@ import cn from "classnames";
 export const SyncPanel = observer(() => {
   const classes = useStyles();
 
-  let workspaceManager = WorkspaceManager.instance;
-  const currentDoc = workspaceManager.selectedEntry ? DocumentManager.instance.documents.get(workspaceManager.selectedEntry)?.doc : undefined;
+  let workspaceManager = ClientWorkspace.instance;
+  const currentDoc = workspaceManager.selectedEntry ? DocumentManager.instance.documents.get(workspaceManager.selectedEntry.normalized)?.doc : undefined;
 
   let docs = [ ...DocumentManager.instance.documents.values() ];
   const savingDocsCount = docs.filter(d => {

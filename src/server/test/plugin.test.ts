@@ -3,7 +3,7 @@ import { buildPlugin, getBuildDirs, getWorkspacePlugins } from "../plugin/Plugin
 
 
 it("builds plugin", async () => {
-  const dirs = getBuildDirs("test", "test", "test");
+  const dirs = getBuildDirs("test", "test");
   const buildResult = await buildPlugin(path.join(__dirname, "fixture/test_user/default/.note/plugins/plugin"), "plugin", dirs);
 
   console.log(buildResult);

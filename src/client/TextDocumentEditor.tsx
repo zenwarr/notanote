@@ -3,7 +3,7 @@ import { Document } from "./Document";
 import { DocumentManager } from "./DocumentManager";
 import "./TextDocumentEditor.css";
 import { EditorView } from "@codemirror/view";
-import { FileSettings } from "../common/WorkspaceEntry";
+import { FileSettings } from "../common/Settings";
 import { useCurrentThemeIsDark } from "./Theme";
 import { CmDocumentEditorStateAdapter } from "./EditorState";
 import assert from "assert";
@@ -38,7 +38,7 @@ export function TextDocumentEditor(props: TextDocumentEditorProps) {
 
     return () => {
       view.destroy();
-      DocumentManager.instance.close(props.doc.fileId);
+      DocumentManager.instance.close(props.doc.entryPath);
     };
   }, []);
 

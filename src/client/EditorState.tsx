@@ -19,7 +19,7 @@ import {
 } from "@codemirror/view";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { createHighlightStyle } from "./Highlight";
-import { FileSettings } from "../common/WorkspaceEntry";
+import { FileSettings } from "../common/Settings";
 import { json } from "@codemirror/lang-json";
 import { javascript } from "@codemirror/lang-javascript";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
@@ -29,18 +29,20 @@ import { NodeProp } from "@lezer/common";
 import { languages } from "@codemirror/language-data";
 import { format } from "date-fns";
 import { Document, DocumentEditorStateAdapter } from "./Document";
+import { StoragePath } from "../common/storage/StoragePath";
 
 
-function getEditorPluginForFile(fileId: string) {
-  if (fileId.endsWith(".json")) {
+function getEditorPluginForFile(entryPath: StoragePath) {
+  const name = entryPath.basename;
+  if (name.endsWith(".json")) {
     return json();
-  } else if (fileId.endsWith(".js")) {
+  } else if (name.endsWith(".js")) {
     return javascript({ jsx: false, typescript: false });
-  } else if (fileId.endsWith(".jsx")) {
+  } else if (name.endsWith(".jsx")) {
     return javascript({ jsx: true, typescript: false });
-  } else if (fileId.endsWith(".ts")) {
+  } else if (name.endsWith(".ts")) {
     return javascript({ jsx: false, typescript: true });
-  } else if (fileId.endsWith(".tsx")) {
+  } else if (name.endsWith(".tsx")) {
     return javascript({ jsx: true, typescript: true });
   } else {
     return markdown({
@@ -51,7 +53,7 @@ function getEditorPluginForFile(fileId: string) {
 }
 
 
-function getPluginsFromSettings(fileId: string, settings: FileSettings): Extension[] {
+function getPluginsFromSettings(entryPath: StoragePath, settings: FileSettings): Extension[] {
   const r: Extension[] = [];
 
   if (settings.drawWhitespace) {
@@ -66,7 +68,7 @@ function getPluginsFromSettings(fileId: string, settings: FileSettings): Extensi
     }));
   }
 
-  if (fileId.endsWith(".md")) {
+  if (entryPath.basename.endsWith(".md")) {
     r.push(checkboxPlugin);
   }
 
@@ -79,8 +81,8 @@ export interface CreateEditorStateOptions {
 }
 
 
-function getStoredSelectionForFile(fileId: string, fileContent: string): EditorSelection | undefined {
-  const stored = localStorage.getItem("stored-selection-" + fileId);
+function getStoredSelectionForFile(entryPath: StoragePath, fileContent: string): EditorSelection | undefined {
+  const stored = localStorage.getItem("stored-selection-" + entryPath.normalized);
   if (!stored) {
     return undefined;
   }
@@ -98,18 +100,18 @@ function getStoredSelectionForFile(fileId: string, fileContent: string): EditorS
 }
 
 
-function storeSelectionForFile(fileId: string, selection: EditorSelection) {
-  localStorage.setItem("stored-selection-" + fileId, JSON.stringify({
+function storeSelectionForFile(entryPath: StoragePath, selection: EditorSelection) {
+  localStorage.setItem("stored-selection-" + entryPath.normalized, JSON.stringify({
     anchor: selection.ranges[0]?.anchor,
     head: selection.ranges[0]?.head
   }));
 }
 
 
-export function createEditorState(content: string, fileId: string, settings: FileSettings, options: CreateEditorStateOptions) {
+export function createEditorState(content: string, entryPath: StoragePath, settings: FileSettings, options: CreateEditorStateOptions) {
   return EditorState.create({
     doc: content,
-    selection: getStoredSelectionForFile(fileId, content) || { anchor: 0 },
+    selection: getStoredSelectionForFile(entryPath, content) || { anchor: 0 },
     extensions: [
       history(),
       drawSelection(),
@@ -132,16 +134,16 @@ export function createEditorState(content: string, fileId: string, settings: Fil
         ...completionKeymap,
         indentWithTab
       ]),
-      getEditorPluginForFile(fileId),
+      getEditorPluginForFile(entryPath),
       ViewPlugin.fromClass(class {
         update(upd: ViewUpdate) {
-          storeSelectionForFile(fileId, upd.state.selection);
+          storeSelectionForFile(entryPath, upd.state.selection);
           options.onUpdate(upd);
         }
       }),
       EditorState.tabSize.of(settings.tabWidth ?? 2),
       scrollPastEnd(),
-      ...getPluginsFromSettings(fileId, settings),
+      ...getPluginsFromSettings(entryPath, settings),
       autocompletion({
         activateOnTyping: true,
         override: [
@@ -266,7 +268,7 @@ export class CmDocumentEditorStateAdapter implements DocumentEditorStateAdapter 
   constructor(doc: Document) {
     this.doc = doc;
     const self = this;
-    this.state = createEditorState(doc.initialSerializedContent, doc.fileId, doc.settings, {
+    this.state = createEditorState(doc.initialSerializedContent, doc.entryPath, doc.settings, {
       onUpdate: upd => {
         if (upd.docChanged) {
           self.doc.onChanges();

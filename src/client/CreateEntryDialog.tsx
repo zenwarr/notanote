@@ -1,22 +1,22 @@
 import * as React from "react";
-import * as path from "path";
 import { useState } from "react";
-import { WorkspaceManager } from "./WorkspaceManager";
+import { ClientWorkspace } from "./ClientWorkspace";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
-import { EntryType } from "../common/WorkspaceEntry";
+import { StoragePath } from "../common/storage/StoragePath";
+import { StorageEntryType } from "../common/storage/StorageLayer";
 
 
 export type CreateEntryDialogProps = {
   open: boolean;
   onClose: () => void;
-  parentPath: string;
+  parentPath: StoragePath;
   suggestedName: string;
-  type: EntryType;
+  type: StorageEntryType;
 }
 
 
 export function CreateEntryDialog(props: CreateEntryDialogProps) {
-  const [ inputPath, setPath ] = useState<string>(() => path.join(props.parentPath, props.suggestedName));
+  const [ inputPath, setPath ] = useState(() => props.parentPath.child(props.suggestedName).normalized);
   const [ loading, setLoading ] = useState(false);
 
   function onChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -28,7 +28,7 @@ export function CreateEntryDialog(props: CreateEntryDialogProps) {
 
     setLoading(true);
     try {
-      await WorkspaceManager.instance.createEntry(inputPath, props.type);
+      await ClientWorkspace.instance.createEntry(new StoragePath(inputPath), props.type);
       props.onClose();
     } catch (err: any) {
       alert("Failed to create: " + err.message);

@@ -19,7 +19,8 @@ module.exports = (env) => [
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
       fallback: {
         path: require.resolve("path-browserify"),
-        stream: require.resolve("stream-browserify")
+        stream: require.resolve("stream-browserify"),
+        assert: require.resolve("assert")
       }
     },
 

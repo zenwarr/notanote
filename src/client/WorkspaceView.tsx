@@ -1,24 +1,26 @@
-import * as path from "path";
 import * as React from "react";
 import { useRef, useState } from "react";
 import { TreeItem, TreeView } from "@mui/lab";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { EntryType, WorkspaceEntry } from "../common/WorkspaceEntry";
 import { Box, IconButton, Tooltip } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { WorkspaceManager } from "./WorkspaceManager";
+import { ClientWorkspace } from "./ClientWorkspace";
 import { observer } from "mobx-react-lite";
 import { CreateEntryDialog } from "./CreateEntryDialog";
 import { CreateNewFolderOutlined, DeleteForever, PostAddOutlined } from "@mui/icons-material";
 import { useNavigate } from "react-router";
 import DescriptionIcon from "@mui/icons-material/Description";
 import FolderIcon from "@mui/icons-material/Folder";
-import { format} from "date-fns";
+import { format } from "date-fns";
+import { StoragePath } from "../common/storage/StoragePath";
+import { StorageEntryType } from "../common/storage/StorageLayer";
+import { MemoryCachedEntryPointer } from "../common/storage/MemoryCachedStorage";
+import { MemoryStorageEntryPointer } from "./storage/MemoryStorage";
 
 
 export interface WorkspaceViewProps {
-  onEntrySelected?: (entry: WorkspaceEntry) => void;
+  onEntrySelected?: (entry: MemoryCachedEntryPointer) => void;
   treeWithPadding?: boolean;
 }
 
@@ -46,29 +48,29 @@ function useExpanded(selected: string | undefined) {
 
 
 interface CreateOptions {
-  parentPath: string;
+  parentPath: StoragePath;
   suggestedName: string;
-  type: EntryType;
+  type: StorageEntryType;
 }
 
 
-function getCreateOptions(selected: string | undefined, createType: EntryType) {
-  let parentPath: string;
+function getCreateOptions(selectedPath: StoragePath | undefined, createType: StorageEntryType): CreateOptions {
+  let parentPath: StoragePath;
 
-  if (!selected) {
-    parentPath = "/";
+  if (!selectedPath) {
+    parentPath = StoragePath.root;
   } else {
-    const workspaceEntry = WorkspaceManager.instance.getEntryByPath(selected);
-    if (!workspaceEntry) {
-      parentPath = "/";
-    } else if (workspaceEntry.type === "dir") {
-      parentPath = selected;
+    const entry = ClientWorkspace.instance.storage.get(selectedPath);
+    if (!entry) {
+      parentPath = StoragePath.root;
+    } else if (entry.memory.type === StorageEntryType.Dir) {
+      parentPath = selectedPath;
     } else {
-      parentPath = path.dirname(selected);
+      parentPath = selectedPath.parentDir;
     }
   }
 
-  let suggestedName = createType === "dir" ? "new-dir" : "new-file.md";
+  let suggestedName = createType === StorageEntryType.Dir ? "new-dir" : "new-file.md";
 
   return {
     type: createType,
@@ -79,9 +81,9 @@ function getCreateOptions(selected: string | undefined, createType: EntryType) {
 
 
 export const WorkspaceView = observer((props: WorkspaceViewProps) => {
-  const workspaceManager = WorkspaceManager.instance;
+  const cw = ClientWorkspace.instance;
   const [ entryDialogOpened, setEntryDialogOpened ] = useState(false);
-  const expand = useExpanded(workspaceManager.selectedEntry);
+  const expand = useExpanded(cw.selectedEntry?.normalized);
   const createOptions = useRef<CreateOptions | undefined>(undefined);
 
   const navigate = useNavigate();
@@ -89,10 +91,10 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 
   function onNodeSelect(_: unknown, value: string | string[]) {
     if (typeof value === "string" || value == null) {
-      WorkspaceManager.instance.selectedEntry = value;
+      ClientWorkspace.instance.selectedEntry = new StoragePath(value);
 
-      const selectedEntry = WorkspaceManager.instance.getEntryByPath(value);
-      if (selectedEntry && selectedEntry.type !== "dir") {
+      const selectedEntry = ClientWorkspace.instance.storage.get(new StoragePath(value));
+      if (selectedEntry && selectedEntry.memory.type !== StorageEntryType.Dir) {
         navigate(`/f/${ value }`);
       }
 
@@ -103,12 +105,12 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   }
 
   function createFile() {
-    createOptions.current = getCreateOptions(workspaceManager.selectedEntry, "file");
+    createOptions.current = getCreateOptions(cw.selectedEntry, StorageEntryType.File);
     setEntryDialogOpened(true);
   }
 
   function createFolder() {
-    createOptions.current = getCreateOptions(workspaceManager.selectedEntry, "dir");
+    createOptions.current = getCreateOptions(cw.selectedEntry, StorageEntryType.Dir);
     setEntryDialogOpened(true);
   }
 
@@ -118,11 +120,11 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   }
 
   async function remove() {
-    if (!workspaceManager.selectedEntry || !confirm("Are you sure you want to remove it?\n\n" + workspaceManager.selectedEntry)) {
+    if (!cw.selectedEntry || !confirm("Are you sure you want to remove it?\n\n" + cw.selectedEntry)) {
       return;
     }
 
-    await WorkspaceManager.instance.remove(workspaceManager.selectedEntry);
+    await ClientWorkspace.instance.remove(cw.selectedEntry);
   }
 
   const labelClasses = {
@@ -154,7 +156,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
             <IconButton
                 onClick={ remove }
                 title={ "Remove selected" }
-                disabled={ !workspaceManager.selectedEntry }
+                disabled={ !cw.selectedEntry }
                 size="large">
               <DeleteForever color={ "error" }/>
             </IconButton>
@@ -164,8 +166,8 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
         <Box p={ props.treeWithPadding ? 1 : undefined }>
           <TreeView defaultCollapseIcon={ <ExpandMoreIcon/> } defaultExpandIcon={ <ChevronRightIcon/> } onNodeSelect={ onNodeSelect }
                     expanded={ expand.expanded } onNodeToggle={ expand.onToggle }
-                    selected={ workspaceManager.selectedEntry || "" }>
-            { workspaceManager.entries.map(e => renderTreeEntry(e, labelClasses)) }
+                    selected={ cw.selectedEntry?.normalized || "" }>
+            { cw.storage.memory.root.directChildren?.map(e => renderTreeEntry(e, labelClasses)) }
           </TreeView>
         </Box>
       </div>
@@ -173,39 +175,40 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 });
 
 
-function renderTreeEntry(e: WorkspaceEntry, classes: { [name: string]: string }) {
+function renderTreeEntry(e: MemoryStorageEntryPointer, classes: { [name: string]: string }) {
   const label = <Tooltip title={ getTooltipText(e) } arrow disableInteractive enterDelay={ 500 }>
     <span className={ classes.label }>
-      { e.type === "dir"
+      { e.type === StorageEntryType.Dir
           ? <FolderIcon className={ classes.icon } fontSize={ "small" }/>
           : <DescriptionIcon className={ classes.icon } fontSize={ "small" }/> }
       <span className={ classes.text }>
-        { e.name }
+        { e.path.basename }
       </span>
     </span>
   </Tooltip>;
 
-  return <TreeItem nodeId={ e.id } key={ e.id } label={ label }>
-    { e.children && e.children.map(c => renderTreeEntry(c, classes)) }
+  const entryPath = e.path.normalized;
+  return <TreeItem nodeId={ entryPath } key={ entryPath } label={ label }>
+    { e.directChildren && e.directChildren.map(c => renderTreeEntry(c, classes)) }
   </TreeItem>;
 }
 
 
-function getTooltipText(e: WorkspaceEntry): React.ReactChild {
+function getTooltipText(e: MemoryStorageEntryPointer): React.ReactChild {
   function formatDate(date: number | undefined) {
     return date != null ? format(new Date(date), "yyyy-MMM-dd hh:mm:ss") : "?";
   }
 
   return <>
     <div>
-      { e.name }
+      { e.path.normalized }
     </div>
-    <div>
-      Created: { formatDate(e.createTs) }
-    </div>
-    <div>
-      Last updated: { formatDate(e.updateTs) }
-    </div>
+    {/*<div>*/ }
+    {/*  Created: { formatDate(e.storageEntry.stats()) }*/ }
+    {/*</div>*/ }
+    {/*<div>*/ }
+    {/*  Last updated: { formatDate(e.updateTs) }*/ }
+    {/*</div>*/ }
   </>;
 }
 

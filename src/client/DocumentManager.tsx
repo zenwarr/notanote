@@ -1,11 +1,11 @@
 import { Document, DocumentEditorStateAdapter, SaveState } from "./Document";
 import { computed, makeObservable, observable } from "mobx";
-import { WorkspaceBackend } from "./backend/WorkspaceBackend";
-import { Backend } from "./backend/Backend";
-import { WorkspaceManager } from "./WorkspaceManager";
+import { ClientWorkspace } from "./ClientWorkspace";
 import { SpecialFiles } from "../common/SpecialFiles";
 import { CmDocumentEditorStateAdapter } from "./EditorState";
 import { PluginManager } from "./plugin/PluginManager";
+import { StoragePath } from "../common/storage/StoragePath";
+import { FileSettingsProvider } from "../common/workspace/FileSettingsProvider";
 
 
 export class DocumentManager {
@@ -20,24 +20,26 @@ export class DocumentManager {
   }
 
 
-  async create(fileId: string): Promise<Document> {
-    const docInfo = this.documents.get(fileId);
+  async create(path: StoragePath): Promise<Document> {
+    const docInfo = this.documents.get(path.normalized);
     if (docInfo) {
       docInfo.usageCount += 1;
       return docInfo.doc;
     }
 
-    const entryInfo = await Backend.get(WorkspaceBackend).getEntry(WorkspaceManager.instance.id, fileId);
+    console.log("reading document text", path.normalized);
+    const entry = ClientWorkspace.instance.storage.get(path);
+    const content = await entry.readText();
 
-    const document = new Document(entryInfo.content, fileId, entryInfo.settings);
+    const document = new Document(content, path, FileSettingsProvider.instance.getSettingsForPath(path));
     document.setEditorStateAdapter(await this.getStateAdapterForFile(document));
-    this.documents.set(fileId, { doc: document, usageCount: 1 });
+    this.documents.set(path.normalized, { doc: document, usageCount: 1 });
     return document;
   }
 
 
-  close(fileID: string) {
-    const doc = this.documents.get(fileID);
+  close(path: StoragePath) {
+    const doc = this.documents.get(path.normalized);
     if (doc) {
       doc.usageCount -= 1;
     }
@@ -56,7 +58,7 @@ export class DocumentManager {
 
 
   public onDocumentSaved(doc: Document) {
-    if (SpecialFiles.shouldReloadSettingsAfterSave(doc.fileId)) {
+    if (SpecialFiles.shouldReloadSettingsAfterSave(doc.entryPath)) {
       for (const [ key, value ] of this.documents) {
         if (value.usageCount === 0) {
           this.documents.delete(key);
@@ -66,7 +68,7 @@ export class DocumentManager {
   }
 
 
-  protected async getStateAdapterForFile(doc: Document): Promise<DocumentEditorStateAdapter> {
+  private async getStateAdapterForFile(doc: Document): Promise<DocumentEditorStateAdapter> {
     if (doc.settings.editor != null) {
       const editor = await PluginManager.instance.getCustomEditorForDocument(doc);
       if (!editor) {

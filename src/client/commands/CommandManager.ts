@@ -2,7 +2,7 @@ import * as mobx from "mobx";
 import { Backend } from "../backend/Backend";
 import { SystemBackend } from "../backend/SystemBackend";
 import { WorkspaceBackend } from "../backend/WorkspaceBackend";
-import { WorkspaceManager } from "../WorkspaceManager";
+import { ClientWorkspace } from "../ClientWorkspace";
 import { PaletteOption } from "../Palette";
 import * as nanoid from "nanoid";
 
@@ -50,12 +50,12 @@ async function initGithub() {
     return;
   }
 
-  await Backend.get(WorkspaceBackend).initGithub(WorkspaceManager.instance.id, email, remote);
+  await Backend.get(WorkspaceBackend).initGithub(ClientWorkspace.instance.remoteStorageId, email, remote);
 }
 
 
 async function pushGithub() {
-  await Backend.get(WorkspaceBackend).githubPush(WorkspaceManager.instance.id);
+  await Backend.get(WorkspaceBackend).githubPush(ClientWorkspace.instance.remoteStorageId);
 }
 
 

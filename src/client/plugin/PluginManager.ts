@@ -72,7 +72,7 @@ export class PluginManager {
   }
 
 
-  protected async loadPluginForEditor(name: string): Promise<LoadedPlugin | undefined> {
+  private async loadPluginForEditor(name: string): Promise<LoadedPlugin | undefined> {
     for (const plugin of this.plugins) {
       if (plugin.editors && Object.keys(plugin.editors).includes(name)) {
         return this.loadPlugin(plugin.name, plugin.load);
@@ -83,7 +83,7 @@ export class PluginManager {
   }
 
 
-  protected async loadPlugin(name: string, loadSpec: PluginLoadSpec): Promise<LoadedPlugin> {
+  private async loadPlugin(name: string, loadSpec: PluginLoadSpec): Promise<LoadedPlugin> {
     const cached = this.loadedPlugins.get(loadSpec);
     if (cached != null) {
       return cached;

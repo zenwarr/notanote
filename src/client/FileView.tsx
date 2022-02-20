@@ -1,19 +1,21 @@
 import { useLoad } from "./useLoad";
+import * as React from "react";
 import { useCallback } from "react";
 import { DocumentManager } from "./DocumentManager";
 import { TextDocumentEditor } from "./TextDocumentEditor";
 import { Document } from "./Document";
 import { observer } from "mobx-react-lite";
-import { WorkspaceManager } from "./WorkspaceManager";
+import { ClientWorkspace } from "./ClientWorkspace";
 import { useWindowTitle } from "./useWindowTitle";
 import { CircularProgress } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { PluginManager, EditorProps } from "./plugin/PluginManager";
+import { EditorProps, PluginManager } from "./plugin/PluginManager";
 import { ErrorBoundary } from "./ErrorBoundary/ErrorBoundary";
+import { StoragePath } from "../common/storage/StoragePath";
 
 
 export type FileViewProps = {
-  fileID: string;
+  entryPath: StoragePath;
   className?: string;
 }
 
@@ -49,10 +51,10 @@ function applyGlobalDocSettings(doc: Document) {
 export function FileView(props: FileViewProps) {
   const classes = useStyles();
   const contentLoad = useLoad(useCallback(async () => {
-    const doc = await DocumentManager.instance.create(props.fileID);
+    const doc = await DocumentManager.instance.create(props.entryPath);
     applyGlobalDocSettings(doc);
     return doc;
-  }, [ props.fileID ]));
+  }, [ props.entryPath ]));
 
   const componentLoad = useLoad<React.ComponentType<EditorProps> | undefined>(useCallback(async () => {
     if (!contentLoad.isLoaded) {
@@ -81,12 +83,12 @@ export interface ConnectedFileViewProps {
 
 
 export const ConnectedFileView = observer((props: ConnectedFileViewProps) => {
-  const ws = WorkspaceManager.instance;
-  const openedDoc = ws.selectedFile ? ws.getEntryByPath(ws.selectedFile) : undefined;
+  const ws = ClientWorkspace.instance;
+  const openedDoc = ws.selectedFile ? ws.storage.get(ws.selectedFile) : undefined;
 
-  useWindowTitle(openedDoc?.id);
+  useWindowTitle(openedDoc?.path.normalized);
 
-  return openedDoc ? <FileView fileID={ openedDoc?.id } className={ props.className }/> : null;
+  return openedDoc ? <FileView entryPath={ openedDoc.path } className={ props.className }/> : null;
 });
 
 

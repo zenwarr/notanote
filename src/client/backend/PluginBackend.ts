@@ -4,7 +4,7 @@ import { timeout } from "./timeout";
 
 export class PluginBackend {
   async clone(workspaceId: string, name: string, url: string): Promise<void> {
-    await ky.post(`/api/workspaces/${ encodeURIComponent(workspaceId) }/plugins`, {
+    await ky.post(`/api/storages/${ encodeURIComponent(workspaceId) }/plugins`, {
       json: {
         name, url
       }
@@ -13,7 +13,7 @@ export class PluginBackend {
 
 
   async update(workspaceId: string, pluginId: string): Promise<void> {
-    await ky.post(`/api/workspaces/${ encodeURIComponent(workspaceId) }/plugins/${pluginId}/update`);
+    await ky.post(`/api/storages/${ encodeURIComponent(workspaceId) }/plugins/${pluginId}/update`);
   }
 }
 

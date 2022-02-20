@@ -1,9 +1,10 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { Palette, PaletteCompleter } from "./Palette";
-import { WorkspaceManager } from "./WorkspaceManager";
+import { ClientWorkspace } from "./ClientWorkspace";
 import { filePaletteCompleter } from "./PaletteCompleter";
 import { CommandManager, commandPaletteCompleter } from "./commands/CommandManager";
+import { StoragePath } from "../common/storage/StoragePath";
 
 
 export enum PaletteMode {
@@ -34,7 +35,7 @@ export function PaletteProvider(props: React.PropsWithChildren<{}>) {
 
   function onSelect(value: string) {
     if (mode === PaletteMode.File) {
-      WorkspaceManager.instance.selectedEntry = value;
+      ClientWorkspace.instance.selectedEntry = new StoragePath(value);
     } else if (mode === PaletteMode.Command) {
       CommandManager.instance.run(value);
     }

@@ -1,5 +1,8 @@
+import { StoragePath } from "./storage/StoragePath";
+
+
 export const SpecialFiles = {
-  shouldReloadSettingsAfterSave: (filePath: string) => {
-    return filePath === ".note/settings.json";
+  shouldReloadSettingsAfterSave: (filePath: StoragePath) => {
+    return filePath.isEqual(new StoragePath(".note/settings.json"));
   }
 };

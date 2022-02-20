@@ -1,41 +1,47 @@
-import {
-  Box,
-  Hidden,
-  SwipeableDrawer
-} from "@mui/material";
+import { Box, CircularProgress, Hidden, SwipeableDrawer } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { WorkspaceView } from "./WorkspaceView";
 import { ConnectedFileView } from "./FileView";
 import { Header } from "./Header";
 import { usePreventClose } from "./usePreventClose";
 import { useEffect, useState } from "react";
-import { Route, Routes, useLocation, useParams } from "react-router";
+import { Route, Routes, useLocation } from "react-router";
 import { HashRouter } from "react-router-dom";
-import { WorkspaceManager } from "./WorkspaceManager";
-import { WorkspaceEntry } from "../common/WorkspaceEntry";
+import { ClientWorkspace } from "./ClientWorkspace";
 import "./App.css";
 import { useShortcuts } from "./Shortcuts";
 import { PaletteProvider } from "./PaletteProvider";
 import { useAppThemeContext } from "./Theme";
+import { StoragePath } from "../common/storage/StoragePath";
+import { StorageEntryType } from "../common/storage/StorageLayer";
+import { MemoryCachedEntryPointer } from "../common/storage/MemoryCachedStorage";
+import { observer } from "mobx-react-lite";
 
 
-export function App() {
+export const App = observer(() => {
   const [ drawerOpen, setDrawerOpen ] = useState(false);
   const classes = useStyles();
   const iOS = !!(navigator.userAgent && /iPad|iPhone|iPod/.test(navigator.userAgent));
+  const [ loaded, setLoaded ] = useState(false);
 
   usePreventClose();
   useShortcuts();
   const appTheme = useAppThemeContext();
 
   useEffect(() => {
-    WorkspaceManager.instance.load();
+    ClientWorkspace.instance.load().then(() => setLoaded(true)).catch(err => console.error(err.message));
   }, []);
 
-  function onMobileEntrySelected(e: WorkspaceEntry) {
-    if (e.type === "file") {
+  function onMobileEntrySelected(e: MemoryCachedEntryPointer) {
+    if (e.memory.type === StorageEntryType.File) {
       setDrawerOpen(false);
     }
+  }
+
+  if (ClientWorkspace.instance.loading) {
+    return <Box display={ "flex" } alignItems={ "center" } justifyContent={ "center" } height={ 300 }>
+      <CircularProgress/>
+    </Box>;
   }
 
   return <HashRouter>
@@ -72,16 +78,16 @@ export function App() {
       </div>
     </PaletteProvider>
   </HashRouter>;
-}
+});
 
 
 export function FileViewRoute() {
   const loc = useLocation();
-  const fileId = loc.pathname.startsWith("/f/") ? loc.pathname.substring("/f".length) : undefined;
+  const entryPath = loc.pathname.startsWith("/f/") ? loc.pathname.substring("/f".length) : undefined;
 
   useEffect(() => {
-    WorkspaceManager.instance.selectedEntry = fileId;
-  }, [ fileId ]);
+    ClientWorkspace.instance.selectedEntry = entryPath ? new StoragePath(entryPath) : undefined;
+  }, [ entryPath ]);
 
   return null;
 }

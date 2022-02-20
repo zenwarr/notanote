@@ -9,7 +9,16 @@ services:
       - ./data/config:/config
     restart: unless-stopped
     environment:
-      - VIRTUAL_HOST=${PUBLIC_DOMAIN}
       - ENV_FILE=/env/.env
       - CONFIG_DIR=/config
     init: true
+    networks:
+      - traefik
+    labels:
+      - "traefik.http.routers.notes.rule=Host(\"${PUBLIC_DOMAIN}\")"
+      - "traefik.http.services.notes.loadbalancer.server.port=8080"
+
+networks:
+  traefik:
+    external:
+      name: traefik

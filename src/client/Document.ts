@@ -1,10 +1,9 @@
 import { makeObservable, observable } from "mobx";
 import * as luxon from "luxon";
-import { Backend } from "./backend/Backend";
-import { WorkspaceBackend } from "./backend/WorkspaceBackend";
-import { WorkspaceManager } from "./WorkspaceManager";
-import { FileSettings } from "../common/WorkspaceEntry";
+import { ClientWorkspace } from "./ClientWorkspace";
+import { FileSettings } from "../common/Settings";
 import { DocumentManager } from "./DocumentManager";
+import { StoragePath } from "../common/storage/StoragePath";
 
 
 const AUTO_SAVE_TIMEOUT = luxon.Duration.fromObject({ seconds: 5 });
@@ -16,8 +15,8 @@ export interface DocumentEditorStateAdapter {
 
 
 export class Document {
-  constructor(content: string, fileId: string, settings: FileSettings) {
-    this.fileId = fileId;
+  constructor(content: string, entryPath: StoragePath, settings: FileSettings) {
+    this.entryPath = entryPath;
     this.settings = settings;
     this.initialSerializedContent = content;
 
@@ -76,7 +75,8 @@ export class Document {
     this.saveState = SaveState.Saving;
 
     try {
-      await Backend.get(WorkspaceBackend).saveEntry(WorkspaceManager.instance.id, this.fileId, await this.serializeContent());
+      const entry = await ClientWorkspace.instance.storage.get(this.entryPath);
+      await entry.writeOrCreate(await this.serializeContent());
 
       this.lastSaveError = undefined;
       this.lastSave = new Date();
@@ -97,7 +97,7 @@ export class Document {
 
   private hadChangesWhileSaving = false;
   private saveTimer: any = undefined;
-  readonly fileId: string;
+  readonly entryPath: StoragePath;
   readonly settings: FileSettings;
   readonly initialSerializedContent: string;
   private adapter: DocumentEditorStateAdapter | undefined;

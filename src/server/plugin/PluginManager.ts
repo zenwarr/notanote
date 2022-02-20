@@ -5,7 +5,9 @@ import * as os from "os";
 import * as fs from "fs";
 import * as _ from "lodash";
 import { RemotePluginSpec } from "../../common/plugin";
-import { runCommand } from "../github/Github";
+import { clone, pullChanges, runCommand } from "../github/Github";
+import { SpecialWorkspaceEntry } from "../../common/workspace/Workspace";
+import { ErrorCode, LogicError } from "../../common/errors";
 
 
 const cssExtract = require("mini-css-extract-plugin");
@@ -22,8 +24,32 @@ export interface PluginBuildDirs {
 }
 
 
-export function getBuildDirs(profileId: string, workspaceId: string, pluginId: string): PluginBuildDirs {
-  const hashInput = [ profileId, workspaceId, pluginId ].join("::");
+export async function buildStoragePlugin(storageRoot: string, pluginId: string): Promise<PluginBuildResult> {
+  const pluginDir = path.join(storageRoot, SpecialWorkspaceEntry.Plugins.normalized, pluginId);
+  const buildDirs = getBuildDirs(storageRoot, pluginId);
+  return buildPlugin(pluginDir, pluginId, buildDirs);
+}
+
+
+export async function updatePlugin(storageRoot: string, pluginId: string): Promise<void> {
+  const pluginDir = path.join(storageRoot, SpecialWorkspaceEntry.Plugins.normalized, pluginId);
+  console.log("Pulling changes from remote repository...");
+  await pullChanges(pluginDir);
+}
+
+
+export async function clonePlugin(storageRoot: string, pluginId: string, cloneUrl: string): Promise<void> {
+  const pluginDir = path.join(storageRoot, SpecialWorkspaceEntry.Plugins.normalized, pluginId);
+  if (await asyncExists(pluginDir)) {
+    throw new LogicError(ErrorCode.AlreadyExists, `Plugin "${ pluginId }" already exists`);
+  }
+
+  await clone(storageRoot, cloneUrl, pluginDir);
+}
+
+
+export function getBuildDirs(storagePath: string, pluginId: string): PluginBuildDirs {
+  const hashInput = [ storagePath, pluginId ].join("::");
   const hash = crypto.createHash("sha1").update(hashInput).digest("hex");
   return {
     buildDir: path.join(os.tmpdir(), "notanote-plugin-build", hash),
@@ -213,12 +239,12 @@ export async function asyncExists(file: string) {
 }
 
 
-export async function getWorkspacePlugins(workspaceId: string, workspaceRoot: string): Promise<RemotePluginSpec[]> {
+export async function getWorkspacePlugins(storageId: string, realRootPath: string): Promise<RemotePluginSpec[]> {
   try {
-    const pluginDirs = await fs.promises.readdir(path.join(workspaceRoot, ".note/plugins"));
+    const pluginDirs = await fs.promises.readdir(path.join(realRootPath, ".note/plugins"));
     return (await Promise.all(pluginDirs.map(async pluginDir => {
       const pluginId = path.basename(pluginDir);
-      return await getPluginSpec(workspaceId, pluginId, path.join(workspaceRoot, ".note/plugins", pluginDir));
+      return await getPluginSpec(storageId, pluginId, path.join(realRootPath, ".note/plugins", pluginDir));
     }))).filter(x => x != null) as RemotePluginSpec[];
   } catch (err: any) {
     if (err.code === "ENOENT") {
@@ -230,14 +256,14 @@ export async function getWorkspacePlugins(workspaceId: string, workspaceRoot: st
 }
 
 
-async function getPluginSpec(workspaceId: string, pluginId: string, dir: string): Promise<RemotePluginSpec | undefined> {
+async function getPluginSpec(wsId: string, pluginId: string, dir: string): Promise<RemotePluginSpec | undefined> {
   const metaFile = path.join(dir, "plugin.json");
 
   try {
     const meta = JSON.parse(await fs.promises.readFile(metaFile, "utf8"));
     return {
       name: pluginId,
-      url: `/api/workspaces/${ encodeURIComponent(workspaceId) }/plugins/${ encodeURIComponent(pluginId) }`,
+      url: `/api/storages/${ encodeURIComponent(wsId) }/plugins/${ encodeURIComponent(pluginId) }`,
       editors: meta.editors
     };
   } catch (err: any) {

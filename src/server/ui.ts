@@ -1,8 +1,7 @@
 import { getProfile, requireAuthenticatedUser } from "./auth";
 import { FastifyInstance } from "fastify";
-import { Workspace } from "../common/storage/Workspace";
 import { getWorkspacePlugins } from "./plugin/PluginManager";
-import { ServerWorkspaceFactory } from "./storage/ServerWorkspaceFactory";
+import { DEFAULT_STORAGE_ID, ServerStorageFactory } from "./storage/ServerStorageFactory";
 
 
 export default async function initUiRoutes(app: FastifyInstance) {
@@ -10,13 +9,13 @@ export default async function initUiRoutes(app: FastifyInstance) {
 
   app.get("/", async (req, res) => {
     const profile = getProfile(req);
-    const workspace = await ServerWorkspaceFactory.instance.getOrCreateWorkspace(profile.id);
+    const { realRoot } = await ServerStorageFactory.instance.getOrCreateForId(profile.id, DEFAULT_STORAGE_ID);
 
     return res.view("index", {
       params: {
         userName: profile.name,
-        workspaceId: workspace.id,
-        plugins: await getWorkspacePlugins(workspace.id, workspace.root)
+        workspaceId: DEFAULT_STORAGE_ID,
+        plugins: await getWorkspacePlugins(DEFAULT_STORAGE_ID, realRoot)
       }
     });
   });

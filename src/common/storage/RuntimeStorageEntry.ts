@@ -1,20 +1,10 @@
-import { StorageEntry } from "./StorageLayer";
+import { StorageEntryPointer } from "./StorageLayer";
 import { StoragePath } from "./StoragePath";
 
 
-export abstract class RuntimeStorageEntry extends StorageEntry {
-  constructor(private readonly _path: StoragePath) {
-    super();
-  }
-
-
-  override flags(): number {
-    return 0;
-  }
-
-
-  override getPath() {
-    return this._path;
+export abstract class RuntimeStorageEntry extends StorageEntryPointer {
+  constructor(path: StoragePath) {
+    super(path);
   }
 
 
@@ -27,7 +17,22 @@ export abstract class RuntimeStorageEntry extends StorageEntry {
   }
 
 
-  override async write() {
+  override async writeOrCreate() {
     throw new Error("Operation not supported for this entry");
+  }
+
+
+  override async remove() {
+    throw new Error("Operation not supported for this entry");
+  }
+
+
+  override async children(): Promise<StorageEntryPointer[]> {
+    throw new Error("Operation not supported for this entry");
+  }
+
+
+  override async exists(): Promise<boolean> {
+    return true;
   }
 }

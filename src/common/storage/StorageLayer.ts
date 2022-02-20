@@ -1,60 +1,67 @@
 import * as path from "path";
 import { StoragePath } from "./StoragePath";
-
-
-export enum StorageLayerFlag {
-  Writable = 1
-}
+import { SerializableStorageEntryData } from "../workspace/SerializableStorageEntryData";
 
 
 export abstract class StorageLayer {
-  abstract createDir(path: StoragePath): Promise<StorageEntry>;
+  abstract createDir(path: StoragePath): Promise<StorageEntryPointer>;
 
 
-  abstract flags(): number; // FsLayerProperty
+  abstract get(path: StoragePath): StorageEntryPointer;
 
 
-  abstract get(path: StoragePath): Promise<StorageEntry | undefined>;
-
-
-  abstract list(path: StoragePath): Promise<StorageEntry[] | undefined>;
-
-
-  abstract write(path: StoragePath, content: Buffer | string): Promise<StorageEntry>;
-
-
-  abstract remove(path: StoragePath): Promise<void>;
+  async loadAll(): Promise<SerializableStorageEntryData | undefined> {
+    return undefined;
+  }
 }
 
 
-export enum StorageEntryFlag {
-  Removed = 1
+export enum StorageErrorCode {
+  Io = "IO_ERROR",
+  NotExists = "NOT_EXISTS",
+  NotDirectory = "NOT_DIRECTORY",
+  NotFile = "NOT_FILE",
+  AlreadyExists = "ALREADY_EXISTS",
+  InvalidStructure = "INVALID_STRUCTURE",
 }
 
 
-export abstract class StorageEntry {
-  abstract getPath(): StoragePath;
+export class StorageError extends Error {
+  constructor(public code: StorageErrorCode, public path: StoragePath, public message: string) {
+    super(message);
+  }
+}
 
 
-  getBasename(): string {
-    return this.getPath().basename;
+export abstract class StorageEntryPointer {
+  constructor(path: StoragePath) {
+    this.path = path;
   }
 
 
-  abstract stats(): Promise<StorageEntryStats | undefined>;
+  public readonly path: StoragePath;
 
 
-  abstract write(content: Buffer | string): Promise<void>;
+  abstract readText(): Promise<string>;
 
 
-  abstract readText(): Promise<string | undefined>;
+  abstract writeOrCreate(content: Buffer | string): Promise<void>;
 
 
-  abstract flags(): number; // FsEntryFlag
+  abstract remove(): Promise<void>;
+
+
+  abstract stats(): Promise<FileStats>;
+
+
+  abstract children(): Promise<StorageEntryPointer[]>;
+
+
+  abstract exists(): Promise<boolean>;
 }
 
 
-export interface StorageEntryStats {
+export interface FileStats {
   isDirectory: boolean;
   createTs: number | undefined;
   updateTs: number | undefined;
@@ -90,4 +97,10 @@ export function isPathInsideRoot(root: string, nested: string): boolean {
   }
 
   return nested.startsWith(addEndingPathSlash(root));
+}
+
+
+export enum StorageEntryType {
+  File = "file",
+  Dir = "dir"
 }

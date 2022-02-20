@@ -7,7 +7,7 @@ export class StoragePath {
   }
 
 
-  get path(): string {
+  get normalized(): string {
     return this._normalized;
   }
 

@@ -1,13 +1,3 @@
-export interface WorkspaceEntry {
-  id: string;
-  name: string;
-  children?: WorkspaceEntry[];
-  type: "file" | "dir";
-  createTs: number | undefined;
-  updateTs: number | undefined;
-}
-
-
 export type FileSettings = BlockSettings & {
   tabWidth?: number;
   lang?: string;
@@ -28,23 +18,8 @@ export interface BlockSettings {
 
   lineHeight?: number;
   paragraphSpacing?: number;
-  hyphens?: string
+  hyphens?: string;
   textIndent?: number;
 
   color?: string;
 }
-
-
-export interface EntryInfo {
-  settings: FileSettings;
-  content: string;
-}
-
-
-export interface CreateEntryReply {
-  path: string;
-  entries: WorkspaceEntry[];
-}
-
-
-export type EntryType = "dir" | "file";

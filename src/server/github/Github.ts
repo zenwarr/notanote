@@ -1,4 +1,4 @@
-import { SpecialEntry, Workspace } from "../../common/storage/Workspace";
+import { SpecialWorkspaceEntry } from "../../common/workspace/Workspace";
 import child_process from "child_process";
 import path from "path";
 import assert from "assert";
@@ -65,59 +65,57 @@ export async function runCommand(bin: string, args: string[], options?: RunComma
 }
 
 
-export async function initGithubIntegration(ws: Workspace, userEmail: string, remote: string) {
-  let privateKeyPath = await getPrivateKeyPathAndEnsureParentExists(ws);
+export async function initGithubIntegration(root: string, userEmail: string, remote: string) {
+  let privateKeyPath = await getPrivateKeyPathAndEnsureParentExists(root);
 
   if (!await fileExists(privateKeyPath)) {
     await runCommand("ssh-keygen", [ "-t", "ed25519", "-C", userEmail, "-f", privateKeyPath, "-N", "" ]);
   }
 
-  const wsDir = ws.root;
-  if (!await isGitRepositoryRoot(wsDir)) {
+  if (!await isGitRepositoryRoot(root)) {
     await runCommand("git", [ "init" ], {
-      cwd: wsDir
+      cwd: root
     });
 
     await runCommand("git", [ "config", "--add", "core.sshCommand", `ssh -i ${ privateKeyPath }` ], {
-      cwd: wsDir
+      cwd: root
     });
 
     await runCommand("git", [ "config", "user.email", userEmail ], {
-      cwd: wsDir
+      cwd: root
     });
 
     await runCommand("git", [ "config", "user.name", "notanote" ], {
-      cwd: wsDir
+      cwd: root
     });
 
     await runCommand("git", [ "remote", "add", "origin", remote ], {
-      cwd: wsDir
+      cwd: root
     });
 
     await runCommand("git", [ "add", "." ], {
-      cwd: wsDir
+      cwd: root
     });
 
     await runCommand("git", [ "commit", "-m", "initial commit" ], {
-      cwd: wsDir
+      cwd: root
     });
   }
 }
 
 
-export async function commitAndPushChanges(ws: Workspace, commitName: string | undefined, checkForChanges: boolean): Promise<void> {
-  if (!checkForChanges || await repositoryHasChanges(ws)) {
-    const wsDir = ws.root;
+export async function commitAndPushChanges(root: string, commitName: string | undefined, checkForChanges: boolean): Promise<void> {
+  if (!checkForChanges || await repositoryHasChanges(root)) {
     await runCommand("git", [ "add", "." ], {
-      cwd: wsDir
+      cwd: root
     });
 
     await runCommand("git", [ "commit", "-m", commitName || generateCommitName() ], {
-      cwd: wsDir
+      cwd: root
     });
 
     await runCommand("git", [ "push", "-u", "origin", "master" ], {
-      cwd: wsDir
+      cwd: root
     });
   }
 }
@@ -128,12 +126,12 @@ function generateCommitName(): string {
 }
 
 
-async function repositoryHasChanges(ws: Workspace) {
-  const wsDir = ws.root;
+async function repositoryHasChanges(root: string) {
   const result = await runCommand("git", [ "diff-index", "--quiet", "--exit-code", "HEAD" ], {
-    cwd: wsDir,
+    cwd: root,
     ignoreExitCode: true
   });
+
   if (result.exitCode === 0) {
     return false;
   } else if (result.exitCode === 1) {
@@ -157,16 +155,15 @@ async function isGitRepositoryRoot(checkDir: string): Promise<boolean> {
 }
 
 
-async function getPrivateKeyPathAndEnsureParentExists(ws: Workspace): Promise<string> {
-  const p = await getPrivateKeyPath(ws);
+async function getPrivateKeyPathAndEnsureParentExists(root: string): Promise<string> {
+  const p = await getPrivateKeyPath(root);
   assert(p != null);
   return p;
 }
 
 
-async function getPrivateKeyPath(ws: Workspace): Promise<string | undefined> {
-  await ws.ensureDirExists(SpecialEntry.Secrets);
-  let secretsPath = ws.toAbsolutePath(SpecialEntry.Secrets);
+async function getPrivateKeyPath(root: string): Promise<string | undefined> {
+  const secretsPath = path.join(root, SpecialWorkspaceEntry.Secrets.normalized);
   if (secretsPath) {
     return path.join(secretsPath, "ssh_key");
   } else {
@@ -175,8 +172,8 @@ async function getPrivateKeyPath(ws: Workspace): Promise<string | undefined> {
 }
 
 
-export async function clone(ws: Workspace, url: string, dir: string): Promise<void> {
-  const privateKeyPath = await getPrivateKeyPath(ws);
+export async function clone(root: string, url: string, dir: string): Promise<void> {
+  const privateKeyPath = await getPrivateKeyPath(root);
   await runCommand("git", [ "clone", url, dir ], {
     env: privateKeyPath ? {
       GIT_SSH_COMMAND: `ssh -i ${ privateKeyPath } -o IdentitiesOnly=yes`

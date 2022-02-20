@@ -1,18 +1,10 @@
 import * as path from "path";
-import { patternMatches, Workspace } from "../../common/storage/Workspace";
-import { ServerWorkspaceFactory } from "../storage/ServerWorkspaceFactory";
 import { StoragePath } from "../../common/storage/StoragePath";
+import { patternMatches } from "../../common/workspace/FileSettingsProvider";
 
 
 beforeAll(() => {
-  process.env["WORKSPACES_DIR"] = path.join(__dirname, "fixture");
-});
-
-
-describe("workspace", () => {
-  it("creates workspace", async () => {
-    const ws = await ServerWorkspaceFactory.instance.getOrCreateWorkspace("test_user", "default");
-  });
+  process.env["STORAGES_DIR"] = path.join(__dirname, "fixture");
 });
 
 
