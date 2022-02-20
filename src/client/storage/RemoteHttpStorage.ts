@@ -70,9 +70,11 @@ export class RemoteStorageEntry extends StorageEntryPointer {
       searchParams: {
         text: true
       }
-    }).text();
+    }).json<SerializableStorageEntryData>();
     this.remoteExists = true;
-    return reply;
+    assert(reply.textContent != null);
+
+    return reply.textContent;
   }
 
 

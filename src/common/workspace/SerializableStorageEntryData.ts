@@ -6,4 +6,5 @@ export interface SerializableStorageEntryData {
   stats: FileStats;
   children?: SerializableStorageEntryData[];
   textContent?: string;
+  checksum?: string;
 }

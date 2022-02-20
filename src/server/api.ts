@@ -9,6 +9,7 @@ import { StoragePath } from "../common/storage/StoragePath";
 import { ServerStorageFactory } from "./storage/ServerStorageFactory";
 import { SerializableStorageEntryData } from "../common/workspace/SerializableStorageEntryData";
 import { FileStats, StorageEntryType, StorageLayer } from "../common/storage/StorageLayer";
+import { checksum } from "../common/workspace/Checksums";
 
 
 type StorageRouteParams = {
@@ -94,33 +95,35 @@ export default async function initApiRoutes(app: FastifyInstance) {
     const { storage } = await getStorage(req);
 
     const fileID = decodeURIComponent(req.params["*"]);
-    const entry = await storage.get(new StoragePath(fileID));
+    const entry = storage.get(new StoragePath(fileID));
     if (!entry) {
       throw new LogicError(ErrorCode.NotFound, "file not found");
     }
 
-    if (req.query.text) {
-      return entry.readText();
-    } else {
-      const stats = await entry.stats();
-      const children = req.query.children ? await entry.children() : [];
-      const childrenStats: FileStats[] = [];
+    const stats = await entry.stats();
+    const text = req.query.text ? await entry.readText() : undefined;
 
-      if (children) {
-        await Promise.all(children.map(async (child, index) => {
-          childrenStats[index] = await child.stats();
-        }));
-      }
+    const childrenEntries = req.query.children ? await entry.children() : undefined;
+    const childrenStats: FileStats[] = [];
 
-      return {
-        path: entry.path.normalized,
-        stats,
-        children: children.map((child, index) => ({
-          path: child.path.normalized,
-          stats: childrenStats[index]!
-        }))
-      };
+    if (childrenEntries) {
+      await Promise.all(childrenEntries.map(async (child, index) => {
+        childrenStats[index] = await child.stats();
+      }));
     }
+
+    const d: SerializableStorageEntryData = {
+      path: entry.path.normalized,
+      stats,
+      textContent: text,
+      checksum: checksum(text || ""),
+      children: childrenEntries?.map((child, index) => ({
+        path: child.path.normalized,
+        stats: childrenStats[index]!
+      }))
+    };
+
+    return d;
   });
 
 
