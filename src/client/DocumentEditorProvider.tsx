@@ -1,9 +1,6 @@
+import * as React from "react";
 import { PluginManager } from "./plugin/PluginManager";
-import { Document } from "./Document";
-import { MonacoEditor } from "./monaco/MonacoEditor";
-import { MonacoEditorStateAdapter } from "./monaco/MonacoEditorStateAdapter";
-import { CodeEditorStateAdapter } from "./code-editor/CodeEditorState";
-import { CodeEditor } from "./code-editor/CodeEditor";
+import { Document, DocumentEditorStateAdapter } from "./Document";
 
 
 const TEXT_EXTS = [ ".md", ".txt" ];
@@ -15,28 +12,64 @@ function isTextFile(filename: string): boolean {
 }
 
 
+export interface DocumentEditorProps {
+  doc: Document;
+}
+
+
 export class DocumentEditorProvider {
-  async getStateAdapter(doc: Document) {
+  async getStateAdapter(doc: Document): Promise<DocumentEditorStateAdapter> {
     if (doc.settings.editor != null) {
       const editor = await PluginManager.instance.getCustomEditorForDocument(doc);
       if (!editor) {
-        return isTextFile(doc.entryPath.normalized) ? new CodeEditorStateAdapter(doc) : new MonacoEditorStateAdapter(doc);
+        return this.getDefaultEditor(doc);
       } else {
         return new editor.stateAdapter(doc);
       }
     } else {
-      return isTextFile(doc.entryPath.normalized) ? new CodeEditorStateAdapter(doc) : new MonacoEditorStateAdapter(doc);
+      return this.getDefaultEditor(doc);
     }
   }
 
 
-  async getComponent(doc: Document) {
+  private async getDefaultEditor(doc: Document) {
+    if (isTextFile(doc.entryPath.normalized)) {
+      return new (await this.loadCodeMirror()).state(doc);
+    } else {
+      return new (await this.loadMonaco()).state(doc);
+    }
+  }
+
+
+  async getComponent(doc: Document): Promise<React.ComponentType<DocumentEditorProps>> {
     const editor = await PluginManager.instance.getCustomEditorForDocument(doc);
     if (editor?.component) {
       return editor.component;
     } else {
-      return isTextFile(doc.entryPath.normalized) ? CodeEditor : MonacoEditor;
+      if (isTextFile(doc.entryPath.normalized)) {
+        return (await this.loadCodeMirror()).editor;
+      } else {
+        return (await this.loadMonaco()).editor;
+      }
     }
+  }
+
+
+  async loadMonaco() {
+    const [ editor, state ] = await Promise.all([ import("./monaco/MonacoEditor"), import("./monaco/MonacoEditorStateAdapter") ]);
+    return {
+      editor: editor.MonacoEditor,
+      state: state.MonacoEditorStateAdapter
+    };
+  }
+
+
+  async loadCodeMirror() {
+    const [ editor, state ] = await Promise.all([ import("./code-editor/CodeEditor"), import("./code-editor/CodeEditorState") ]);
+    return {
+      editor: editor.CodeEditor,
+      state: state.CodeEditorStateAdapter
+    };
   }
 
 
