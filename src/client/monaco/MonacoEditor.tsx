@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { DocumentManager } from "../DocumentManager";
 import { MonacoEditorStateAdapter } from "./MonacoEditorStateAdapter";
 import { Document } from "../Document";
 import * as monaco from "monaco-editor";
+import { useCurrentThemeIsDark } from "../Theme";
 
 
 export interface MonacoEditorProps {
@@ -28,13 +29,15 @@ function getLanguageFromFileName(filename: string) {
 export function MonacoEditor(props: MonacoEditorProps) {
   const containerRef = useRef<any>();
   const stateAdapter = useRef<MonacoEditorStateAdapter>(props.doc.getEditorStateAdapter() as MonacoEditorStateAdapter);
+  const isDarkTheme = useCurrentThemeIsDark();
 
   useEffect(() => {
+    monaco.editor.setTheme(isDarkTheme ? "vs-dark" : "vs");
     const editor = monaco.editor.create(containerRef.current, {
       value: stateAdapter.current.initialText,
       language: getLanguageFromFileName(props.doc.entryPath.normalized),
       wordWrap: "on",
-      renderWhitespace: "all",
+      renderWhitespace: "all"
     });
     stateAdapter.current.model = editor.getModel();
 
@@ -42,6 +45,10 @@ export function MonacoEditor(props: MonacoEditorProps) {
       DocumentManager.instance.close(props.doc.entryPath);
     };
   }, []);
+
+  useLayoutEffect(() => {
+    monaco.editor.setTheme(isDarkTheme ? "vs-dark" : "vs");
+  }, [ isDarkTheme ]);
 
   return <div ref={ containerRef } className={ props.className }/>;
 }
