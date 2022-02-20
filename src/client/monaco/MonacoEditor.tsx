@@ -53,11 +53,18 @@ export function MonacoEditor(props: MonacoEditorProps) {
   useEffect(() => {
     defineTheme();
     monaco.editor.setTheme(isDarkTheme ? "pure-dark" : "vs");
+
+    let fontSize = props.doc.settings.fontSize;
+    if (typeof fontSize !== "number") {
+      fontSize = undefined;
+    }
+
     const editor = monaco.editor.create(containerRef.current, {
       value: stateAdapter.current.initialText,
       language: getLanguageFromFileName(props.doc.entryPath.normalized),
       wordWrap: "on",
-      renderWhitespace: "all"
+      renderWhitespace: "all",
+      fontSize
     });
     stateAdapter.current.model = editor.getModel();
 
