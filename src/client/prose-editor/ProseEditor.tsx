@@ -3,7 +3,8 @@ import { EditorView } from "prosemirror-view";
 import { ProseEditorStateAdapter } from "./ProseEditorStateAdapter";
 import { Document } from "../Document";
 import { DocumentManager } from "../DocumentManager";
-require("prosemirror-view/style/prosemirror.css");
+import "prosemirror-view/style/prosemirror.css";
+import "./ProseEditor.css";
 
 
 export interface ProseEditorProps {

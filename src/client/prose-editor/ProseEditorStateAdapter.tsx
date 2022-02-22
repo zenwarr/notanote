@@ -5,7 +5,6 @@ import { StoragePath } from "../../common/storage/StoragePath";
 import { FileSettings } from "../../common/Settings";
 import { baseKeymap } from "prosemirror-commands";
 import { keymap } from "prosemirror-keymap";
-import { parseMarkdown } from "./MarkdownParser";
 
 
 export class ProseEditorStateAdapter implements DocumentEditorStateAdapter {
@@ -35,7 +34,7 @@ export class ProseEditorStateAdapter implements DocumentEditorStateAdapter {
 
 function createEditorState(content: string, path: StoragePath, settings: FileSettings) {
   return EditorState.create({
-    doc: parseMarkdown(content),
+    doc: defaultMarkdownParser.parse(content),
     schema: schema,
     plugins: [
       keymap(baseKeymap),

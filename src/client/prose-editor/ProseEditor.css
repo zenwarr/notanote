@@ -1,0 +1,5 @@
+.ProseMirror {
+  outline: none !important;
+  max-height: 100%;
+  overflow: auto;
+}

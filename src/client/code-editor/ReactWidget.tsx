@@ -1,13 +1,4 @@
-import {
-  Decoration,
-  DecorationSet,
-  EditorView,
-  MatchDecorator,
-  PluginField,
-  ViewPlugin,
-  ViewUpdate,
-  WidgetType
-} from "@codemirror/view";
+import { Decoration, DecorationSet, EditorView, MatchDecorator, PluginField, ViewPlugin, ViewUpdate, WidgetType } from "@codemirror/view";
 import * as ReactDOM from "react-dom";
 import { ReactElement } from "react";
 
@@ -78,20 +69,7 @@ export const checkboxPlugin = ViewPlugin.fromClass(class {
 
 
   constructor(view: EditorView) {
-    this.decorator = this.makeDecorator();
-    this.decorations = this.decorator.createDeco(view);
-  }
-
-
-  update(update: ViewUpdate) {
-    if (update.docChanged || update.viewportChanged) {
-      this.decorations = this.decorator.updateDeco(update, this.decorations);
-    }
-  }
-
-
-  protected makeDecorator() {
-    return new MatchDecorator({
+    this.decorator = new MatchDecorator({
       regexp: CHECKBOX_RE,
       decoration: match => {
         return Decoration.replace({
@@ -100,8 +78,32 @@ export const checkboxPlugin = ViewPlugin.fromClass(class {
         });
       }
     });
+
+    this.decorations = this.decorator.createDeco(view);
+  }
+
+
+  /**
+   * Notifies plugin of an updated that happened in the view.
+   * Called before updated DOM is applied.
+   * Should update internal state of the plugin.
+   * @param update
+   */
+  update(update: ViewUpdate) {
+    if (update.docChanged || update.viewportChanged) {
+      this.decorations = this.decorator.updateDeco(update, this.decorations);
+    }
   }
 }, {
+  /**
+   * This function gets called with plugin value and returns decoration set.
+   * In this case, plugin value is instance of class we give as a first argument.
+   */
   decorations: v => v.decorations,
+
+  /**
+   * In this case, we report to editor that ranges covering checkboxes should be treated as atomic values.
+   * It means cursor should never be placed inside them.
+   */
   provide: PluginField.atomicRanges.from(v => v.decorations)
 });

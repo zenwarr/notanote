@@ -22,27 +22,28 @@ export interface DocumentEditorProps {
 }
 
 
+interface LazyEditorModule {
+  editor: React.ComponentType<DocumentEditorProps>;
+  state: new (doc: Document) => DocumentEditorStateAdapter;
+}
+
+
 export class DocumentEditorProvider {
   async getStateAdapter(doc: Document): Promise<DocumentEditorStateAdapter> {
+    let StateClass: new (doc: Document) => DocumentEditorStateAdapter;
+
     if (doc.settings.editor != null) {
       const editor = await PluginManager.instance.getCustomEditorForDocument(doc);
       if (!editor) {
-        return this.getDefaultEditor(doc);
+        StateClass = (await this.getDefault(doc)).state;
       } else {
-        return new editor.stateAdapter(doc);
+        StateClass = editor.stateAdapter;
       }
     } else {
-      return this.getDefaultEditor(doc);
+      StateClass = (await this.getDefault(doc)).state;
     }
-  }
 
-
-  private async getDefaultEditor(doc: Document) {
-    if (shouldUseCodeMirror(doc.entryPath.normalized)) {
-      return new (await this.loadCodeMirror()).state(doc);
-    } else {
-      return new (await this.loadMonaco()).state(doc);
-    }
+    return new StateClass(doc);
   }
 
 
@@ -51,16 +52,23 @@ export class DocumentEditorProvider {
     if (editor?.component) {
       return editor.component;
     } else {
-      if (shouldUseCodeMirror(doc.entryPath.normalized)) {
-        return (await this.loadCodeMirror()).editor;
-      } else {
-        return (await this.loadMonaco()).editor;
-      }
+      return (await this.getDefault(doc)).editor;
     }
   }
 
 
-  async loadMonaco() {
+  private async getDefault(doc: Document) {
+    if (doc.entryPath.normalized.endsWith(".md")) {
+      return this.loadProseMirror();
+    } else if (shouldUseCodeMirror(doc.entryPath.normalized)) {
+      return this.loadCodeMirror();
+    } else {
+      return this.loadMonaco();
+    }
+  }
+
+
+  async loadMonaco(): Promise<LazyEditorModule> {
     const [ editor, state ] = await Promise.all([ import("./monaco/MonacoEditor"), import("./monaco/MonacoEditorStateAdapter") ]);
     return {
       editor: editor.MonacoEditor,
@@ -69,11 +77,20 @@ export class DocumentEditorProvider {
   }
 
 
-  async loadCodeMirror() {
+  async loadCodeMirror(): Promise<LazyEditorModule> {
     const [ editor, state ] = await Promise.all([ import("./code-editor/CodeEditor"), import("./code-editor/CodeEditorState") ]);
     return {
       editor: editor.CodeEditor,
       state: state.CodeEditorStateAdapter
+    };
+  }
+
+
+  async loadProseMirror(): Promise<LazyEditorModule> {
+    const [ editor, state ] = await Promise.all([ import("./prose-editor/ProseEditor"), import("./prose-editor/ProseEditorStateAdapter") ]);
+    return {
+      editor: editor.ProseEditor,
+      state: state.ProseEditorStateAdapter
     };
   }
 
