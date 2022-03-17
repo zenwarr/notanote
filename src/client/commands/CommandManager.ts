@@ -40,12 +40,12 @@ async function showVersion() {
 
 
 async function initGithub() {
-  const email = prompt("your email", "zenw@yandex.ru");
+  const email = prompt("your email", "user@example.com");
   if (!email) {
     return;
   }
 
-  const remote = prompt("remote", "git@github.com:zenwarr/notanote-sync-test.git");
+  const remote = prompt("remote", "git@github.com:user/repository.git");
   if (!remote) {
     return;
   }
