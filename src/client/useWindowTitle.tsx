@@ -9,9 +9,9 @@ function getDocTitle(hasUnsyncedChanges: boolean, fileId: string | undefined) {
 
   if (fileId) {
     const fileName = path.basename(fileId);
-    return `${ prefix }${ fileName } — Notes app`;
+    return `${ prefix }${ fileName } — Nuclear notes`;
   } else {
-    return `${ prefix }Notes app`;
+    return `${ prefix }Nuclear notes`;
   }
 }
 
