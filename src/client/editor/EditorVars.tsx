@@ -26,6 +26,7 @@ export function setEditorVars(el: HTMLElement, settings: FileSettings, isDarkThe
   el.style.setProperty("--editor-cursor-color", isDarkTheme ? "white" : "black");
   el.style.setProperty("--editor-code-background-color", isDarkTheme ? "#1d1f21" : "#e1e1e1");
   el.style.setProperty("--editor-active-line-background", isDarkTheme ? "#1d1f21" : "#e1e1e1");
+  el.style.setProperty("--editor-max-width", sizeValueToPropValue(settings.maxWidth));
 
   document.documentElement.lang = settings.lang || "en";
 }

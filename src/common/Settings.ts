@@ -22,4 +22,5 @@ export interface BlockSettings {
   textIndent?: number;
 
   color?: string;
+  maxWidth?: string | number;
 }
