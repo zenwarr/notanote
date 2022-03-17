@@ -1,5 +1,17 @@
-.ProseMirror {
-  outline: none !important;
-  max-height: 100%;
-  overflow: auto;
-}
+/*.ProseMirror {*/
+/*  outline: none !important;*/
+/*  max-height: 100%;*/
+/*  overflow: auto;*/
+/*}*/
+
+/*.ProseMirror pre {*/
+/*  padding: 10px;*/
+/*  background: var(--editor-code-background-color);*/
+/*  border-radius: 7px;*/
+/*}*/
+
+/*.ProseMirror code {*/
+/*  background: var(--editor-code-background-color);*/
+/*  border-radius: 7px;*/
+/*  padding: 5px;*/
+/*}*/

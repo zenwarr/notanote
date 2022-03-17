@@ -84,7 +84,8 @@ export class FileSettingsProvider {
 
   static init(fs: StorageLayer): void {
     if (FileSettingsProvider._instance) {
-      throw new Error("FileSettingsProvider is already initialized");
+      console.error("FileSettingsProvider is already initialized");
+      return;
     }
     FileSettingsProvider._instance = new FileSettingsProvider(fs);
   }

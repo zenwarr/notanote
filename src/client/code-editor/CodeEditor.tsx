@@ -1,12 +1,12 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Document } from "../Document";
 import { DocumentManager } from "../DocumentManager";
 import "./CodeEditor.css";
 import { EditorView } from "@codemirror/view";
-import { FileSettings } from "../../common/Settings";
 import { useCurrentThemeIsDark } from "../Theme";
 import { CodeEditorStateAdapter } from "./CodeEditorState";
 import assert from "assert";
+import { setEditorVars } from "../editor/EditorVars";
 
 
 export type CodeEditorProps = {
@@ -22,6 +22,7 @@ export function CodeEditor(props: CodeEditorProps) {
   const stateAdapter = useRef<CodeEditorStateAdapter>(props.doc.getEditorStateAdapter() as CodeEditorStateAdapter);
   assert(stateAdapter.current instanceof CodeEditorStateAdapter);
   const editorState = stateAdapter.current.state;
+
 
   useEffect(() => {
     const view = new EditorView({
@@ -53,34 +54,4 @@ export function CodeEditor(props: CodeEditorProps) {
   }, [ props.doc.settings, isDarkTheme ]);
 
   return <div ref={ containerRef } className={ props.className }/>;
-}
-
-
-function numberValueToPropValue(value: number | undefined): string | null {
-  return value == null ? null : `${ value }px`;
-}
-
-
-function sizeValueToPropValue(value: number | string | undefined): string | null {
-  if (typeof value === "string") {
-    return value;
-  } else {
-    return numberValueToPropValue(value);
-  }
-}
-
-
-function setEditorVars(el: HTMLElement, settings: FileSettings, isDarkTheme: boolean) {
-  el.style.setProperty("--editor-text-indent", numberValueToPropValue(settings.textIndent));
-  el.style.setProperty("--editor-line-height", settings.lineHeight == null ? null : "" + settings.lineHeight);
-  el.style.setProperty("--editor-paragraph-spacing", numberValueToPropValue(settings.paragraphSpacing));
-  el.style.setProperty("--editor-hyphens", settings.hyphens ?? null);
-  el.style.setProperty("--editor-font-size", sizeValueToPropValue(settings.fontSize));
-  el.style.setProperty("--editor-font-family", settings.fontFamily ?? null);
-  el.style.setProperty("--editor-caret-color", isDarkTheme ? "lightgray" : "black");
-  el.style.setProperty("--editor-whitespace-color", isDarkTheme ? "gray" : "#b5b5b5");
-  el.style.setProperty("--editor-selection-color", isDarkTheme ? "#464646" : "#d7d4f0");
-  el.style.setProperty("--editor-cursor-color", isDarkTheme ? "white" : "black");
-
-  document.documentElement.lang = settings.lang || "en";
 }

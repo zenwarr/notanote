@@ -9,7 +9,7 @@
 }
 
 .cm-editor .cm-line {
-  padding-bottom: var(--editor-paragraph-spacing);
+  padding: var(--editor-paragraph-spacing) 0;
 }
 
 .cm-focused {
@@ -43,4 +43,8 @@
 
 .cm-editor .cm-cursor-primary {
   border-color: var(--editor-cursor-color) !important;
+}
+
+.cm-editor .cm-activeLine {
+  background: var(--editor-active-line-background);
 }

@@ -1,4 +1,5 @@
-import { EditorSelection, EditorState, Extension, StateCommand } from "@codemirror/state";
+import * as mobx from "mobx";
+import { EditorSelection, EditorState, Extension, StateCommand, StateField } from "@codemirror/state";
 import { history, historyKeymap } from "@codemirror/history";
 import { getIndentation, IndentContext, indentOnInput, indentString, syntaxTree } from "@codemirror/language";
 import { defaultHighlightStyle, HighlightStyle } from "@codemirror/highlight";
@@ -8,7 +9,7 @@ import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import {
   drawSelection,
-  EditorView,
+  EditorView, highlightActiveLine,
   highlightSpecialChars,
   KeyBinding,
   keymap,
@@ -115,7 +116,7 @@ export function createEditorState(content: string, entryPath: StoragePath, setti
     extensions: [
       history(),
       drawSelection(),
-      // EditorState.allowMultipleSelections.of(true),
+      EditorState.allowMultipleSelections.of(true),
       indentOnInput(),
       defaultHighlightStyle.fallback,
       bracketMatching(),
@@ -125,6 +126,8 @@ export function createEditorState(content: string, entryPath: StoragePath, setti
       highlightSelectionMatches(),
       placeholder("< your note here >"),
       EditorView.lineWrapping,
+      // gutter.lineNumbers(),
+      // gutter.highlightActiveLineGutter(),
       keymap.of([
         ...customKeymap,
         ...closeBracketsKeymap,
@@ -134,6 +137,7 @@ export function createEditorState(content: string, entryPath: StoragePath, setti
         ...completionKeymap,
         indentWithTab
       ]),
+      highlightActiveLine(),
       getEditorPluginForFile(entryPath),
       ViewPlugin.fromClass(class {
         update(upd: ViewUpdate) {
@@ -144,6 +148,7 @@ export function createEditorState(content: string, entryPath: StoragePath, setti
       EditorState.tabSize.of(settings.tabWidth ?? 2),
       scrollPastEnd(),
       ...getPluginsFromSettings(entryPath, settings),
+      EditorView.contentAttributes.of({ spellcheck: "true" }),
       autocompletion({
         activateOnTyping: true,
         override: [
@@ -272,9 +277,14 @@ export class CodeEditorStateAdapter implements DocumentEditorStateAdapter {
       onUpdate: upd => {
         if (upd.docChanged) {
           self.doc.onChanges();
+
+          this.updatePreview(upd.state);
         }
         self.state = upd.state;
       }
+    });
+    mobx.makeObservable(this, {
+      preview: mobx.observable
     });
   }
 
@@ -284,6 +294,25 @@ export class CodeEditorStateAdapter implements DocumentEditorStateAdapter {
   }
 
 
+  async updatePreview(state: EditorState) {
+    // if (this.updateGenerationRunning) {
+    //   return;
+    // }
+    //
+    // this.updateGenerationRunning = true;
+    //
+    // try {
+    //   const markdown = state.doc.toString();
+    //   const preview = await unified.unified().use(remarkParse).use(remarkHtml).process(markdown);
+    //   this.preview = "" + preview;
+    // } finally {
+    //   this.updateGenerationRunning = false;
+    // }
+  }
+
+
   state: EditorState;
+  preview: string | undefined = undefined;
   private readonly doc: Document;
+  updateGenerationRunning = false;
 }

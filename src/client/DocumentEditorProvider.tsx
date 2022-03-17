@@ -58,9 +58,9 @@ export class DocumentEditorProvider {
 
 
   private async getDefault(doc: Document) {
-    if (doc.entryPath.normalized.endsWith(".md")) {
-      return this.loadProseMirror();
-    } else if (shouldUseCodeMirror(doc.entryPath.normalized)) {
+    // if (doc.entryPath.normalized.endsWith(".md")) {
+    //   return this.loadProseMirror();
+    if (shouldUseCodeMirror(doc.entryPath.normalized)) {
       return this.loadCodeMirror();
     } else {
       return this.loadMonaco();
@@ -86,13 +86,13 @@ export class DocumentEditorProvider {
   }
 
 
-  async loadProseMirror(): Promise<LazyEditorModule> {
-    const [ editor, state ] = await Promise.all([ import("./prose-editor/ProseEditor"), import("./prose-editor/ProseEditorStateAdapter") ]);
-    return {
-      editor: editor.ProseEditor,
-      state: state.ProseEditorStateAdapter
-    };
-  }
+  // async loadProseMirror(): Promise<LazyEditorModule> {
+  //   const [ editor, state ] = await Promise.all([ import("./prose-editor/ProseEditor"), import("./prose-editor/ProseEditorStateAdapter") ]);
+  //   return {
+  //     editor: editor.ProseEditor,
+  //     state: state.ProseEditorStateAdapter
+  //   };
+  // }
 
 
   static instance = new DocumentEditorProvider();
