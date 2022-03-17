@@ -1107,10 +1107,10 @@
   resolved "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@codemirror/autocomplete@^0.19.0", "@codemirror/autocomplete@^0.19.13":
-  version "0.19.13"
-  resolved "https://registry.npmjs.org/@codemirror/autocomplete/-/autocomplete-0.19.13.tgz#33253750605ffa94a8880636df514fa49821485f"
-  integrity sha512-fI6lgTH2PlyTQqF2eWKDRBRUC+9MqvS2TfvE7aJ4Pu1oHM1w8JI16J9Qvwrd0iabJeF/QodU51Clok98c7fpCQ==
+"@codemirror/autocomplete@^0.19.0", "@codemirror/autocomplete@^0.19.14":
+  version "0.19.14"
+  resolved "https://registry.npmjs.org/@codemirror/autocomplete/-/autocomplete-0.19.14.tgz#5f61b0fced56e7960791063d03b21d11a63f0ec5"
+  integrity sha512-4PqJG7GGTePc+FQF387RFebDV4ERvKj23gQBmzNtu64ZSHlYEGulwP5EIIfulBiaWEmei9TYVaMFmTdNfofpRQ==
   dependencies:
     "@codemirror/language" "^0.19.0"
     "@codemirror/state" "^0.19.4"
@@ -1333,10 +1333,10 @@
     "@codemirror/legacy-modes" "^0.19.0"
     "@codemirror/stream-parser" "^0.19.0"
 
-"@codemirror/language@^0.19.0", "@codemirror/language@^0.19.7":
-  version "0.19.7"
-  resolved "https://registry.npmjs.org/@codemirror/language/-/language-0.19.7.tgz#9eef8e827692d93a701b18db9d46a42be34ecca6"
-  integrity sha512-pNNUtYWMIMG0lUSKyUXJr8U0rFiCKsKFXbA2Oj17PC+S1FY99hV0z1vcntW67ekAIZw9DMEUQnLsKBuIbAUX7Q==
+"@codemirror/language@^0.19.0", "@codemirror/language@^0.19.8":
+  version "0.19.8"
+  resolved "https://registry.npmjs.org/@codemirror/language/-/language-0.19.8.tgz#fddaa76affb44d71e84dfde7308058732b88c064"
+  integrity sha512-KhRne8qmzSKkaw+qhkwgNsPKxmThlyeJ3umfc33B9kJzVP7xhTkwX2MEPl0almM3brxMi+lPYx7gCPOy1gHsWw==
   dependencies:
     "@codemirror/state" "^0.19.0"
     "@codemirror/text" "^0.19.0"
@@ -1387,10 +1387,10 @@
   dependencies:
     "@codemirror/state" "^0.19.0"
 
-"@codemirror/search@^0.19.8":
-  version "0.19.8"
-  resolved "https://registry.npmjs.org/@codemirror/search/-/search-0.19.8.tgz#20b5895ad6becd97e0b69b02369d69887ae15255"
-  integrity sha512-mMHx60bzbcbSI8Fu2WbxsGAZ2FCGkzslISsvyJXOxVoB7E+y1LDTBv0HUJ+srmfIsak6ceMxKgyI6RldRPMu5A==
+"@codemirror/search@^0.19.9":
+  version "0.19.9"
+  resolved "https://registry.npmjs.org/@codemirror/search/-/search-0.19.9.tgz#b9548dfeb2028e6d5ecd1965f8f0ee50e2925603"
+  integrity sha512-h3MuwbUbiyOp6Np3IB5r4LH0w4inZvbtLO1Ipmz8RhElcGRiYr11Q6Bim8ocLfe08RmZT6B5EkTj1E8eNlugQQ==
   dependencies:
     "@codemirror/panel" "^0.19.0"
     "@codemirror/rangeset" "^0.19.0"
@@ -1431,10 +1431,10 @@
     "@codemirror/state" "^0.19.0"
     "@codemirror/view" "^0.19.0"
 
-"@codemirror/view@^0.19.0", "@codemirror/view@^0.19.22", "@codemirror/view@^0.19.23", "@codemirror/view@^0.19.34", "@codemirror/view@^0.19.44", "@codemirror/view@^0.19.45":
-  version "0.19.45"
-  resolved "https://registry.npmjs.org/@codemirror/view/-/view-0.19.45.tgz#fa608ee1412808e2fa555e48658436dd9e309d5c"
-  integrity sha512-wR19UBYvJMeV9axa5Xo6ATbAP1jl30BPFZ5buu3cJjYXwlRhJDjzw2wUbxk1zsR1LtAe5jrRNeWEtGA+IPacxw==
+"@codemirror/view@^0.19.0", "@codemirror/view@^0.19.22", "@codemirror/view@^0.19.23", "@codemirror/view@^0.19.34", "@codemirror/view@^0.19.44", "@codemirror/view@^0.19.47":
+  version "0.19.47"
+  resolved "https://registry.npmjs.org/@codemirror/view/-/view-0.19.47.tgz#2163c3016d7680bf50dd695c0e3abdaf80f45363"
+  integrity sha512-SfbagKvJQl5dtt+9wYpo9sa3ZkMgUxTq+/hXDf0KVwIx+zu3cJIqfEm9xSx6yXkq7it7RsPGHaPasApNffF/8g==
   dependencies:
     "@codemirror/rangeset" "^0.19.5"
     "@codemirror/state" "^0.19.3"
