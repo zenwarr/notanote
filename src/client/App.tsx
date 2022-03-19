@@ -56,7 +56,7 @@ export const App = observer(() => {
 
           <Hidden lgUp>
             <SwipeableDrawer open={ drawerOpen } onOpen={ () => setDrawerOpen(true) } onClose={ () => setDrawerOpen(false) }
-                             disableBackdropTransition={ !iOS } disableDiscovery={ iOS }>
+                              disableBackdropTransition={ !iOS } disableDiscovery={ iOS } keepMounted>
               <Box className={ classes.workspaceViewContainer }>
                 <WorkspaceView treeWithPadding onEntrySelected={ onMobileEntrySelected }/>
               </Box>
