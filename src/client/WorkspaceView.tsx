@@ -1,6 +1,6 @@
 import * as React from "react";
-import { useRef, useState } from "react";
-import { TreeItem, TreeView } from "@mui/lab";
+import { useEffect, useRef, useState } from "react";
+import cn from "classnames";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { Box, IconButton, Tooltip } from "@mui/material";
@@ -17,6 +17,8 @@ import { StoragePath } from "../common/storage/StoragePath";
 import { StorageEntryType } from "../common/storage/StorageLayer";
 import { MemoryCachedEntryPointer } from "../common/storage/MemoryCachedStorage";
 import { MemoryStorageEntryPointer } from "./storage/MemoryStorage";
+import { FixedSizeNodeData, FixedSizeTree } from "react-vtree";
+import { ContainerWithSizeDetection } from "./utils/ContainerWithSizeDetection";
 
 
 export interface WorkspaceViewProps {
@@ -29,7 +31,7 @@ function getParents(p: string) {
   const parts = p.split("/").filter(x => !!x);
   const result: string[] = [];
   for (let q = 0; q < parts.length; ++q) {
-    result.push(parts.slice(0, q + 1).join("/"));
+    result.push("/" + parts.slice(0, q + 1).join("/"));
   }
   return result;
 }
@@ -40,8 +42,15 @@ function useExpanded(selected: string | undefined) {
 
   return {
     expanded,
-    onToggle: (_: unknown, nodes: string[]) => {
-      setExpanded(nodes);
+    onToggle: (node: string) => {
+      const isAlreadyExpanded = expanded.includes(node);
+      if (isAlreadyExpanded) {
+        // collapse this item and all its children
+        setExpanded(expanded.filter(x => x !== node && !x.startsWith(node + "/")));
+      } else {
+        const parents = getParents(node);
+        setExpanded([ ...new Set([ ...expanded, ...parents ]) ]);
+      }
     }
   };
 }
@@ -89,18 +98,25 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const navigate = useNavigate();
   const classes = useStyles();
 
-  function onNodeSelect(_: unknown, value: string | string[]) {
-    if (typeof value === "string" || value == null) {
-      ClientWorkspace.instance.selectedEntry = new StoragePath(value);
+  useEffect(() => {
+    console.log("mount");
 
-      const selectedEntry = ClientWorkspace.instance.storage.get(new StoragePath(value));
-      if (selectedEntry && selectedEntry.memory.type !== StorageEntryType.Dir) {
-        navigate(`/f/${ value }`);
-      }
+    return () => {
+      console.log("unmount");
+    }
+  }, []);
 
-      if (selectedEntry) {
-        props.onEntrySelected?.(selectedEntry);
-      }
+  function onNodeSelect(value: string) {
+    expand.onToggle(value);
+    ClientWorkspace.instance.selectedEntry = new StoragePath(value);
+
+    const selectedEntry = ClientWorkspace.instance.storage.get(new StoragePath(value));
+    if (selectedEntry && selectedEntry.memory.type !== StorageEntryType.Dir) {
+      navigate(`/f/${ value }`);
+    }
+
+    if (selectedEntry) {
+      props.onEntrySelected?.(selectedEntry);
     }
   }
 
@@ -127,70 +143,145 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
     await ClientWorkspace.instance.remove(cw.selectedEntry);
   }
 
-  const labelClasses = {
-    label: classes.entry,
-    icon: classes.entryIcon,
-    text: classes.entryText
+  const treeState: TreeState = {
+    root: cw.storage.memory.root,
+    selected: cw.selectedEntry?.normalized || "",
+    onSelect: onNodeSelect,
+    expanded: expand.expanded
   };
 
-  return (
-      <div className={ classes.container }>
-        { createOptions.current && <CreateEntryDialog open={ entryDialogOpened }
-                                                      onClose={ onCreateDialogClose }
-                                                      type={ createOptions.current.type }
-                                                      suggestedName={ createOptions.current.suggestedName }
-                                                      parentPath={ createOptions.current.parentPath }/> }
+  const containerClassName = cn(classes.treeContainer, { [classes.treeContainerPadding]: props.treeWithPadding });
 
-        <Box mb={ 2 } display={ "flex" } justifyContent={ "space-between" } className={ classes.toolbar }>
-          <Box>
-            <IconButton onClick={ createFile } title={ "Create file" } size="large">
-              <PostAddOutlined/>
-            </IconButton>
+  return <>
+    { createOptions.current && <CreateEntryDialog open={ entryDialogOpened }
+                                                  onClose={ onCreateDialogClose }
+                                                  type={ createOptions.current.type }
+                                                  suggestedName={ createOptions.current.suggestedName }
+                                                  parentPath={ createOptions.current.parentPath }/> }
 
-            <IconButton onClick={ createFolder } title={ "Create folder" } size="large">
-              <CreateNewFolderOutlined/>
-            </IconButton>
-          </Box>
+    <Box mb={ 2 } display={ "flex" } justifyContent={ "space-between" } className={ classes.toolbar }>
+      <Box>
+        <IconButton onClick={ createFile } title={ "Create file" } size="large">
+          <PostAddOutlined/>
+        </IconButton>
 
-          <Box>
-            <IconButton
-                onClick={ remove }
-                title={ "Remove selected" }
-                disabled={ !cw.selectedEntry }
-                size="large">
-              <DeleteForever color={ "error" }/>
-            </IconButton>
-          </Box>
-        </Box>
+        <IconButton onClick={ createFolder } title={ "Create folder" } size="large">
+          <CreateNewFolderOutlined/>
+        </IconButton>
+      </Box>
 
-        <Box p={ props.treeWithPadding ? 1 : undefined }>
-          <TreeView defaultCollapseIcon={ <ExpandMoreIcon/> } defaultExpandIcon={ <ChevronRightIcon/> } onNodeSelect={ onNodeSelect }
-                    expanded={ expand.expanded } onNodeToggle={ expand.onToggle }
-                    selected={ cw.selectedEntry?.normalized || "" }>
-            { cw.storage.memory.root.directChildren?.map(e => renderTreeEntry(e, labelClasses)) }
-          </TreeView>
-        </Box>
-      </div>
-  );
+      <Box>
+        <IconButton
+            onClick={ remove }
+            title={ "Remove selected" }
+            disabled={ !cw.selectedEntry }
+            size="large">
+          <DeleteForever color={ "error" }/>
+        </IconButton>
+      </Box>
+    </Box>
+
+    <ContainerWithSizeDetection className={ containerClassName }>
+      {
+        (width, height) => <FixedSizeTree treeWalker={ treeWalker.bind(null, treeState) } itemSize={ 25 } height={ height }
+                                          width={ width }>
+          { TreeNode as any }
+        </FixedSizeTree>
+      }
+    </ContainerWithSizeDetection>
+  </>;
 });
 
 
-function renderTreeEntry(e: MemoryStorageEntryPointer, classes: { [name: string]: string }) {
-  const label = <Tooltip title={ getTooltipText(e) } arrow disableInteractive enterDelay={ 500 }>
-    <span className={ classes.label }>
-      { e.type === StorageEntryType.Dir
-          ? <FolderIcon className={ classes.icon } fontSize={ "small" }/>
-          : <DescriptionIcon className={ classes.icon } fontSize={ "small" }/> }
-      <span className={ classes.text }>
+type TreeNodeData = FixedSizeNodeData & {
+  entry: MemoryStorageEntryPointer;
+  level: number;
+  state: TreeState;
+}
+
+
+type TreeState = {
+  root: MemoryStorageEntryPointer;
+  selected: string | undefined;
+  onSelect: (node: string) => void;
+  expanded: string[];
+}
+
+
+function* treeWalker(state: TreeState): any {
+  function createEntry(e: MemoryStorageEntryPointer, level: number) {
+    const d: TreeNodeData = {
+      id: e.path.normalized,
+      isOpenByDefault: state.expanded.includes(e.path.normalized),
+      entry: e,
+      level,
+      state
+    };
+    return {
+      data: d
+    };
+  }
+
+  for (const child of state.root.directChildren || []) {
+    yield createEntry(child, 0);
+  }
+
+  while (true) {
+    const item: TreeNodeData = (yield).data;
+    for (const child of item.entry.directChildren || []) {
+      yield createEntry(child, item.level + 1);
+    }
+  }
+}
+
+
+interface TreeNodeProps {
+  data: TreeNodeData;
+  isOpen: boolean;
+  setOpen: (open: boolean) => void;
+  style: any;
+}
+
+
+function TreeNode(props: TreeNodeProps) {
+  const e = props.data.entry;
+  const classes = useStyles();
+
+  const id = props.data.entry.path.normalized;
+  const isSelected = props.data.state.selected === id;
+  const isDir = e.type === StorageEntryType.Dir;
+  const padding = `${ props.data.level + (isDir ? 0 : 1.5) }em`;
+
+  const rootClass = cn(classes.entry, {
+    [classes.entrySelected]: isSelected
+  });
+
+  function onClick() {
+    props.data.state.onSelect(id);
+    props.setOpen(!props.isOpen);
+  }
+
+  return <Tooltip title={ getTooltipText(e) } arrow disableInteractive enterDelay={ 500 }>
+    <span className={ rootClass } onClick={ onClick } style={ { ...props.style, paddingLeft: padding } }>
+      {
+          isDir && props.isOpen && <ExpandMoreIcon/>
+      }
+
+      {
+          isDir && !props.isOpen && <ChevronRightIcon/>
+      }
+
+      {
+        isDir
+            ? <FolderIcon className={ classes.entryIcon } fontSize={ "small" }/>
+            : <DescriptionIcon className={ classes.entryIcon } fontSize={ "small" }/>
+      }
+
+      <span>
         { e.path.basename }
       </span>
     </span>
   </Tooltip>;
-
-  const entryPath = e.path.normalized;
-  return <TreeItem nodeId={ entryPath } key={ entryPath } label={ label }>
-    { e.directChildren && e.directChildren.map(c => renderTreeEntry(c, classes)) }
-  </TreeItem>;
 }
 
 
@@ -223,13 +314,18 @@ const useStyles = makeStyles(theme => ({
     paddingTop: 1,
     paddingBottom: 1,
     paddingLeft: 3,
-    borderRadius: 5
+    borderRadius: 5,
+    userSelect: "none",
+    cursor: "default",
+    height: 25
+  },
+  entrySelected: {
+    background: theme.palette.action.selected
   },
   entryIcon: {
     marginRight: theme.spacing(1),
     color: "gray"
   },
-  entryText: {},
   toolbar: {
     backgroundColor: theme.palette.background.default,
     position: "sticky",
@@ -237,9 +333,10 @@ const useStyles = makeStyles(theme => ({
     top: 0,
     zIndex: 10
   },
-  container: {
-    overflow: "auto",
-    height: "100vh",
-    position: "relative"
+  treeContainer: {
+    flexGrow: 1
+  },
+  treeContainerPadding: {
+    padding: theme.spacing(1)
   }
 }));

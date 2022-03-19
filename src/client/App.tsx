@@ -112,6 +112,9 @@ const useStyles = makeStyles(theme => ({
   workspaceViewContainer: {
     maxWidth: "300px",
     minWidth: "300px",
+    height: "100vh",
+    display: "flex",
+    flexDirection: "column",
     [theme.breakpoints.down("lg")]: {
       width: 500,
       maxWidth: "90vw"
