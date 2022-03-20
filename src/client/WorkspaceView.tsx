@@ -22,7 +22,7 @@ import { ContainerWithSizeDetection } from "./utils/ContainerWithSizeDetection";
 
 
 export interface WorkspaceViewProps {
-  onEntrySelected?: (entry: MemoryCachedEntryPointer) => void;
+  onFileSelected?: (entry: MemoryCachedEntryPointer) => void;
   treeWithPadding?: boolean;
 }
 
@@ -107,16 +107,19 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   }, []);
 
   function onNodeSelect(value: string) {
-    expand.onToggle(value);
-    ClientWorkspace.instance.selectedEntry = new StoragePath(value);
-
     const selectedEntry = ClientWorkspace.instance.storage.get(new StoragePath(value));
-    if (selectedEntry && selectedEntry.memory.type !== StorageEntryType.Dir) {
-      navigate(`/f/${ value }`);
+    if (!selectedEntry) {
+      return;
     }
 
-    if (selectedEntry) {
-      props.onEntrySelected?.(selectedEntry);
+    ClientWorkspace.instance.selectedEntry = new StoragePath(value);
+    const isDir = selectedEntry.memory.type === StorageEntryType.Dir;
+
+    if (!isDir) {
+      navigate(`/f/${ value }`);
+      props.onFileSelected?.(selectedEntry);
+    } else {
+      expand.onToggle(value);
     }
   }
 
@@ -257,8 +260,10 @@ function TreeNode(props: TreeNodeProps) {
   });
 
   function onClick() {
+    if (isDir) {
+      props.setOpen(!props.isOpen);
+    }
     props.data.state.onSelect(id);
-    props.setOpen(!props.isOpen);
   }
 
   return <Tooltip title={ getTooltipText(e) } arrow disableInteractive enterDelay={ 500 }>
@@ -317,10 +322,18 @@ const useStyles = makeStyles(theme => ({
     borderRadius: 5,
     userSelect: "none",
     cursor: "default",
-    height: 25
+    height: 25,
+
+    "&:hover": {
+      background: theme.palette.action.hover
+    }
   },
   entrySelected: {
-    background: theme.palette.action.selected
+    background: theme.palette.action.selected,
+
+    "&:hover": {
+      background: theme.palette.action.selected
+    }
   },
   entryIcon: {
     marginRight: theme.spacing(1),

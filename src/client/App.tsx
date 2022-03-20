@@ -58,7 +58,7 @@ export const App = observer(() => {
             <SwipeableDrawer open={ drawerOpen } onOpen={ () => setDrawerOpen(true) } onClose={ () => setDrawerOpen(false) }
                               disableBackdropTransition={ !iOS } disableDiscovery={ iOS } keepMounted>
               <Box className={ classes.workspaceViewContainer }>
-                <WorkspaceView treeWithPadding onEntrySelected={ onMobileEntrySelected }/>
+                <WorkspaceView treeWithPadding onFileSelected={ onMobileEntrySelected }/>
               </Box>
             </SwipeableDrawer>
           </Hidden>
