@@ -1,24 +1,23 @@
 import * as React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import cn from "classnames";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { Box, IconButton, Tooltip } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { ClientWorkspace } from "./ClientWorkspace";
+import { ClientWorkspace } from "../ClientWorkspace";
 import { observer } from "mobx-react-lite";
-import { CreateEntryDialog } from "./CreateEntryDialog";
+import { CreateEntryDialog } from "../CreateEntryDialog";
 import { CreateNewFolderOutlined, DeleteForever, PostAddOutlined } from "@mui/icons-material";
 import { useNavigate } from "react-router";
-import DescriptionIcon from "@mui/icons-material/Description";
-import FolderIcon from "@mui/icons-material/Folder";
-import { format } from "date-fns";
-import { StoragePath } from "../common/storage/StoragePath";
-import { StorageEntryType } from "../common/storage/StorageLayer";
-import { MemoryCachedEntryPointer } from "../common/storage/MemoryCachedStorage";
-import { MemoryStorageEntryPointer } from "./storage/MemoryStorage";
-import { FixedSizeNodeData, FixedSizeTree } from "react-vtree";
-import { ContainerWithSizeDetection } from "./utils/ContainerWithSizeDetection";
+import { StoragePath } from "../../common/storage/StoragePath";
+import { StorageEntryType } from "../../common/storage/StorageLayer";
+import { MemoryCachedEntryPointer } from "../../common/storage/MemoryCachedStorage";
+import { FixedSizeTree } from "react-vtree";
+import { ContainerWithSizeDetection } from "../utils/ContainerWithSizeDetection";
+import { TreeNode } from "./TreeNode";
+import { TreeState, treeWalker } from "./TreeState";
+import { TreeContext } from "./TreeContext";
+import { MemoryStorageEntryPointer } from "../storage/MemoryStorage";
+import { TreeMenu } from "./TreeMenu";
 
 
 export interface WorkspaceViewProps {
@@ -98,14 +97,6 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const navigate = useNavigate();
   const classes = useStyles();
 
-  useEffect(() => {
-    console.log("mount");
-
-    return () => {
-      console.log("unmount");
-    }
-  }, []);
-
   function onNodeSelect(value: string) {
     const selectedEntry = ClientWorkspace.instance.storage.get(new StoragePath(value));
     if (!selectedEntry) {
@@ -155,6 +146,21 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 
   const containerClassName = cn(classes.treeContainer, { [classes.treeContainerPadding]: props.treeWithPadding });
 
+  const [ menuEntry, setMenuEntry ] = useState<MemoryStorageEntryPointer | undefined>();
+  const [ menuState, setMenuState ] = useState<{
+    x: number;
+    y: number
+  } | undefined>();
+
+  function onMenuOpen(x: number, y: number, entry: MemoryStorageEntryPointer) {
+    setMenuState({ x, y });
+    setMenuEntry(entry);
+  }
+
+  function onMenuClose() {
+    setMenuState(undefined);
+  }
+
   return <>
     { createOptions.current && <CreateEntryDialog open={ entryDialogOpened }
                                                   onClose={ onCreateDialogClose }
@@ -176,7 +182,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
       <Box>
         <IconButton
             onClick={ remove }
-            title={ "Remove selected" }
+            title={ "Delete selected" }
             disabled={ !cw.selectedEntry }
             size="large">
           <DeleteForever color={ "error" }/>
@@ -184,161 +190,24 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
       </Box>
     </Box>
 
-    <ContainerWithSizeDetection className={ containerClassName }>
-      {
-        (width, height) => <FixedSizeTree treeWalker={ treeWalker.bind(null, treeState) } itemSize={ 25 } height={ height }
-                                          width={ width }>
-          { TreeNode as any }
-        </FixedSizeTree>
-      }
-    </ContainerWithSizeDetection>
+    <TreeContext.Provider value={ { openMenu: onMenuOpen, closeMenu: onMenuClose } }>
+      <ContainerWithSizeDetection className={ containerClassName }>
+        {
+          (width, height) => <FixedSizeTree treeWalker={ treeWalker.bind(null, treeState) } itemSize={ 25 } height={ height }
+                                            width={ width }>
+            { TreeNode as any }
+          </FixedSizeTree>
+        }
+      </ContainerWithSizeDetection>
+    </TreeContext.Provider>
+
+    <TreeMenu open={ menuState != null } onClose={ () => setMenuState(undefined) }
+              entry={ menuEntry } x={ menuState?.x } y={ menuState?.y }/>
   </>;
 });
 
 
-type TreeNodeData = FixedSizeNodeData & {
-  entry: MemoryStorageEntryPointer;
-  level: number;
-  state: TreeState;
-}
-
-
-type TreeState = {
-  root: MemoryStorageEntryPointer;
-  selected: string | undefined;
-  onSelect: (node: string) => void;
-  expanded: string[];
-}
-
-
-function* treeWalker(state: TreeState): any {
-  function createEntry(e: MemoryStorageEntryPointer, level: number) {
-    const d: TreeNodeData = {
-      id: e.path.normalized,
-      isOpenByDefault: state.expanded.includes(e.path.normalized),
-      entry: e,
-      level,
-      state
-    };
-    return {
-      data: d
-    };
-  }
-
-  for (const child of state.root.directChildren || []) {
-    yield createEntry(child, 0);
-  }
-
-  while (true) {
-    const item: TreeNodeData = (yield).data;
-    for (const child of item.entry.directChildren || []) {
-      yield createEntry(child, item.level + 1);
-    }
-  }
-}
-
-
-interface TreeNodeProps {
-  data: TreeNodeData;
-  isOpen: boolean;
-  setOpen: (open: boolean) => void;
-  style: any;
-}
-
-
-function TreeNode(props: TreeNodeProps) {
-  const e = props.data.entry;
-  const classes = useStyles();
-
-  const id = props.data.entry.path.normalized;
-  const isSelected = props.data.state.selected === id;
-  const isDir = e.type === StorageEntryType.Dir;
-  const padding = `${ props.data.level + (isDir ? 0 : 1.5) }em`;
-
-  const rootClass = cn(classes.entry, {
-    [classes.entrySelected]: isSelected
-  });
-
-  function onClick() {
-    if (isDir) {
-      props.setOpen(!props.isOpen);
-    }
-    props.data.state.onSelect(id);
-  }
-
-  return <Tooltip title={ getTooltipText(e) } arrow disableInteractive enterDelay={ 500 }>
-    <span className={ rootClass } onClick={ onClick } style={ { ...props.style, paddingLeft: padding } }>
-      {
-          isDir && props.isOpen && <ExpandMoreIcon/>
-      }
-
-      {
-          isDir && !props.isOpen && <ChevronRightIcon/>
-      }
-
-      {
-        isDir
-            ? <FolderIcon className={ classes.entryIcon } fontSize={ "small" }/>
-            : <DescriptionIcon className={ classes.entryIcon } fontSize={ "small" }/>
-      }
-
-      <span>
-        { e.path.basename }
-      </span>
-    </span>
-  </Tooltip>;
-}
-
-
-function getTooltipText(e: MemoryStorageEntryPointer): React.ReactChild {
-  function formatDate(date: number | undefined) {
-    return date != null ? format(new Date(date), "yyyy-MMM-dd hh:mm:ss") : "?";
-  }
-
-  return <>
-    <div>
-      { e.path.normalized }
-    </div>
-    {/*<div>*/ }
-    {/*  Created: { formatDate(e.storageEntry.stats()) }*/ }
-    {/*</div>*/ }
-    {/*<div>*/ }
-    {/*  Last updated: { formatDate(e.updateTs) }*/ }
-    {/*</div>*/ }
-  </>;
-}
-
-
 const useStyles = makeStyles(theme => ({
-  entry: {
-    display: "flex",
-    alignItems: "center",
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    paddingTop: 1,
-    paddingBottom: 1,
-    paddingLeft: 3,
-    borderRadius: 5,
-    userSelect: "none",
-    cursor: "default",
-    height: 25,
-
-    "&:hover": {
-      background: theme.palette.action.hover
-    }
-  },
-  entrySelected: {
-    background: theme.palette.action.selected,
-
-    "&:hover": {
-      background: theme.palette.action.selected
-    }
-  },
-  entryIcon: {
-    marginRight: theme.spacing(1),
-    color: "gray"
-  },
   toolbar: {
     backgroundColor: theme.palette.background.default,
     position: "sticky",

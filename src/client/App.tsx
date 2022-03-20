@@ -1,6 +1,6 @@
 import { Box, CircularProgress, Hidden, SwipeableDrawer } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { WorkspaceView } from "./WorkspaceView";
+import { WorkspaceView } from "./WorkspaceView/WorkspaceView";
 import { ConnectedFileView } from "./FileView";
 import { Header } from "./Header";
 import { usePreventClose } from "./usePreventClose";
