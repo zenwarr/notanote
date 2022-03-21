@@ -1,6 +1,13 @@
 import * as p from "path";
 import * as mobx from "mobx";
-import { StorageEntryPointer, StorageEntryType, StorageError, StorageErrorCode, StorageLayer } from "../../common/storage/StorageLayer";
+import {
+  FileStats,
+  StorageEntryPointer,
+  StorageEntryType,
+  StorageError,
+  StorageErrorCode,
+  StorageLayer
+} from "../../common/storage/StorageLayer";
 import { StoragePath } from "../../common/storage/StoragePath";
 import { SerializableStorageEntryData } from "../../common/workspace/SerializableStorageEntryData";
 
@@ -9,7 +16,7 @@ export class MemoryStorage extends StorageLayer {
   constructor(initial?: SerializableStorageEntryData) {
     super();
     this.initial = initial;
-    this.root = new MemoryStorageEntryPointer(this, StoragePath.root, StorageEntryType.Dir, []);
+    this.root = new MemoryStorageEntryPointer(this, StoragePath.root, StorageEntryType.Dir, [], undefined);
     if (this.initial) {
       this.root.initialize(this.initial);
     }
@@ -24,7 +31,11 @@ export class MemoryStorage extends StorageLayer {
         this.root, path.parentDir, getPathParts(path.parentDir.normalized), true
     );
 
-    const newEntry = new MemoryStorageEntryPointer(this, path, StorageEntryType.Dir, []);
+    const newEntry = new MemoryStorageEntryPointer(this, path, StorageEntryType.Dir, [], {
+      isDirectory: true,
+      createTs: new Date().valueOf(),
+      updateTs: new Date().valueOf()
+    });
     if (parent.directChildren?.some(child => child.path.isEqual(path))) {
       throw new Error(`Directory ${ path } already exists`);
     }
@@ -57,7 +68,11 @@ export class MemoryStorage extends StorageLayer {
     let child = entry.directChildren?.find(c => c.path.basename === topPart);
     if (!child) {
       if (createDirs) {
-        child = new MemoryStorageEntryPointer(this, entry.path.child(topPart), StorageEntryType.Dir, []);
+        child = new MemoryStorageEntryPointer(this, entry.path.child(topPart), StorageEntryType.Dir, [], {
+          isDirectory: true,
+          createTs: new Date().valueOf(),
+          updateTs: new Date().valueOf()
+        });
         entry.directChildren = [ ...entry.directChildren || [], child ];
       } else {
         return new MemoryStorageEntryPointer(this, fullPath);
@@ -106,12 +121,13 @@ function getPathParts(path: string): string[] {
 
 export class MemoryStorageEntryPointer extends StorageEntryPointer {
   constructor(layer: MemoryStorage, path: StoragePath);
-  constructor(layer: MemoryStorage, path: StoragePath, type: StorageEntryType.File, content: string | undefined);
-  constructor(layer: MemoryStorage, path: StoragePath, type: StorageEntryType.Dir, content: MemoryStorageEntryPointer[] | undefined);
-  constructor(layer: MemoryStorage, path: StoragePath, type?: StorageEntryType, childrenOrContent?: string | MemoryStorageEntryPointer[] | undefined) {
+  constructor(layer: MemoryStorage, path: StoragePath, type: StorageEntryType.File, content: string | undefined, stats: FileStats | undefined);
+  constructor(layer: MemoryStorage, path: StoragePath, type: StorageEntryType.Dir, content: MemoryStorageEntryPointer[] | undefined, stats: FileStats | undefined);
+  constructor(layer: MemoryStorage, path: StoragePath, type?: StorageEntryType, childrenOrContent?: string | MemoryStorageEntryPointer[], stats?: FileStats) {
     super(path);
     this.storage = layer;
     this.type = type;
+    this._stats = stats;
     if (type === StorageEntryType.File) {
       this.content = childrenOrContent as string | undefined;
     } else if (type === StorageEntryType.Dir) {
@@ -124,6 +140,7 @@ export class MemoryStorageEntryPointer extends StorageEntryPointer {
       content: mobx.observable,
       directChildren: mobx.observable,
       type: mobx.observable,
+      _stats: mobx.observable,
       _exists: mobx.observable
     });
   }
@@ -151,6 +168,9 @@ export class MemoryStorageEntryPointer extends StorageEntryPointer {
   type: StorageEntryType | undefined = undefined;
 
 
+  _stats: FileStats | undefined = undefined;
+
+
   initialize(remoteStorageEntryData: SerializableStorageEntryData) {
     const toMemoryStorageEntry = (d: SerializableStorageEntryData): MemoryStorageEntryPointer => {
       if (d.stats.isDirectory) {
@@ -158,14 +178,16 @@ export class MemoryStorageEntryPointer extends StorageEntryPointer {
             this.storage,
             new StoragePath(d.path),
             StorageEntryType.Dir,
-            d.children?.map(toMemoryStorageEntry) || []
+            d.children?.map(toMemoryStorageEntry) || [],
+            d.stats
         );
       } else {
         return new MemoryStorageEntryPointer(
             this.storage,
             new StoragePath(d.path),
             StorageEntryType.File,
-            d.textContent
+            d.textContent,
+            d.stats
         );
       }
     };
@@ -216,8 +238,8 @@ export class MemoryStorageEntryPointer extends StorageEntryPointer {
 
     return {
       isDirectory: this.type === StorageEntryType.Dir,
-      createTs: undefined,
-      updateTs: undefined,
+      createTs: this._stats?.createTs,
+      updateTs: this._stats?.updateTs,
     };
   }
 
