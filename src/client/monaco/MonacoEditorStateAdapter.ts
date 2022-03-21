@@ -22,7 +22,7 @@ export class MonacoEditorStateAdapter implements DocumentEditorStateAdapter {
 
 
   get initialText() {
-    return this.doc.initialSerializedContent;
+    return this.doc.getLastSavedText();
   }
 
 

@@ -58,7 +58,7 @@ export class DocumentEditorProvider {
 
 
   private async getDefault(doc: Document) {
-    if (shouldUseCodeMirror(doc.entryPath.normalized)) {
+    if (shouldUseCodeMirror(doc.entry.path.normalized)) {
       return this.loadCodeMirror();
     } else {
       return this.loadMonaco();

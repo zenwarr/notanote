@@ -17,7 +17,7 @@ export abstract class RuntimeStorageEntry extends StorageEntryPointer {
   }
 
 
-  override async writeOrCreate() {
+  override async writeOrCreate(content: Buffer | string) {
     throw new Error("Operation not supported for this entry");
   }
 

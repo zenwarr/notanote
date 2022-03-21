@@ -61,7 +61,7 @@ export function MonacoEditor(props: MonacoEditorProps) {
 
     const editor = monaco.editor.create(containerRef.current, {
       value: stateAdapter.current.initialText,
-      language: getLanguageFromFileName(props.doc.entryPath.normalized),
+      language: getLanguageFromFileName(props.doc.entry.path.normalized),
       wordWrap: "on",
       renderWhitespace: "all",
       fontSize
@@ -69,7 +69,7 @@ export function MonacoEditor(props: MonacoEditorProps) {
     stateAdapter.current.model = editor.getModel();
 
     return () => {
-      DocumentManager.instance.close(props.doc.entryPath);
+      DocumentManager.instance.close(props.doc.entry.path);
     };
   }, []);
 

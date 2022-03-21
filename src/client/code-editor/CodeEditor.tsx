@@ -23,7 +23,6 @@ export function CodeEditor(props: CodeEditorProps) {
   assert(stateAdapter.current instanceof CodeEditorStateAdapter);
   const editorState = stateAdapter.current.state;
 
-
   useEffect(() => {
     const view = new EditorView({
       state: editorState,
@@ -39,7 +38,7 @@ export function CodeEditor(props: CodeEditorProps) {
 
     return () => {
       view.destroy();
-      DocumentManager.instance.close(props.doc.entryPath);
+      DocumentManager.instance.close(props.doc.entry.path);
     };
   }, []);
 

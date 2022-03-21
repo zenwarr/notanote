@@ -37,6 +37,11 @@ export class StoragePath {
   }
 
 
+  get parts(): string[] {
+    return this._normalized.split("/");
+  }
+
+
   static root = new StoragePath("/");
 
 

@@ -1,5 +1,6 @@
-import { StorageEntryPointer, FileStats, StorageError, StorageErrorCode, StorageLayer } from "./StorageLayer";
+import { FileStats, StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "./StorageLayer";
 import { StoragePath } from "./StoragePath";
+import { walkSerializableStorageEntries } from "../workspace/SerializableStorageEntryData";
 
 
 export class StorageWithMounts extends StorageLayer {
@@ -31,7 +32,8 @@ export class StorageWithMounts extends StorageLayer {
 
 
   override get(path: StoragePath): StorageEntryPointer {
-    return new MountableStorageEntryPointer(this, this.getPointer(path));;
+    return new MountableStorageEntryPointer(this, this.getPointer(path));
+    ;
   }
 
 
@@ -65,6 +67,40 @@ export class StorageWithMounts extends StorageLayer {
     } else {
       return this.base.get(path);
     }
+  }
+
+
+  override async loadAll() {
+    const all = await this.base.loadAll();
+    if (!all) {
+      return undefined;
+    }
+
+    const mountParentsToChildren = new Map<string, string[]>();
+    for (const mount of this.mounts.values()) {
+      const mountParent = mount.path.parentDir.normalized;
+      const children = mountParentsToChildren.get(mountParent) || [];
+      children.push(mount.path.normalized);
+      mountParentsToChildren.set(mountParent, children);
+    }
+
+    for (const entry of walkSerializableStorageEntries(all)) {
+      for (const childPath of mountParentsToChildren.get(entry.path) || []) {
+        const child = this.mounts.get(childPath)!;
+
+        if (!entry.children) {
+          entry.children = [];
+        }
+
+        entry.children.push({
+          path: child.path.normalized,
+          stats: await child.stats(),
+          textContent: await child.readText()
+        });
+      }
+    }
+
+    return all;
   }
 
 

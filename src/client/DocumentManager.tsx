@@ -29,9 +29,9 @@ export class DocumentManager {
     }
 
     const entry = ClientWorkspace.instance.storage.get(path);
-    const content = await entry.readText();
 
-    const document = new Document(content, path, FileSettingsProvider.instance.getSettingsForPath(path));
+    const document = new Document(entry, FileSettingsProvider.instance.getSettingsForPath(path));
+    await document.loadText();
     document.setEditorStateAdapter(await DocumentEditorProvider.instance.getStateAdapter(document));
     this.documents.set(path.normalized, { doc: document, usageCount: 1 });
     return document;
@@ -58,7 +58,7 @@ export class DocumentManager {
 
 
   public onDocumentSaved(doc: Document) {
-    if (SpecialFiles.shouldReloadSettingsAfterSave(doc.entryPath)) {
+    if (SpecialFiles.shouldReloadSettingsAfterSave(doc.entry.path)) {
       for (const [ key, value ] of this.documents) {
         if (value.usageCount === 0) {
           this.documents.delete(key);

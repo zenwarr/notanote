@@ -5,12 +5,6 @@ import { StorageErrorCode } from "../../common/storage/StorageLayer";
 import { MemoryStorage } from "../../client/storage/MemoryStorage";
 
 
-// class TestFsEntry extends RuntimeStorageEntry {
-//   override async readText() {
-//     return "test";
-//   }
-// }
-
 describe("fs storage", () => {
   let fs!: FsStorage;
 
@@ -109,19 +103,3 @@ describe("memory storage", () => {
     expect(file.path.normalized).toEqual("/a/b/c.txt");
   });
 });
-
-
-// it("mounts", async () => {
-//   const fs = new CompositeFileStorage(new FsStorageLayer(path.join(__dirname, "test_data")));
-//
-//   fs.mount(new TestFsEntry(new StoragePath("/mounted.txt")));
-//
-//   const text = await (await fs.get(new StoragePath("mounted.txt")))?.readText();
-//   expect(text).toEqual("test");
-//
-//   const file = await (await fs.get(new StoragePath("/test.file.txt")))?.readText();
-//   expect(file).toEqual("hello, world\n");
-//
-//   const list = await fs.get(StoragePath.root).children();
-//   console.log(list);
-// });

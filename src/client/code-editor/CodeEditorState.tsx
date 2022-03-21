@@ -273,18 +273,13 @@ export class CodeEditorStateAdapter implements DocumentEditorStateAdapter {
   constructor(doc: Document) {
     this.doc = doc;
     const self = this;
-    this.state = createEditorState(doc.initialSerializedContent, doc.entryPath, doc.settings, {
+    this.state = createEditorState(doc.getLastSavedText(), doc.entry.path, doc.settings, {
       onUpdate: upd => {
         if (upd.docChanged) {
           self.doc.onChanges();
-
-          this.updatePreview(upd.state);
         }
         self.state = upd.state;
       }
-    });
-    mobx.makeObservable(this, {
-      preview: mobx.observable
     });
   }
 
@@ -294,25 +289,6 @@ export class CodeEditorStateAdapter implements DocumentEditorStateAdapter {
   }
 
 
-  async updatePreview(state: EditorState) {
-    // if (this.updateGenerationRunning) {
-    //   return;
-    // }
-    //
-    // this.updateGenerationRunning = true;
-    //
-    // try {
-    //   const markdown = state.doc.toString();
-    //   const preview = await unified.unified().use(remarkParse).use(remarkHtml).process(markdown);
-    //   this.preview = "" + preview;
-    // } finally {
-    //   this.updateGenerationRunning = false;
-    // }
-  }
-
-
   state: EditorState;
-  preview: string | undefined = undefined;
   private readonly doc: Document;
-  updateGenerationRunning = false;
 }

@@ -4,6 +4,7 @@ import { ClientWorkspace } from "./ClientWorkspace";
 import { FileSettings } from "../common/Settings";
 import { DocumentManager } from "./DocumentManager";
 import { StoragePath } from "../common/storage/StoragePath";
+import { StorageEntryPointer } from "../common/storage/StorageLayer";
 
 
 const AUTO_SAVE_TIMEOUT = luxon.Duration.fromObject({ seconds: 5 });
@@ -15,16 +16,21 @@ export interface DocumentEditorStateAdapter {
 
 
 export class Document {
-  constructor(content: string, entryPath: StoragePath, settings: FileSettings) {
-    this.entryPath = entryPath;
+  constructor(entry: StorageEntryPointer, settings: FileSettings) {
+    this.entry = entry;
     this.settings = settings;
-    this.initialSerializedContent = content;
+    this.text = "";
 
     makeObservable(this, {
       lastSave: observable,
       lastSaveError: observable,
       saveState: observable
     });
+  }
+
+
+  async loadText() {
+    this.text = await this.entry.readText();
   }
 
 
@@ -42,8 +48,13 @@ export class Document {
     if (this.adapter) {
       return this.adapter.serializeContent();
     } else {
-      return this.initialSerializedContent;
+      return this.text;
     }
+  }
+
+
+  getLastSavedText() {
+    return this.text;
   }
 
 
@@ -75,8 +86,9 @@ export class Document {
     this.saveState = SaveState.Saving;
 
     try {
-      const entry = await ClientWorkspace.instance.storage.get(this.entryPath);
-      await entry.writeOrCreate(await this.serializeContent());
+      const content = await this.serializeContent();
+      await this.entry.writeOrCreate(content);
+      this.text = content;
 
       this.lastSaveError = undefined;
       this.lastSave = new Date();
@@ -97,9 +109,9 @@ export class Document {
 
   private hadChangesWhileSaving = false;
   private saveTimer: any = undefined;
-  readonly entryPath: StoragePath;
+  readonly entry: StorageEntryPointer;
   readonly settings: FileSettings;
-  readonly initialSerializedContent: string;
+  private text: string;
   private adapter: DocumentEditorStateAdapter | undefined;
 
   lastSave: Date | undefined = undefined;
