@@ -8,10 +8,9 @@ import { ClientWorkspace } from "./ClientWorkspace";
 import { useWindowTitle } from "./useWindowTitle";
 import { CircularProgress } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { EditorProps, PluginManager } from "./plugin/PluginManager";
+import { EditorProps} from "./plugin/PluginManager";
 import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
 import { StoragePath } from "../common/storage/StoragePath";
-import { CodeEditor } from "./code-editor/CodeEditor";
 import { DocumentEditorProvider } from "./DocumentEditorProvider";
 
 

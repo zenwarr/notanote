@@ -1,7 +1,6 @@
 import { StorageEntryType } from "../../common/storage/StorageLayer";
 import cn from "classnames";
 import * as React from "react";
-import { useState } from "react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import FolderIcon from "@mui/icons-material/Folder";

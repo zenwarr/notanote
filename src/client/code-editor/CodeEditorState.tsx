@@ -1,5 +1,4 @@
-import * as mobx from "mobx";
-import { EditorSelection, EditorState, Extension, StateCommand, StateField } from "@codemirror/state";
+import { EditorSelection, EditorState, Extension, StateCommand } from "@codemirror/state";
 import { history, historyKeymap } from "@codemirror/history";
 import { getIndentation, IndentContext, indentOnInput, indentString, syntaxTree } from "@codemirror/language";
 import { defaultHighlightStyle, HighlightStyle } from "@codemirror/highlight";

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef} from "react";
 import { Document } from "../Document";
 import { DocumentManager } from "../DocumentManager";
 import "./CodeEditor.css";

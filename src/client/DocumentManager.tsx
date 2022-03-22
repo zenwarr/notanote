@@ -1,11 +1,9 @@
-import { Document, DocumentEditorStateAdapter, SaveState } from "./Document";
+import { Document, SaveState } from "./Document";
 import { computed, makeObservable, observable } from "mobx";
 import { ClientWorkspace } from "./ClientWorkspace";
 import { SpecialFiles } from "../common/SpecialFiles";
-import { PluginManager } from "./plugin/PluginManager";
 import { StoragePath } from "../common/storage/StoragePath";
 import { FileSettingsProvider } from "../common/workspace/FileSettingsProvider";
-import { CodeEditorStateAdapter } from "./code-editor/CodeEditorState";
 import { DocumentEditorProvider } from "./DocumentEditorProvider";
 
 

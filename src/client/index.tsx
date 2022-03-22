@@ -12,7 +12,7 @@ import { MemoryCachedStorage } from "../common/storage/MemoryCachedStorage";
 import { FileSettingsProvider } from "../common/workspace/FileSettingsProvider";
 import { StorageWithMounts } from "../common/storage/StorageWithMounts";
 import { DeviceConfigStorageEntry } from "./device/DeviceConfigStorageEntry";
-import { StoragePath } from "../common/storage/StoragePath";
+import { SpecialWorkspaceEntry } from "../common/workspace/Workspace";
 
 
 if ("serviceWorker" in navigator) {
@@ -34,7 +34,7 @@ const params = JSON.parse(root?.dataset.params ?? "{}");
 const DEFAULT_WORKSPACE_ID = "default";
 
 const remote = new StorageWithMounts(new RemoteHttpStorage(DEFAULT_WORKSPACE_ID));
-remote.mount(new DeviceConfigStorageEntry(new StoragePath("/.note/device.json")));
+remote.mount(new DeviceConfigStorageEntry(SpecialWorkspaceEntry.DeviceConfig));
 const fs = new MemoryCachedStorage(remote);
 ClientWorkspace.init(fs, DEFAULT_WORKSPACE_ID);
 ProfileManager.instance.userName = params.userName;

@@ -65,6 +65,13 @@ export class FileSettingsProvider {
           name: "pluginConfig.editor"
         }
       };
+    } else if (entryPath.valueOf() === SpecialWorkspaceEntry.DeviceConfig.valueOf()) {
+      specificSettings = {
+        ...specificSettings,
+        editor: {
+          name: "deviceConfig.editor"
+        }
+      };
     }
 
     return specificSettings;

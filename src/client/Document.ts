@@ -1,9 +1,7 @@
 import { makeObservable, observable } from "mobx";
 import * as luxon from "luxon";
-import { ClientWorkspace } from "./ClientWorkspace";
 import { FileSettings } from "../common/Settings";
 import { DocumentManager } from "./DocumentManager";
-import { StoragePath } from "../common/storage/StoragePath";
 import { StorageEntryPointer } from "../common/storage/StorageLayer";
 
 

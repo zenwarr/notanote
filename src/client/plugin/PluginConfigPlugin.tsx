@@ -26,7 +26,7 @@ import { ClientWorkspace } from "../ClientWorkspace";
 import { CommandManager } from "../commands/CommandManager";
 
 
-export interface PluginManagerConfig {
+interface PluginManagerConfig {
   plugins?: {
     name: string;
     gitCloneUrl: string;
@@ -46,7 +46,7 @@ function getUpdatePluginCommandName(plugin: string) {
 }
 
 
-export const PluginConfigEditor = observer((props: { doc: Document }) => {
+const PluginConfigEditor = observer((props: { doc: Document }) => {
   const state = useEditorState(props.doc);
   const [ cloneDialogOpen, setCloneDialogOpen ] = useState(false);
 
@@ -136,7 +136,7 @@ function CloneDialog(props: { open: boolean, onClose: () => void, doc: Document 
 }
 
 
-export class PluginConfigEditorState implements DocumentEditorStateAdapter {
+class PluginConfigEditorState implements DocumentEditorStateAdapter {
   constructor(doc: Document) {
     makeAutoObservable(this);
 
