@@ -31,7 +31,9 @@ export function CodeEditor(props: CodeEditorProps) {
 
     const cursorPos = editorState.selection.ranges[0]?.head;
     if (cursorPos != null) {
-      view.scrollPosIntoView(cursorPos);
+      view.dispatch({
+        effects: EditorView.scrollIntoView(cursorPos)
+      });
     }
 
     viewRef.current = view;

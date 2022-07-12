@@ -1,4 +1,4 @@
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { configure } from "mobx";
 import { ClientWorkspace } from "./ClientWorkspace";
@@ -46,10 +46,10 @@ try {
   alert("Failed to register plugins: " + error.message);
 }
 
-ReactDOM.render(<>
+createRoot(root!).render(<>
   <ErrorBoundary>
     <AppThemeProvider>
       <App/>
     </AppThemeProvider>
   </ErrorBoundary>
-</>, root);
+</>);

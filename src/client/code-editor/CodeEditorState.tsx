@@ -1,10 +1,8 @@
-import { EditorSelection, EditorState, Extension, StateCommand } from "@codemirror/state";
-import { history, historyKeymap } from "@codemirror/history";
+import { EditorSelection, EditorState, Extension, StateCommand, Text } from "@codemirror/state";
+import { history, historyKeymap } from "@codemirror/commands";
 import { getIndentation, IndentContext, indentOnInput, indentString, syntaxTree } from "@codemirror/language";
-import { defaultHighlightStyle, HighlightStyle } from "@codemirror/highlight";
-import { bracketMatching } from "@codemirror/matchbrackets";
-import { closeBrackets, closeBracketsKeymap } from "@codemirror/closebrackets";
-import { autocompletion, completionKeymap } from "@codemirror/autocomplete";
+import { defaultHighlightStyle, HighlightStyle, bracketMatching, syntaxHighlighting } from "@codemirror/language";
+import { autocompletion, completionKeymap, closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import {
   drawSelection,
@@ -24,7 +22,6 @@ import { json } from "@codemirror/lang-json";
 import { javascript } from "@codemirror/lang-javascript";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { CHECKBOX_RE, checkboxPlugin } from "./ReactWidget";
-import { Text } from "@codemirror/text";
 import { NodeProp } from "@lezer/common";
 import { languages } from "@codemirror/language-data";
 import { format } from "date-fns";
@@ -68,9 +65,9 @@ function getPluginsFromSettings(entryPath: StoragePath, settings: FileSettings):
     }));
   }
 
-  if (entryPath.basename.endsWith(".md")) {
-    r.push(checkboxPlugin);
-  }
+  // if (entryPath.basename.endsWith(".md")) {
+  //   r.push(checkboxPlugin);
+  // }
 
   return r;
 }
@@ -117,11 +114,11 @@ export function createEditorState(content: string, entryPath: StoragePath, setti
       drawSelection(),
       EditorState.allowMultipleSelections.of(true),
       indentOnInput(),
-      defaultHighlightStyle.fallback,
       bracketMatching(),
       closeBrackets(),
       autocompletion(),
-      HighlightStyle.define(createHighlightStyle(settings)),
+      syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+      syntaxHighlighting(HighlightStyle.define(createHighlightStyle(settings))),
       highlightSelectionMatches(),
       placeholder("< your note here >"),
       EditorView.lineWrapping,

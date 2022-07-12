@@ -1,4 +1,5 @@
-import { Tag, tags as t, TagStyle } from "@codemirror/highlight";
+import { TagStyle } from "@codemirror/language";
+import { Tag, tags as t } from "@lezer/highlight";
 import { BlockSettings, FileSettings } from "../../common/Settings";
 
 

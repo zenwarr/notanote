@@ -1,4 +1,4 @@
-import { Decoration, DecorationSet, EditorView, MatchDecorator, PluginField, ViewPlugin, ViewUpdate, WidgetType } from "@codemirror/view";
+import { Decoration, DecorationSet, EditorView, MatchDecorator, ViewPlugin, ViewUpdate, WidgetType } from "@codemirror/view";
 import * as ReactDOM from "react-dom";
 import { ReactElement } from "react";
 
@@ -65,21 +65,19 @@ export const CHECKBOX_RE = /\[[ x]]/g;
 
 export const checkboxPlugin = ViewPlugin.fromClass(class {
   decorations: DecorationSet;
-  decorator: MatchDecorator;
+  matcher: MatchDecorator;
 
 
   constructor(view: EditorView) {
-    this.decorator = new MatchDecorator({
+    this.matcher = new MatchDecorator({
       regexp: CHECKBOX_RE,
-      decoration: match => {
-        return Decoration.replace({
-          widget: new CheckboxWidget(match[0] === "[x]"),
-          inclusive: true
-        });
-      }
+      decoration: match => Decoration.replace({
+        widget: new CheckboxWidget(match[0] === "[x]"),
+        inclusive: true
+      })
     });
 
-    this.decorations = this.decorator.createDeco(view);
+    this.decorations = this.matcher.createDeco(view);
   }
 
 
@@ -91,7 +89,7 @@ export const checkboxPlugin = ViewPlugin.fromClass(class {
    */
   update(update: ViewUpdate) {
     if (update.docChanged || update.viewportChanged) {
-      this.decorations = this.decorator.updateDeco(update, this.decorations);
+      this.decorations = this.matcher.updateDeco(update, this.decorations);
     }
   }
 }, {
@@ -105,5 +103,5 @@ export const checkboxPlugin = ViewPlugin.fromClass(class {
    * In this case, we report to editor that ranges covering checkboxes should be treated as atomic values.
    * It means cursor should never be placed inside them.
    */
-  provide: PluginField.atomicRanges.from(v => v.decorations)
+  // provide: PluginField.atomicRanges.from(v => v.decorations)
 });
