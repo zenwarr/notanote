@@ -1,4 +1,4 @@
-FROM node:16.8.0
+FROM node:18.5.0
 
 ARG CONTAINER_USER_ID
 
