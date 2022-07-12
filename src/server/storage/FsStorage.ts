@@ -1,5 +1,4 @@
 import {
-  joinNestedPathSecure,
   StorageEntryPointer,
   FileStats,
   StorageError,
@@ -7,8 +6,7 @@ import {
   StorageLayer
 } from "../../common/storage/StorageLayer";
 import * as fs from "fs";
-import * as path from "path";
-import { StoragePath } from "../../common/storage/StoragePath";
+import { joinNestedPathSecure, StoragePath } from "../../common/storage/StoragePath";
 import { asyncExists } from "../plugin/PluginManager";
 
 
@@ -18,19 +16,19 @@ export class FsStorage extends StorageLayer {
   }
 
 
-  override async createDir(path: StoragePath) {
-    const realPath = this.toAbsolute(path);
+  override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
+    const realPath = this.toAbsolutePath(path);
     await fs.promises.mkdir(realPath, { recursive: true });
-    return new FsStorageEntry(path, this.toAbsolute(path));
+    return new StorageEntryPointer(path, this);
   }
 
 
-  override get(path: StoragePath) {
-    return new FsStorageEntry(path, this.toAbsolute(path));
+  override get(path: StoragePath): StorageEntryPointer {
+    return new StorageEntryPointer(path, this);
   }
 
 
-  protected toAbsolute(path: StoragePath): string {
+  protected toAbsolutePath(path: StoragePath): string {
     const result = joinNestedPathSecure(this.rootPath, path.normalized);
     if (!result) {
       throw new Error("Path is outside root directory");
@@ -38,71 +36,67 @@ export class FsStorage extends StorageLayer {
 
     return result;
   }
-}
 
 
-export class FsStorageEntry extends StorageEntryPointer {
-  constructor(path: StoragePath, absPath: string) {
-    super(path);
-    this.absPath = absPath;
-  }
+  override async children(path: StoragePath): Promise<StorageEntryPointer[]> {
+    const entryAbsPath = this.toAbsolutePath(path);
 
-
-  private readonly absPath: string;
-
-
-  override async children(): Promise<StorageEntryPointer[]> {
     try {
-      const entries = await fs.promises.readdir(this.absPath);
-      return entries.map(entry => new FsStorageEntry(this.path.child(entry), path.join(this.absPath, entry)));
+      const entries = await fs.promises.readdir(this.toAbsolutePath(path));
+      return entries.map(entry => new StorageEntryPointer(path.child(entry), this));
     } catch (err: any) {
       if (err.code === "ENOENT") {
-        throw new StorageError(StorageErrorCode.NotExists, this.path, "Path does not exist");
+        throw new StorageError(StorageErrorCode.NotExists, path, "Path does not exist");
       } else if (err.code === "ENOTDIR") {
-        throw new StorageError(StorageErrorCode.NotDirectory, this.path, "Not a directory");
+        throw new StorageError(StorageErrorCode.NotDirectory, path, "Not a directory");
       }
       throw err;
     }
   }
 
 
-  override async readText(): Promise<string> {
-    return fs.promises.readFile(this.absPath, "utf-8");
+  override async readText(path: StoragePath): Promise<string> {
+    return fs.promises.readFile(this.toAbsolutePath(path), "utf-8");
   }
 
 
-  override async remove(): Promise<void> {
-    const stat = await fs.promises.stat(this.absPath);
+  override async remove(path: StoragePath): Promise<void> {
+    const absPath = this.toAbsolutePath(path);
+    const stat = await fs.promises.stat(absPath);
     if (stat.isDirectory()) {
-      await fs.promises.rmdir(this.absPath, {
+      await fs.promises.rmdir(absPath, {
         recursive: true
       });
     } else {
-      await fs.promises.rm(this.absPath);
+      await fs.promises.rm(absPath);
     }
   }
 
 
-  override async stats(): Promise<FileStats> {
-    const stats = await fs.promises.stat(this.absPath);
+  override async stats(path: StoragePath): Promise<FileStats> {
+    const absPath = this.toAbsolutePath(path);
+    const stats = await fs.promises.stat(absPath);
     return {
       isDirectory: stats.isDirectory(),
+      size: stats.isDirectory() ? undefined : stats.size,
       createTs: Math.floor(stats.birthtimeMs),
       updateTs: Math.floor(stats.mtimeMs)
     };
   }
 
 
-  override async writeOrCreate(content: Buffer | string): Promise<void> {
+  override async writeOrCreate(path: StoragePath, content: Buffer | string): Promise<StorageEntryPointer> {
+    const absPath = this.toAbsolutePath(path);
     if (typeof content === "string") {
       content = Buffer.from(content, "utf-8");
     }
 
-    await fs.promises.writeFile(this.absPath, content);
+    await fs.promises.writeFile(absPath, content);
+    return new StorageEntryPointer(path, this);
   }
 
 
-  override async exists(): Promise<boolean> {
-    return asyncExists(this.absPath);
+  override async exists(path: StoragePath): Promise<boolean> {
+    return asyncExists(this.toAbsolutePath(path));
   }
 }

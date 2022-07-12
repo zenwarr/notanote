@@ -1,9 +1,9 @@
 import * as React from "react";
-import { MemoryStorageEntryPointer } from "../storage/MemoryStorage";
+import { StoragePath } from "../../common/storage/StoragePath.js";
 
 
 export interface TreeCtxData {
-  openMenu: (x: number, y: number, entry: MemoryStorageEntryPointer) => void;
+  openMenu: (x: number, y: number, path: StoragePath) => void;
   closeMenu: () => void;
 }
 

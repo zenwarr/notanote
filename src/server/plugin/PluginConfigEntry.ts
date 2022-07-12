@@ -6,8 +6,8 @@ import { StoragePath } from "../../common/storage/StoragePath";
 
 
 export class PluginConfigStorageEntry extends RuntimeStorageEntry {
-  constructor(private readonly wsId: string, private readonly realRootPath: string, path: StoragePath) {
-    super(path);
+  constructor(private readonly wsId: string, private readonly realRootPath: string) {
+    super();
   }
 
 

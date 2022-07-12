@@ -1,8 +1,21 @@
+import { walkSerializableStorageEntries } from "../workspace/SerializableStorageEntryData";
 import { FileStats, StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "./StorageLayer";
 import { StoragePath } from "./StoragePath";
-import { walkSerializableStorageEntries } from "../workspace/SerializableStorageEntryData";
 
 
+export abstract class MountedFile {
+  abstract readText(path: StoragePath): Promise<string>;
+
+  abstract stats(path: StoragePath): Promise<FileStats>;
+
+  abstract write(path: StoragePath, content: Buffer | string): Promise<void>;
+}
+
+
+/**
+ * Enriches a storage layer with a set of mounted files.
+ * We support mounting files only, not directories.
+ */
 export class StorageWithMounts extends StorageLayer {
   constructor(base: StorageLayer) {
     super();
@@ -11,6 +24,7 @@ export class StorageWithMounts extends StorageLayer {
 
 
   private readonly base: StorageLayer;
+  private mounts = new Map<string, MountedFile>();
 
 
   override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
@@ -18,55 +32,23 @@ export class StorageWithMounts extends StorageLayer {
       throw new StorageError(StorageErrorCode.AlreadyExists, path, "Storage entry already exists");
     }
 
-    let parent = path.parentDir;
-    do {
-      if (this.mounts.has(parent.normalized)) {
-        throw new StorageError(StorageErrorCode.InvalidStructure, path, "Storage entry already exists");
-      }
-      parent = parent.parentDir;
-    } while (!parent.isEqual(StoragePath.root));
-
-    const createdDir = await this.base.createDir(path);
-    return new MountableStorageEntryPointer(this, createdDir);
+    await this.base.createDir(path);
+    return new StorageEntryPointer(path, this);
   }
 
 
   override get(path: StoragePath): StorageEntryPointer {
-    return new MountableStorageEntryPointer(this, this.getPointer(path));
-    ;
+    return new StorageEntryPointer(path, this);
   }
 
 
-  mount(entry: StorageEntryPointer) {
-    const normalized = entry.path.normalized;
+  mount(path: StoragePath, mountedFile: MountedFile) {
+    const normalized = path.normalized;
     if (this.mounts.has(normalized)) {
       throw new Error(`Path '${ normalized }' is already mounted`);
     }
 
-    this.mounts.set(normalized, entry);
-  }
-
-
-  getMountedChildren(path: StoragePath): StorageEntryPointer[] {
-    const result: StorageEntryPointer[] = [];
-    for (const [ key, value ] of Object.entries(this.mounts)) {
-      const mountedPath = new StoragePath(key);
-      if (mountedPath.parentDir === path) {
-        result.push(value);
-      }
-    }
-
-    return result;
-  }
-
-
-  private getPointer(path: StoragePath): StorageEntryPointer {
-    const mounted = this.mounts.get(path.normalized);
-    if (mounted) {
-      return mounted;
-    } else {
-      return this.base.get(path);
-    }
+    this.mounts.set(normalized, mountedFile);
   }
 
 
@@ -77,11 +59,11 @@ export class StorageWithMounts extends StorageLayer {
     }
 
     const mountParentsToChildren = new Map<string, string[]>();
-    for (const mount of this.mounts.values()) {
-      const mountParent = mount.path.parentDir.normalized;
-      const children = mountParentsToChildren.get(mountParent) || [];
-      children.push(mount.path.normalized);
-      mountParentsToChildren.set(mountParent, children);
+    for (const [ mountPath, mount ] of this.mounts.entries()) {
+      const mountParentPath = new StoragePath(mountPath).parentDir.normalized;
+      const children = mountParentsToChildren.get(mountParentPath) || [];
+      children.push(mountPath);
+      mountParentsToChildren.set(mountParentPath, children);
     }
 
     for (const entry of walkSerializableStorageEntries(all)) {
@@ -93,9 +75,9 @@ export class StorageWithMounts extends StorageLayer {
         }
 
         entry.children.push({
-          path: child.path.normalized,
-          stats: await child.stats(),
-          textContent: await child.readText()
+          path: childPath,
+          stats: await child.stats(new StoragePath(childPath)),
+          textContent: await child.readText(new StoragePath(childPath))
         });
       }
     }
@@ -104,50 +86,65 @@ export class StorageWithMounts extends StorageLayer {
   }
 
 
-  private mounts = new Map<string, StorageEntryPointer>();
-}
+  override async children(path: StoragePath): Promise<StorageEntryPointer[]> {
+    const mountedChildren: StorageEntryPointer[] = [];
+    for (const [ key, value ] of Object.entries(this.mounts)) {
+      const mountedPath = new StoragePath(key);
+      if (mountedPath.parentDir === path) {
+        mountedChildren.push(new StorageEntryPointer(mountedPath, this));
+      }
+    }
 
-
-export class MountableStorageEntryPointer extends StorageEntryPointer {
-  constructor(storage: StorageWithMounts, entry: StorageEntryPointer) {
-    super(entry.path);
-    this.storage = storage;
-    this.entry = entry;
+    const children = await this.base.children(path);
+    return [ ...children, ...mountedChildren ];
   }
 
 
-  private readonly storage: StorageWithMounts;
-  private readonly entry: StorageEntryPointer;
+  override async exists(path: StoragePath): Promise<boolean> {
+    if (this.mounts.has(path.normalized)) {
+      return true;
+    }
 
-
-  override async children(): Promise<StorageEntryPointer[]> {
-    const mountedChildren = this.storage.getMountedChildren(this.path);
-    const children = await this.entry.children();
-    return [ ...mountedChildren, ...children ];
+    return this.base.exists(path);
   }
 
 
-  override async exists(): Promise<boolean> {
-    return this.entry.exists();
+  override async readText(path: StoragePath): Promise<string> {
+    const mounted = this.mounts.get(path.normalized);
+    if (mounted) {
+      return mounted.readText(path);
+    }
+
+    return this.base.readText(path);
   }
 
 
-  override async readText(): Promise<string> {
-    return this.entry.readText();
+  override async remove(path: StoragePath): Promise<void> {
+    const mounted = this.mounts.get(path.normalized);
+    if (mounted) {
+      throw new StorageError(StorageErrorCode.NoPermissions, path, "Cannot remove mounted file");
+    }
+
+    return this.base.remove(path);
   }
 
 
-  override async remove(): Promise<void> {
-    await this.entry.remove();
+  override async stats(path: StoragePath): Promise<FileStats> {
+    const mounted = this.mounts.get(path.normalized);
+    if (mounted) {
+      return mounted.stats(path);
+    }
+
+    return this.base.stats(path);
   }
 
 
-  override async stats(): Promise<FileStats> {
-    return this.entry.stats();
-  }
+  override async writeOrCreate(path: StoragePath, content: Buffer | string): Promise<StorageEntryPointer> {
+    const mounted = this.mounts.get(path.normalized);
+    if (mounted) {
+      await mounted.write(path, content);
+    }
 
-
-  override async writeOrCreate(content: Buffer | string): Promise<void> {
-    await this.entry.writeOrCreate(content);
+    return this.base.writeOrCreate(path, content);
   }
 }

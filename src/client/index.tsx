@@ -34,7 +34,7 @@ const params = JSON.parse(root?.dataset.params ?? "{}");
 const DEFAULT_WORKSPACE_ID = "default";
 
 const remote = new StorageWithMounts(new RemoteHttpStorage(DEFAULT_WORKSPACE_ID));
-remote.mount(new DeviceConfigStorageEntry(SpecialWorkspaceEntry.DeviceConfig));
+remote.mount(SpecialWorkspaceEntry.DeviceConfig, new DeviceConfigStorageEntry());
 const fs = new MemoryCachedStorage(remote);
 ClientWorkspace.init(fs, DEFAULT_WORKSPACE_ID);
 ProfileManager.instance.userName = params.userName;

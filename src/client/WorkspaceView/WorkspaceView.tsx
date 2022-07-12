@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import cn from "classnames";
 import { Box, IconButton } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
+import { SerializableStorageEntryData } from "../../common/workspace/SerializableStorageEntryData.js";
 import { ClientWorkspace } from "../ClientWorkspace";
 import { observer } from "mobx-react-lite";
 import { CreateEntryDialog } from "../CreateEntryDialog";
@@ -10,18 +11,16 @@ import { CreateNewFolderOutlined, DeleteForever, PostAddOutlined } from "@mui/ic
 import { useNavigate } from "react-router";
 import { StoragePath } from "../../common/storage/StoragePath";
 import { StorageEntryType } from "../../common/storage/StorageLayer";
-import { MemoryCachedEntryPointer } from "../../common/storage/MemoryCachedStorage";
 import { FixedSizeTree } from "react-vtree";
 import { ContainerWithSizeDetection } from "../utils/ContainerWithSizeDetection";
 import { TreeNode } from "./TreeNode";
 import { TreeState, treeWalker } from "./TreeState";
 import { TreeContext } from "./TreeContext";
-import { MemoryStorageEntryPointer } from "../storage/MemoryStorage";
 import { TreeMenu } from "./TreeMenu";
 
 
 export interface WorkspaceViewProps {
-  onFileSelected?: (entry: MemoryCachedEntryPointer) => void;
+  onFileSelected?: (entry: StoragePath) => void;
   treeWithPadding?: boolean;
 }
 
@@ -68,10 +67,10 @@ function getCreateOptions(selectedPath: StoragePath | undefined, createType: Sto
   if (!selectedPath) {
     parentPath = StoragePath.root;
   } else {
-    const entry = ClientWorkspace.instance.storage.get(selectedPath);
+    const entry = ClientWorkspace.instance.storage.getMemoryData(selectedPath);
     if (!entry) {
       parentPath = StoragePath.root;
-    } else if (entry.memory.type === StorageEntryType.Dir) {
+    } else if (entry.stats.isDirectory) {
       parentPath = selectedPath;
     } else {
       parentPath = selectedPath.parentDir;
@@ -98,17 +97,17 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const classes = useStyles();
 
   function onNodeSelect(value: string) {
-    const selectedEntry = ClientWorkspace.instance.storage.get(new StoragePath(value));
+    const selectedEntry = ClientWorkspace.instance.storage.getMemoryData(new StoragePath(value));
     if (!selectedEntry) {
       return;
     }
 
     ClientWorkspace.instance.selectedEntry = new StoragePath(value);
-    const isDir = selectedEntry.memory.type === StorageEntryType.Dir;
+    const isDir = selectedEntry.stats.isDirectory;
 
     if (!isDir) {
       navigate(`/f/${ value }`);
-      props.onFileSelected?.(selectedEntry);
+      props.onFileSelected?.(new StoragePath(selectedEntry.path));
     } else {
       expand.onToggle(value);
     }
@@ -138,7 +137,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   }
 
   const treeState: TreeState = {
-    root: cw.storage.memory.root,
+    root: cw.storage.memory.data,
     selected: cw.selectedEntry?.normalized || "",
     onSelect: onNodeSelect,
     expanded: expand.expanded
@@ -146,15 +145,15 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 
   const containerClassName = cn(classes.treeContainer, { [classes.treeContainerPadding]: props.treeWithPadding });
 
-  const [ menuEntry, setMenuEntry ] = useState<MemoryStorageEntryPointer | undefined>();
+  const [ menuEntry, setMenuEntry ] = useState<SerializableStorageEntryData | undefined>();
   const [ menuState, setMenuState ] = useState<{
     x: number;
     y: number
   } | undefined>();
 
-  function onMenuOpen(x: number, y: number, entry: MemoryStorageEntryPointer) {
+  function onMenuOpen(x: number, y: number, path: StoragePath) {
     setMenuState({ x, y });
-    setMenuEntry(entry);
+    setMenuEntry(ClientWorkspace.instance.storage.getMemoryData(path));
   }
 
   function onMenuClose() {
@@ -202,7 +201,8 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
     </TreeContext.Provider>
 
     <TreeMenu open={ menuState != null } onClose={ () => setMenuState(undefined) }
-              entry={ menuEntry } x={ menuState?.x } y={ menuState?.y }/>
+              entry={ menuEntry ? cw.storage.get(new StoragePath(menuEntry.path)) : undefined }
+              x={ menuState?.x } y={ menuState?.y }/>
   </>;
 });
 

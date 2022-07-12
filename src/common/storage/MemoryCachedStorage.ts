@@ -1,8 +1,11 @@
-import { StorageEntryPointer, FileStats, StorageLayer, StorageEntryType } from "./StorageLayer";
+import { StorageEntryPointer, FileStats, StorageLayer, StorageEntryType, StorageError, StorageErrorCode } from "./StorageLayer";
 import { StoragePath } from "./StoragePath";
-import { MemoryStorageEntryPointer, MemoryStorage } from "../../client/storage/MemoryStorage";
+import { MemoryStorage } from "../../client/storage/MemoryStorage";
 
 
+/**
+ * Proxies access to another storage and caches its data.
+ */
 export class MemoryCachedStorage extends StorageLayer {
   constructor(remoteStorage: StorageLayer) {
     super();
@@ -14,71 +17,71 @@ export class MemoryCachedStorage extends StorageLayer {
   readonly memory = new MemoryStorage();
 
 
-  override async createDir(path: StoragePath): Promise<MemoryCachedEntryPointer> {
-    await this.remote.createDir(path);
-    const created = await this.memory.createDir(path);
-    return new MemoryCachedEntryPointer(created, this);
+  getMemoryData(path: StoragePath) {
+    return this.memory.getDataAtPath(path);
   }
 
 
-  override get(path: StoragePath): MemoryCachedEntryPointer {
-    return new MemoryCachedEntryPointer(this.memory.get(path), this);
+  override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
+    await this.remote.createDir(path);
+    await this.memory.createDir(path);
+    return new StorageEntryPointer(path, this);
+  }
+
+
+  override get(path: StoragePath): StorageEntryPointer {
+    return new StorageEntryPointer(path, this);
   }
 
 
   override async loadAll() {
     return this.remote.loadAll();
   }
-}
 
 
-export class MemoryCachedEntryPointer extends StorageEntryPointer {
-  constructor(memory: MemoryStorageEntryPointer, storage: MemoryCachedStorage) {
-    super(memory.path);
-    this.memory = memory;
-    this.storage = storage;
+  override async children(path: StoragePath): Promise<StorageEntryPointer[]> {
+    const cachedChildren = await this.memory.children(path);
+    return cachedChildren.map(p => new StorageEntryPointer(path, this));
   }
 
 
-  readonly memory: MemoryStorageEntryPointer;
-  readonly storage: MemoryCachedStorage;
-
-
-  override async children(): Promise<StorageEntryPointer[]> {
-    return (await this.memory.children()).map(p => new MemoryCachedEntryPointer(p, this.storage));
+  override async exists(path: StoragePath): Promise<boolean> {
+    return this.memory.exists(path);
   }
 
 
-  override async exists(): Promise<boolean> {
-    return this.memory.exists();
-  }
-
-
-  override async readText(): Promise<string> {
-    if (this.memory.content == null && this.memory.type === StorageEntryType.File) {
-      const remoteEntry = this.storage.remote.get(this.path);
-      this.memory.content = await remoteEntry.readText();
+  override async readText(path: StoragePath): Promise<string> {
+    const cached = await this.memory.getDataAtPath(path);
+    if (!cached) {
+      throw new StorageError(StorageErrorCode.NotExists, path, `File does not exist`);
     }
 
-    return this.memory.readText();
+    if (cached.stats.isDirectory) {
+      throw new StorageError(StorageErrorCode.NotFile, path, `Not a file`);
+    }
+
+    if (cached.textContent == null) {
+      cached.textContent = await this.remote.readText(path);
+    }
+
+    return cached.textContent;
   }
 
 
-  override async remove(): Promise<void> {
-    const remoteEntry = await this.storage.remote.get(this.path);
-    await remoteEntry.remove();
-    await this.memory.remove();
+  override async remove(path: StoragePath): Promise<void> {
+    await this.remote.remove(path);
+    await this.memory.remove(path);
   }
 
 
-  override async stats(): Promise<FileStats> {
-    return this.memory.stats();
+  override async stats(path: StoragePath): Promise<FileStats> {
+    return this.memory.stats(path);
   }
 
 
-  override async writeOrCreate(content: Buffer | string): Promise<void> {
-    const remoteEntry = await this.storage.remote.get(this.path);
-    await remoteEntry.writeOrCreate(content);
-    await this.memory.writeOrCreate(content);
+  override async writeOrCreate(path: StoragePath, content: Buffer | string): Promise<StorageEntryPointer> {
+    await this.remote.writeOrCreate(path, content);
+    await this.memory.writeOrCreate(path, content);
+    return new StorageEntryPointer(path, this);
   }
 }

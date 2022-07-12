@@ -1,4 +1,5 @@
 import { RuntimeStorageEntry } from "../../common/storage/RuntimeStorageEntry";
+import { StoragePath } from "../../common/storage/StoragePath";
 
 
 const DEVICE_CONFIG_KEY = "nuclear-device-config";
@@ -32,7 +33,7 @@ export class DeviceConfigStorageEntry extends RuntimeStorageEntry {
   }
 
 
-  override async writeOrCreate(content: Buffer | string) {
+  override async write(path: StoragePath, content: Buffer | string) {
     if (typeof content !== "string") {
       throw new Error("DeviceConfigStorageEntry: writeOrCreate: content must be a string");
     }

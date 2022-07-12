@@ -1,8 +1,9 @@
+import levenshtein from "js-levenshtein";
+import { StoragePath } from "../common/storage/StoragePath";
+import { SerializableStorageEntryData } from "../common/workspace/SerializableStorageEntryData";
+import { ClientWorkspace } from "./ClientWorkspace";
 import { PaletteOption } from "./Palette";
 import { RecentDocStorage } from "./RecentDocStorage";
-import levenshtein from "js-levenshtein";
-import { ClientWorkspace } from "./ClientWorkspace";
-import { StorageEntryPointer } from "../common/storage/StorageLayer";
 
 
 const COMPLETE_RESULT_COUNT = 10;
@@ -11,13 +12,13 @@ const COMPLETE_RESULT_COUNT = 10;
 export function filePaletteCompleter(value: string): PaletteOption[] {
   if (!value) {
     const recentDocs = RecentDocStorage.instance.getRecentDocs();
-    let recentEntries: (StorageEntryPointer | undefined)[] = [];
+    let recentEntries: (SerializableStorageEntryData | undefined)[] = [];
     ClientWorkspace.instance.walk(entry => {
-      if (entry.type !== "file") {
+      if (entry.stats.isDirectory) {
         return false;
       }
 
-      const recentIndex = recentDocs.indexOf(entry.path.normalized);
+      const recentIndex = recentDocs.indexOf(new StoragePath(entry.path).normalized);
       if (recentIndex < 0) {
         return false;
       }
@@ -34,7 +35,7 @@ export function filePaletteCompleter(value: string): PaletteOption[] {
     }
 
     return recentEntries.map(entry => {
-      const path = entry!.path;
+      const path = new StoragePath(entry!.path); // because we filter the list above
       return {
         value: path.normalized,
         content: path.basename,
@@ -48,13 +49,14 @@ export function filePaletteCompleter(value: string): PaletteOption[] {
   const result: PaletteOption[] = [];
   const resultIds: string[] = [];
   ClientWorkspace.instance.walk(entry => {
-    if (entry.type === "file" && entry.path.normalized.toLowerCase().includes(value)) {
+    const entryPath = new StoragePath(entry.path);
+    if (!entry.stats.isDirectory && entryPath.normalized.toLowerCase().includes(value)) {
       result.push({
-        value: entry.path.normalized,
-        content: entry.path.basename,
-        description: entry.path.normalized
+        value: entryPath.normalized,
+        content: entryPath.basename,
+        description: entryPath.normalized
       });
-      resultIds.push(entry.path.normalized);
+      resultIds.push(entryPath.normalized);
       if (result.length === COMPLETE_RESULT_COUNT) {
         return true;
       }
@@ -74,23 +76,26 @@ export function filePaletteCompleter(value: string): PaletteOption[] {
 function getClosestEntries(value: string, count: number, exclude: string[]): PaletteOption[] {
   value = value.toLowerCase();
 
-  const allEntries: StorageEntryPointer[] = [];
+  const allEntries: SerializableStorageEntryData[] = [];
   const distance = new Map<string, number>();
   ClientWorkspace.instance.walk(entry => {
-    const entryPath = entry.path.normalized;
-    if (entry.type === "file" && !exclude.includes(entryPath)) {
+    let normalizedPath = new StoragePath(entry.path).normalized;
+    if (!entry.stats.isDirectory && !exclude.includes(normalizedPath)) {
       allEntries.push(entry);
-      distance.set(entryPath, levenshtein(value, entryPath.toLowerCase()));
+      distance.set(normalizedPath, levenshtein(value, normalizedPath.toLowerCase()));
     }
 
     return false;
   });
 
-  allEntries.sort((a, b) => distance.get(a.path.normalized)! - distance.get(b.path.normalized)!);
+  allEntries.sort((a, b) => distance.get(new StoragePath(a.path).normalized)! - distance.get(new StoragePath(b.path).normalized)!);
 
-  return allEntries.slice(0, count).map(entry => ({
-    value: entry.path.normalized,
-    content: entry.path.basename,
-    description: entry.path.normalized
-  }));
+  return allEntries.slice(0, count).map(entry => {
+    let entryPath = new StoragePath(entry.path);
+    return {
+      value: entryPath.normalized,
+      content: entryPath.basename,
+      description: entryPath.normalized
+    }
+  });
 }

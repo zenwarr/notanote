@@ -1,38 +1,25 @@
-import { StorageEntryPointer } from "./StorageLayer";
+import { StorageError, StorageErrorCode } from "./StorageLayer";
 import { StoragePath } from "./StoragePath";
+import { MountedFile } from "./StorageWithMounts";
 
 
-export abstract class RuntimeStorageEntry extends StorageEntryPointer {
-  constructor(path: StoragePath) {
-    super(path);
-  }
-
-
-  override async stats() {
+export abstract class RuntimeStorageEntry extends MountedFile {
+  override async stats(path: StoragePath) {
     return {
       isDirectory: false,
+      size: undefined,
       createTs: undefined,
       updateTs: undefined
     };
   }
 
 
-  override async writeOrCreate(content: Buffer | string) {
-    throw new Error("Operation not supported for this entry");
+  override async write(path: StoragePath, content: Buffer | string) {
+    throw new StorageError(StorageErrorCode.NotSupported, path, "Operation not supported for this entry");
   }
 
 
-  override async remove() {
-    throw new Error("Operation not supported for this entry");
-  }
-
-
-  override async children(): Promise<StorageEntryPointer[]> {
-    throw new Error("Operation not supported for this entry");
-  }
-
-
-  override async exists(): Promise<boolean> {
-    return true;
+  override async readText(path: StoragePath): Promise<string> {
+    throw new StorageError(StorageErrorCode.NotSupported, path, "Operation not supported for this entry");
   }
 }

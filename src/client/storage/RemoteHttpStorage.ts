@@ -1,4 +1,4 @@
-import { StorageEntryPointer, FileStats, StorageLayer } from "../../common/storage/StorageLayer";
+import { StorageEntryPointer, FileStats, StorageLayer, StorageErrorCode, StorageError } from "../../common/storage/StorageLayer";
 import { StoragePath } from "../../common/storage/StoragePath";
 import ky from "ky";
 import { SerializableStorageEntryData } from "../../common/workspace/SerializableStorageEntryData";
@@ -13,6 +13,7 @@ export class RemoteHttpStorage extends StorageLayer {
 
 
   readonly wsId: string;
+  readonly cache = new Map<string, SerializableStorageEntryData | undefined>();
 
 
   override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
@@ -23,106 +24,95 @@ export class RemoteHttpStorage extends StorageLayer {
       }
     }).json<SerializableStorageEntryData>();
 
-    return new RemoteStorageEntry(path, this.wsId, reply);
+    return new StorageEntryPointer(path, this);
   }
 
 
   override get(path: StoragePath): StorageEntryPointer {
-    return new RemoteStorageEntry(path, this.wsId);
+    return new StorageEntryPointer(path, this);
   }
 
 
   override async loadAll(): Promise<SerializableStorageEntryData> {
     return ky.get(`/api/storages/${ this.wsId }/tree`).json<SerializableStorageEntryData>();
   }
-}
 
 
-export class RemoteStorageEntry extends StorageEntryPointer {
-  constructor(path: StoragePath, wsId: string, remoteData?: SerializableStorageEntryData) {
-    super(path);
-    this.wsId = wsId;
-    this.remoteData = remoteData;
-  }
-
-
-  private readonly wsId: string;
-  private remoteData: SerializableStorageEntryData | undefined;
-  private remoteExists: boolean | undefined;
-
-
-  override async children(): Promise<StorageEntryPointer[]> {
-    const reply = await ky(`/api/storages/${ this.wsId }/files/${ this.path.normalized }`, {
+  override async children(path: StoragePath): Promise<StorageEntryPointer[]> {
+    const reply = await ky(`/api/storages/${ this.wsId }/files/${ path.normalized }`, {
       searchParams: {
         children: true
       }
     }).json<SerializableStorageEntryData>();
-    this.remoteExists = true;
 
     assert(reply.children != null);
 
-    return reply.children.map(entry => new RemoteStorageEntry(new StoragePath(entry.path), this.wsId, entry));
+    return reply.children.map(entry => new StorageEntryPointer(new StoragePath(entry.path), this));
   }
 
 
-  override async readText(): Promise<string> {
-    const reply = await ky(`/api/storages/${ this.wsId }/files/${ this.path.normalized }`, {
+  override async readText(path: StoragePath): Promise<string> {
+    const reply = await ky(`/api/storages/${ this.wsId }/files/${ path.normalized }`, {
       searchParams: {
         text: true
       }
     }).json<SerializableStorageEntryData>();
-    this.remoteExists = true;
     assert(reply.textContent != null);
 
     return reply.textContent;
   }
 
 
-  override async remove(): Promise<void> {
-    await ky.delete(`/api/storages/${ this.wsId }/files/${ this.path.normalized }`).json();
-    this.remoteExists = false;
+  override async remove(path: StoragePath): Promise<void> {
+    await ky.delete(`/api/storages/${ this.wsId }/files/${ path.normalized }`).json();
+    this.cache.delete(path.normalized);
   }
 
 
-  override async stats(): Promise<FileStats> {
-    if (!this.remoteData) {
-      await this.loadRemoteData();
+  override async stats(path: StoragePath): Promise<FileStats> {
+    const data = await this.getRemoteData(path);
+    if (!data) {
+      throw new StorageError(StorageErrorCode.NotExists, path, `File does not exist`);
     }
 
-    return this.remoteData!.stats;
+    return data.stats;
   }
 
 
-  override async writeOrCreate(content: Buffer | string): Promise<void> {
+  override async writeOrCreate(path: StoragePath, content: Buffer | string): Promise<StorageEntryPointer> {
     if (typeof content !== "string") {
-      throw new Error("Writing binary content not supported for this layer");
+      throw new StorageError(StorageErrorCode.BinaryContentNotSupported, path, "Binary content is not supported");
     }
 
-    this.remoteData = await ky.put(`/api/storages/${ this.wsId }/files/${ this.path.normalized }`, {
+    const remoteData = await ky.put(`/api/storages/${ this.wsId }/files/${ path.normalized }`, {
       json: {
         content
       }
     }).json<SerializableStorageEntryData>();
-    this.remoteExists = true;
+    this.cache.set(path.normalized, remoteData);
+
+    return new StorageEntryPointer(path, this);
   }
 
 
-  override async exists(): Promise<boolean> {
-    if (!this.remoteData) {
-      await this.loadRemoteData();
+  override async exists(path: StoragePath): Promise<boolean> {
+    const data = await this.getRemoteData(path);
+    return data != null;
+  }
+
+
+  private async getRemoteData(path: StoragePath): Promise<SerializableStorageEntryData | undefined> {
+    if (this.cache.has(path.normalized)) {
+      return this.cache.get(path.normalized);
     }
 
-    return this.remoteExists || false;
-  }
-
-
-  private async loadRemoteData() {
-    const reply = await ky(`/api/storages/${ this.wsId }/files/${ this.path.normalized }`);
+    const reply = await ky(`/api/storages/${ this.wsId }/files/${ path.normalized }`);
     if (reply.status === 404) {
-      this.remoteExists = false;
+      return undefined;
     } else {
-      this.remoteData = await reply.json();
-      this.remoteExists = true;
+      const remoteData = await reply.json();
+      this.cache.set(path.normalized, remoteData);
+      return remoteData;
     }
   }
 }

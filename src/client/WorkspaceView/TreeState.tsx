@@ -1,16 +1,16 @@
-import { MemoryStorageEntryPointer } from "../storage/MemoryStorage";
 import { FixedSizeNodeData } from "react-vtree";
+import { SerializableStorageEntryData } from "../../common/workspace/SerializableStorageEntryData.js";
 
 
 export type TreeNodeData = FixedSizeNodeData & {
-  entry: MemoryStorageEntryPointer;
+  data: SerializableStorageEntryData;
   level: number;
   state: TreeState;
 }
 
 
 export type TreeState = {
-  root: MemoryStorageEntryPointer;
+  root: SerializableStorageEntryData;
   selected: string | undefined;
   onSelect: (node: string) => void;
   expanded: string[];
@@ -18,26 +18,27 @@ export type TreeState = {
 
 
 export function* treeWalker(state: TreeState): any {
-  function createEntry(e: MemoryStorageEntryPointer, level: number) {
+  function createEntry(e: SerializableStorageEntryData, level: number) {
     const d: TreeNodeData = {
-      id: e.path.normalized,
-      isOpenByDefault: state.expanded.includes(e.path.normalized),
-      entry: e,
+      id: e.path,
+      isOpenByDefault: state.expanded.includes(e.path),
+      data: e,
       level,
       state
     };
+
     return {
       data: d
     };
   }
 
-  for (const child of state.root.directChildren || []) {
+  for (const child of state.root.children || []) {
     yield createEntry(child, 0);
   }
 
   while (true) {
     const item: TreeNodeData = (yield).data;
-    for (const child of item.entry.directChildren || []) {
+    for (const child of item.data.children || []) {
       yield createEntry(child, item.level + 1);
     }
   }

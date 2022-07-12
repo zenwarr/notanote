@@ -1,3 +1,4 @@
+import path from "path";
 import p from "path";
 
 
@@ -38,7 +39,17 @@ export class StoragePath {
 
 
   get parts(): string[] {
-    return this._normalized.split("/");
+    return this._normalized.split("/").filter(x => !!x);
+  }
+
+
+  inside(other: StoragePath, includeSelf = true): boolean {
+    const includes = other._normalized === "/" || this._normalized.startsWith(other._normalized + "/");
+    if (includes && !includeSelf && this.isEqual(other)) {
+      return false;
+    }
+
+    return includes;
   }
 
 
@@ -57,5 +68,41 @@ function normalize(path: string): string {
     path = "/" + path;
   }
 
+  if (path.endsWith("/") && path !== "/") {
+    path = path.substring(0, path.length - 1);
+  }
+
   return path;
+}
+
+
+export function joinNestedPathSecure(root: string, nested: string): string | undefined {
+  if (nested.indexOf("\0") >= 0) {
+    return undefined;
+  }
+
+  if (!root.endsWith(path.sep)) {
+    root = root + path.sep;
+  }
+
+  const result = path.join(root, nested);
+  if (!isPathInsideRoot(root, result)) {
+    return undefined;
+  }
+
+  return result;
+}
+
+
+export function addEndingPathSlash(p: string) {
+  return p.endsWith(path.sep) ? p : p + path.sep;
+}
+
+
+export function isPathInsideRoot(root: string, nested: string): boolean {
+  if (addEndingPathSlash(root) === addEndingPathSlash(nested)) {
+    return true;
+  }
+
+  return nested.startsWith(addEndingPathSlash(root));
 }

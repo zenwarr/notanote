@@ -1,7 +1,7 @@
 import { makeObservable, observable } from "mobx";
+import { SerializableStorageEntryData } from "../common/workspace/SerializableStorageEntryData";
 import { RecentDocStorage } from "./RecentDocStorage";
 import { StoragePath } from "../common/storage/StoragePath";
-import { MemoryStorageEntryPointer } from "./storage/MemoryStorage";
 import { MemoryCachedStorage } from "../common/storage/MemoryCachedStorage";
 import { StorageEntryType } from "../common/storage/StorageLayer";
 import { FileSettingsProvider } from "../common/workspace/FileSettingsProvider";
@@ -37,7 +37,7 @@ export class ClientWorkspace {
       throw new Error(`Failed to load storage entries: loadAll returns undefined`);
     }
 
-    this.storage.memory.root.initialize(allEntries);
+    this.storage.memory.setData(allEntries);
 
     await FileSettingsProvider.instance.load();
 
@@ -45,14 +45,14 @@ export class ClientWorkspace {
   }
 
 
-  walk(cb: (entry: MemoryStorageEntryPointer) => boolean) {
-    function walkList(list: MemoryStorageEntryPointer[] | undefined): boolean {
-      for (const e of list || []) {
+  walk(cb: (entry: SerializableStorageEntryData) => boolean) {
+    function walkList(entries: SerializableStorageEntryData[] | undefined): boolean {
+      for (const e of entries || []) {
         if (cb(e)) {
           return true;
         }
 
-        if (walkList(e.directChildren)) {
+        if (walkList(e.children)) {
           return true;
         }
       }
@@ -60,7 +60,7 @@ export class ClientWorkspace {
       return false;
     }
 
-    walkList(this.storage.get(StoragePath.root).memory.directChildren || []);
+    walkList(this.storage.getMemoryData(StoragePath.root)?.children || []);
   }
 
 
@@ -108,8 +108,8 @@ export class ClientWorkspace {
     if (path == null) {
       this._selectedFile = undefined;
     } else {
-      const entry = this.storage.get(path);
-      if (entry && entry.memory.type === StorageEntryType.File) {
+      const entry = this.storage.getMemoryData(path);
+      if (entry && !entry.stats.isDirectory) {
         this._selectedFile = path;
         RecentDocStorage.instance.saveLastOpenedDoc(path.normalized);
       }

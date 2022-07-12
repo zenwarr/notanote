@@ -1,5 +1,6 @@
 import { Box, CircularProgress, Hidden, SwipeableDrawer } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
+import { MemoryCachedStorage } from "../common/storage/MemoryCachedStorage.js";
 import { WorkspaceView } from "./WorkspaceView/WorkspaceView";
 import { ConnectedFileView } from "./FileView";
 import { Header } from "./Header";
@@ -13,8 +14,6 @@ import { useShortcuts } from "./Shortcuts";
 import { PaletteProvider } from "./PaletteProvider";
 import { useAppThemeContext } from "./Theme";
 import { StoragePath } from "../common/storage/StoragePath";
-import { StorageEntryType } from "../common/storage/StorageLayer";
-import { MemoryCachedEntryPointer } from "../common/storage/MemoryCachedStorage";
 import { observer } from "mobx-react-lite";
 
 
@@ -22,18 +21,18 @@ export const App = observer(() => {
   const [ drawerOpen, setDrawerOpen ] = useState(false);
   const classes = useStyles();
   const iOS = !!(navigator.userAgent && /iPad|iPhone|iPod/.test(navigator.userAgent));
-  const [ loaded, setLoaded ] = useState(false);
 
   usePreventClose();
   useShortcuts();
   const appTheme = useAppThemeContext();
 
   useEffect(() => {
-    ClientWorkspace.instance.load().then(() => setLoaded(true)).catch(err => console.error(err.message));
+    ClientWorkspace.instance.load().then(() => {}).catch(err => console.error(err.message));
   }, []);
 
-  function onMobileEntrySelected(e: MemoryCachedEntryPointer) {
-    if (e.memory.type === StorageEntryType.File) {
+  function onMobileEntrySelected(path: StoragePath) {
+    const cached = ClientWorkspace.instance.storage.getMemoryData(path);
+    if (cached && !cached.stats.isDirectory) {
       setDrawerOpen(false);
     }
   }

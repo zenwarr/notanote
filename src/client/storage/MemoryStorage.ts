@@ -1,265 +1,218 @@
-import * as p from "path";
+import * as _ from "lodash";
 import * as mobx from "mobx";
-import {
-  FileStats,
-  StorageEntryPointer,
-  StorageEntryType,
-  StorageError,
-  StorageErrorCode,
-  StorageLayer
-} from "../../common/storage/StorageLayer";
+import * as p from "path";
+import { StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "../../common/storage/StorageLayer";
 import { StoragePath } from "../../common/storage/StoragePath";
 import { SerializableStorageEntryData } from "../../common/workspace/SerializableStorageEntryData";
 
 
+/**
+ * Memory storage is used to keep all storage data inside memory.
+ * This storage is mostly used for storing cached data of another storage and testing.
+ */
 export class MemoryStorage extends StorageLayer {
+  /**
+   * Data for the entire memory storage can be restored from a serializable object `initial`.
+   */
   constructor(initial?: SerializableStorageEntryData) {
     super();
-    this.initial = initial;
-    this.root = new MemoryStorageEntryPointer(this, StoragePath.root, StorageEntryType.Dir, [], undefined);
-    if (this.initial) {
-      this.root.initialize(this.initial);
-    }
-  }
 
+    this.setData(initial);
 
-  private readonly initial: SerializableStorageEntryData | undefined;
-
-
-  override async createDir(path: StoragePath) {
-    const parent = await this.getPointer(
-        this.root, path.parentDir, getPathParts(path.parentDir.normalized), true
-    );
-
-    const newEntry = new MemoryStorageEntryPointer(this, path, StorageEntryType.Dir, [], {
-      isDirectory: true,
-      createTs: new Date().valueOf(),
-      updateTs: new Date().valueOf()
+    mobx.makeObservable(this, {
+      data: mobx.observable
     });
-    if (parent.directChildren?.some(child => child.path.isEqual(path))) {
-      throw new Error(`Directory ${ path } already exists`);
-    }
-
-    if (!parent.directChildren) {
-      parent.directChildren = [];
-    }
-
-    parent.directChildren.push(newEntry);
-    return newEntry;
   }
 
 
-  override get(path: StoragePath) {
-    return this.getPointer(this.root, path, getPathParts(path.normalized), false);
+  setData(data: SerializableStorageEntryData | undefined) {
+    this.data = _.cloneDeep(data) || {
+      path: StoragePath.root.normalized,
+      stats: {
+        isDirectory: true,
+        size: undefined,
+        createTs: undefined,
+        updateTs: undefined
+      }
+    };
+  }
+
+
+  override get(path: StoragePath): StorageEntryPointer {
+    return new StorageEntryPointer(path, this);
   }
 
 
   override async loadAll() {
-    return this.initial;
+    return mobx.toJS(this.data);
   }
 
 
-  private getPointer(entry: MemoryStorageEntryPointer, fullPath: StoragePath, parts: string[], createDirs: boolean): MemoryStorageEntryPointer {
-    const topPart = parts[0];
+  private getDataAtPathInternal(startFrom: SerializableStorageEntryData, pathPartsLeft: string[], createDirs: boolean): SerializableStorageEntryData | undefined {
+    const topPart = pathPartsLeft[0];
     if (!topPart) {
-      return entry;
+      return startFrom;
     }
 
-    let child = entry.directChildren?.find(c => c.path.basename === topPart);
+    let child = startFrom.children?.find(c => new StoragePath(c.path).basename === topPart);
     if (!child) {
       if (createDirs) {
-        child = new MemoryStorageEntryPointer(this, entry.path.child(topPart), StorageEntryType.Dir, [], {
-          isDirectory: true,
-          createTs: new Date().valueOf(),
-          updateTs: new Date().valueOf()
-        });
-        entry.directChildren = [ ...entry.directChildren || [], child ];
+        child = {
+          path: new StoragePath(startFrom.path).child(topPart).normalized,
+          stats: {
+            isDirectory: true,
+            size: undefined,
+            createTs: new Date().valueOf(),
+            updateTs: new Date().valueOf()
+          }
+        };
+        startFrom.children = [ ...startFrom.children || [], child ];
       } else {
-        return new MemoryStorageEntryPointer(this, fullPath);
+        return undefined;
       }
     }
 
-    return parts.length === 1 ? child : this.getPointer(child, fullPath, parts.slice(1), createDirs);
+    return pathPartsLeft.length === 1 ? child : this.getDataAtPathInternal(child, pathPartsLeft.slice(1), createDirs);
   }
 
 
-  createEntry(entry: MemoryStorageEntryPointer) {
-    const parent = entry.path.parentDir;
-    const parentEntry = this.getPointer(this.root, parent, getPathParts(parent.normalized), true);
+  private getDataObject(path: StoragePath, createDirs = false) {
+    return this.getDataAtPathInternal(this.data, getPathParts(path.normalized), createDirs);
+  }
 
-    if (parentEntry.directChildren?.some(child => child.path.isEqual(entry.path))) {
-      throw new Error(`Entry ${ entry.path } already exists`);
+
+  getDataAtPath(path: StoragePath) {
+    return this.getDataObject(path);
+  }
+
+
+  private createDataObject(newEntryData: SerializableStorageEntryData) {
+    const newPath = new StoragePath(newEntryData.path);
+    const parentPath = newPath.parentDir;
+
+    const parentEntry = this.getDataAtPathInternal(this.data, getPathParts(parentPath.normalized), true);
+    if (!parentEntry) {
+      throw new StorageError(StorageErrorCode.InvalidStructure, newPath, `Failed to create entry: invalid structure`);
+    }
+
+    if (!parentEntry.stats.isDirectory) {
+      throw new StorageError(StorageErrorCode.InvalidStructure, newPath, `Failed to create entry: invalid structure`);
+    }
+
+    if (parentEntry.children?.some(child => new StoragePath(child.path).isEqual(newPath))) {
+      throw new Error(`Entry ${ newEntryData.path } already exists`);
     } else {
-      parentEntry.directChildren = [ ...parentEntry.directChildren || [], entry ];
+      parentEntry.children = [ ...parentEntry.children || [], newEntryData ];
     }
+
+    return newEntryData;
   }
 
 
-  removeEntry(path: StoragePath) {
-    const parent = this.getPointer(this.root, path.parentDir, getPathParts(path.parentDir.normalized), false);
+  override async children(path: StoragePath): Promise<StorageEntryPointer[]> {
+    const p = this.getDataObject(path);
+    if (!p) {
+      return [];
+    }
+
+    if (!p.stats.isDirectory) {
+      throw new StorageError(StorageErrorCode.NotDirectory, path, "Not a directory");
+    }
+
+    return (p.children || []).map(c => new StorageEntryPointer(new StoragePath(c.path), this));
+  }
+
+
+  override async readText(path: StoragePath) {
+    const p = this.getDataObject(path);
+    if (!p) {
+      return "";
+    }
+
+    if (p.stats.isDirectory) {
+      throw new StorageError(StorageErrorCode.NotFile, path, "Not a file");
+    }
+
+    return p.textContent || "";
+  }
+
+
+  override async remove(path: StoragePath) {
+    const p = this.get(path);
+    if (!p) {
+      return;
+    }
+
+    const parent = this.getDataObject(path.parentDir);
     if (!parent) {
-      throw new Error(`Entry ${ path } does not exist`);
+      return;
     }
 
-    const entry = parent.directChildren?.find(c => c.path.isEqual(path));
-    if (!entry) {
-      throw new Error(`Entry ${ path } does not exist`);
-    }
-
-    parent.directChildren = parent.directChildren?.filter(c => c !== entry);
+    parent.children = parent.children?.filter(c => new StoragePath(c.path).normalized === path.normalized);
   }
 
 
-  readonly root: MemoryStorageEntryPointer;
+  override async stats(path: StoragePath) {
+    const p = this.getDataObject(path);
+    if (!p) {
+      throw new StorageError(StorageErrorCode.NotExists, path, "Not exists");
+    }
+
+    return p.stats;
+  }
+
+
+  override async writeOrCreate(path: StoragePath, content: Buffer | string): Promise<StorageEntryPointer> {
+    let textContent: string;
+    if (Buffer.isBuffer(content)) {
+      textContent = content.toString();
+    } else {
+      textContent = content;
+    }
+
+    let p = this.getDataObject(path);
+    if (!p) {
+      p = this.createDataObject({
+        path: path.normalized,
+        stats: {
+          isDirectory: false,
+          size: textContent.length,
+          createTs: new Date().valueOf(),
+          updateTs: new Date().valueOf()
+        }
+      });
+    }
+
+    p.textContent = textContent;
+
+    return new StorageEntryPointer(path, this);
+  }
+
+
+  override async exists(path: StoragePath): Promise<boolean> {
+    return this.getDataObject(path) != null;
+  }
+
+
+  override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
+    this.createDataObject({
+      path: path.normalized,
+      stats: {
+        isDirectory: true,
+        size: undefined,
+        createTs: new Date().valueOf(),
+        updateTs: new Date().valueOf()
+      }
+    })
+
+    return new StorageEntryPointer(path, this);
+  }
+
+
+  data!: SerializableStorageEntryData;
 }
 
 
 function getPathParts(path: string): string[] {
   return path.split(p.sep).filter(x => x !== "");
-}
-
-
-export class MemoryStorageEntryPointer extends StorageEntryPointer {
-  constructor(layer: MemoryStorage, path: StoragePath);
-  constructor(layer: MemoryStorage, path: StoragePath, type: StorageEntryType.File, content: string | undefined, stats: FileStats | undefined);
-  constructor(layer: MemoryStorage, path: StoragePath, type: StorageEntryType.Dir, content: MemoryStorageEntryPointer[] | undefined, stats: FileStats | undefined);
-  constructor(layer: MemoryStorage, path: StoragePath, type?: StorageEntryType, childrenOrContent?: string | MemoryStorageEntryPointer[], stats?: FileStats) {
-    super(path);
-    this.storage = layer;
-    this.type = type;
-    this._stats = stats;
-    if (type === StorageEntryType.File) {
-      this.content = childrenOrContent as string | undefined;
-    } else if (type === StorageEntryType.Dir) {
-      this.directChildren = childrenOrContent as MemoryStorageEntryPointer[] | undefined;
-    } else {
-      this._exists = false;
-    }
-
-    mobx.makeObservable(this, {
-      content: mobx.observable,
-      directChildren: mobx.observable,
-      type: mobx.observable,
-      _stats: mobx.observable,
-      _exists: mobx.observable
-    });
-  }
-
-
-  private readonly storage: MemoryStorage;
-
-  /**
-   * If value is undefined, the entry is a directory or content is not yet loaded.
-   */
-  content: string | undefined = undefined;
-
-  /**
-   * If value is undefined, the entry is a file.
-   */
-  directChildren: MemoryStorageEntryPointer[] | undefined = undefined;
-
-
-  _exists: boolean = true;
-
-
-  /**
-   * If value is undefined, type is not known yet.
-   */
-  type: StorageEntryType | undefined = undefined;
-
-
-  _stats: FileStats | undefined = undefined;
-
-
-  initialize(remoteStorageEntryData: SerializableStorageEntryData) {
-    const toMemoryStorageEntry = (d: SerializableStorageEntryData): MemoryStorageEntryPointer => {
-      if (d.stats.isDirectory) {
-        return new MemoryStorageEntryPointer(
-            this.storage,
-            new StoragePath(d.path),
-            StorageEntryType.Dir,
-            d.children?.map(toMemoryStorageEntry) || [],
-            d.stats
-        );
-      } else {
-        return new MemoryStorageEntryPointer(
-            this.storage,
-            new StoragePath(d.path),
-            StorageEntryType.File,
-            d.textContent,
-            d.stats
-        );
-      }
-    };
-
-    this.directChildren = remoteStorageEntryData.children?.map(toMemoryStorageEntry) || [];
-    this.type = StorageEntryType.Dir;
-  }
-
-
-  override async children() {
-    if (this.type !== StorageEntryType.Dir) {
-      throw new StorageError(StorageErrorCode.NotDirectory, this.path, "Not a directory");
-    }
-
-    return this.directChildren || [];
-  }
-
-
-  override async readText() {
-    if (!this._exists) {
-      throw new StorageError(StorageErrorCode.NotExists, this.path, "Not exists");
-    }
-
-    if (this.type !== StorageEntryType.File) {
-      throw new StorageError(StorageErrorCode.NotFile, this.path, "Not a file");
-    }
-
-    return this.content || "";
-  }
-
-
-  override async remove() {
-    if (!this._exists) {
-      throw new StorageError(StorageErrorCode.NotExists, this.path, "Not exists");
-    }
-
-    this.storage.removeEntry(this.path);
-    this.content = undefined;
-    this.directChildren = undefined;
-    this._exists = false;
-  }
-
-
-  override async stats() {
-    if (!this._exists) {
-      throw new StorageError(StorageErrorCode.NotExists, this.path, "Not exists");
-    }
-
-    return {
-      isDirectory: this.type === StorageEntryType.Dir,
-      createTs: this._stats?.createTs,
-      updateTs: this._stats?.updateTs,
-    };
-  }
-
-
-  override async writeOrCreate(content: Buffer | string) {
-    if (!this._exists) {
-      this._exists = true;
-      this.type = StorageEntryType.File;
-      this.storage.createEntry(this);
-    }
-
-    if (Buffer.isBuffer(content)) {
-      this.content = content.toString();
-    } else {
-      this.content = content;
-    }
-  }
-
-
-  override async exists() {
-    return this._exists;
-  }
 }

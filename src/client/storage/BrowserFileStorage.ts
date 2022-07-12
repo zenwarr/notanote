@@ -1,7 +1,7 @@
-import { FileStats, StorageEntryPointer, StorageLayer } from "../../common/storage/StorageLayer";
-import { StoragePath } from "../../common/storage/StoragePath";
 import * as idb from "idb-keyval";
 import * as mobx from "mobx";
+import { FileStats, StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "../../common/storage/StorageLayer";
+import { StoragePath } from "../../common/storage/StoragePath";
 
 
 export class BrowserFileStorageLayer extends StorageLayer {
@@ -45,16 +45,16 @@ export class BrowserFileStorageLayer extends StorageLayer {
       throw new Error("Failed to create directory");
     }
 
-    return new BrowserFileStorageEntry(path, this, dirs.parent, dirs.child);
+    return new StorageEntryPointer(path, this);
   }
 
 
   override get(path: StoragePath): StorageEntryPointer {
-    return new BrowserFileStorageEntry(path, this);
+    return new StorageEntryPointer(path, this);
   }
 
 
-  async getHandle(path: StoragePath): Promise<{
+  async getHandle(path: StoragePath, create = false): Promise<{
     parent: FileSystemDirectoryHandle | undefined,
     child: FileSystemHandle | undefined
   } | undefined> {
@@ -65,7 +65,7 @@ export class BrowserFileStorageLayer extends StorageLayer {
       };
     }
 
-    const parentHandles = await this.getDirectoryHandle(path.parentDir);
+    const parentHandles = await this.getDirectoryHandle(path.parentDir, create);
     if (!parentHandles) {
       return undefined;
     }
@@ -79,7 +79,7 @@ export class BrowserFileStorageLayer extends StorageLayer {
       try {
         return {
           parent: parentHandles.child,
-          child: await parentHandles.child.getDirectoryHandle(path.basename)
+          child: await parentHandles.child.getDirectoryHandle(path.basename, { create })
         };
       } catch (error) {
         return {
@@ -142,55 +142,35 @@ export class BrowserFileStorageLayer extends StorageLayer {
   async saveHandle(key: string) {
     return idb.set(key, this.root);
   }
-}
 
 
-export class BrowserFileStorageEntry extends StorageEntryPointer {
-  constructor(path: StoragePath, layer: BrowserFileStorageLayer, dirHandle?: FileSystemDirectoryHandle, handle?: FileSystemHandle) {
-    super(path);
-    this.layer = layer;
-    this.dirHandle = dirHandle;
-    this.handle = handle;
-  }
-
-
-  private readonly layer: BrowserFileStorageLayer;
-  private dirHandle: FileSystemDirectoryHandle | undefined;
-  private handle: FileSystemHandle | undefined;
-
-
-  override async children(): Promise<StorageEntryPointer[]> {
-    await this.lazyInitHandles();
-
-    if (!this.handle) {
-      throw new Error("Directory not found");
+  override async children(path: StoragePath): Promise<StorageEntryPointer[]> {
+    const handles = await this.getHandle(path);
+    if (!handles) {
+      throw new StorageError(StorageErrorCode.NotExists, path, "Directory does not exist");
     }
 
-    const dir = this.handle instanceof FileSystemDirectoryHandle ? this.handle : undefined;
+    const dir = handles.child instanceof FileSystemDirectoryHandle ? handles.child : undefined;
     if (!dir) {
       throw new Error("Not a directory");
     }
 
     const result: StorageEntryPointer[] = [];
     for await (const value of dir.values()) {
-      result.push(
-          new BrowserFileStorageEntry(
-              this.path.child(value.name),
-              this.layer,
-              dir,
-              value
-          )
-      );
+      result.push(new StorageEntryPointer(path.child(value.name), this));
     }
 
     return result;
   }
 
 
-  override async readText(): Promise<string> {
-    await this.lazyInitHandles();
+  override async readText(path: StoragePath): Promise<string> {
+    const handles = await this.getHandle(path);
+    if (!handles) {
+      throw new StorageError(StorageErrorCode.NotExists, path, "File does not exist");
+    }
 
-    const fileHandle = this.handle instanceof FileSystemFileHandle ? this.handle : undefined;
+    const fileHandle = handles.child instanceof FileSystemFileHandle ? handles.child : undefined;
     if (!fileHandle) {
       throw new Error("Not a file");
     }
@@ -199,65 +179,61 @@ export class BrowserFileStorageEntry extends StorageEntryPointer {
   }
 
 
-  override async remove(): Promise<void> {
-    await this.lazyInitHandles();
-
-    if (this.dirHandle) {
-      await this.dirHandle.removeEntry(this.path.basename, { recursive: true });
+  override async remove(path: StoragePath): Promise<void> {
+    const handles = await this.getHandle(path);
+    if (!handles) {
+      throw new StorageError(StorageErrorCode.NotExists, path, "File does not exist");
     }
+
+    if (!handles.parent) {
+      throw new StorageError(StorageErrorCode.InvalidStructure, path.parentDir, "Cannot remove root directory");
+    }
+
+    await handles.parent.removeEntry(path.basename, { recursive: true });
   }
 
 
-  override async stats(): Promise<FileStats> {
-    await this.lazyInitHandles();
+  override async stats(path: StoragePath): Promise<FileStats> {
+    const handles = await this.getHandle(path);
+    if (!handles || !handles.child) {
+      throw new StorageError(StorageErrorCode.NotExists, path, "File does not exist");
+    }
 
     return {
-      isDirectory: this.handle?.kind === "directory",
+      isDirectory: handles.child.kind === "directory",
+      size: "unk",
       createTs: undefined,
       updateTs: undefined
     };
   }
 
 
-  override async writeOrCreate(content: Buffer | string): Promise<void> {
-    await this.lazyInitHandles();
-
-    if (!this.dirHandle) {
-      throw new Error("Parent directory does not exist");
+  override async writeOrCreate(path: StoragePath, content: Buffer | string): Promise<StorageEntryPointer> {
+    const handles = await this.getHandle(path, true);
+    if (!handles) {
+      throw new StorageError(StorageErrorCode.NotExists, path, "File does not exist");
     }
 
-    if (!this.handle) {
-      this.handle = await this.dirHandle.getFileHandle(this.path.basename, { create: true });
+    if ((handles.child && handles.child.kind !== "file") || !handles.parent) {
+      throw new StorageError(StorageErrorCode.DirectoryWrite, path, "Cannot write to a directory");
     }
 
-    if (this.handle.kind !== "file") {
-      throw new Error("Cannot write: entry is not a file");
+    if (!handles.child) {
+      handles.child = await handles.parent.getFileHandle(path.basename, { create: true });
     }
 
-    const fileHandle = this.handle as FileSystemFileHandle;
+    const fileHandle = handles.child as FileSystemFileHandle;
     const writable = await fileHandle.createWritable({ keepExistingData: false });
     await writable.truncate(0);
     await writable.write(content);
     await writable.close();
+
+    return new StorageEntryPointer(path, this);
   }
 
 
-  override async exists(): Promise<boolean> {
-    await this.lazyInitHandles();
-    return this.handle != null;
-  }
-
-
-  private async lazyInitHandles() {
-    if (this.handle && this.dirHandle) {
-      return;
-    }
-
-    const d = await this.layer.getHandle(this.path);
-
-    if (d) {
-      this.dirHandle = d.parent;
-      this.handle = d.child;
-    }
+  override async exists(path: StoragePath): Promise<boolean> {
+    const handles = await this.getHandle(path);
+    return !!handles && !!handles.child;
   }
 }
