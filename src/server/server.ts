@@ -1,9 +1,9 @@
 import fastify from "fastify";
 import path from "path";
-import fastifyFormBody from "fastify-formbody";
-import pointOfView from "point-of-view";
+import fastifyFormBody from "@fastify/formbody";
+import fastifyView from "@fastify/view";
 import hbs from "handlebars";
-import fastifyStatic from "fastify-static";
+import fastifyStatic from "@fastify/static";
 import { configureAuth } from "./auth";
 import { ErrorCode, getStatusCodeForError, LogicError } from "../common/errors";
 
@@ -18,7 +18,7 @@ export async function startApp() {
   });
 
   app.register(fastifyFormBody);
-  app.register(pointOfView, {
+  app.register(fastifyView, {
     engine: {
       handlebars: hbs
     },
@@ -51,6 +51,9 @@ export async function startApp() {
   app.register(require("./ui"));
 
   const port = process.env["PORT"] ?? 80;
-  await app.listen(port, "0.0.0.0");
+  await app.listen({
+    host: "0.0.0.0",
+    port: +port
+  });
   console.log("Application listening on port", port);
 }

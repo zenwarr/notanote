@@ -1,5 +1,5 @@
-import fastifyPassport from "fastify-passport";
-import fastifySecureSession from "fastify-secure-session";
+import fastifyPassport from "@fastify/passport";
+import fastifySecureSession from "@fastify/secure-session";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { FastifyInstance, FastifyRequest } from "fastify";

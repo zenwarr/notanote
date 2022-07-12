@@ -110,7 +110,7 @@ export class RemoteHttpStorage extends StorageLayer {
     if (reply.status === 404) {
       return undefined;
     } else {
-      const remoteData = await reply.json();
+      const remoteData = await reply.json<SerializableStorageEntryData>();
       this.cache.set(path.normalized, remoteData);
       return remoteData;
     }
