@@ -1,14 +1,17 @@
 import { makeObservable, observable } from "mobx";
+import { SyncProvider } from "../common/sync/SyncProvider";
+import { SyncWorker } from "../common/sync/SyncWorker";
 import { SerializableStorageEntryData } from "../common/workspace/SerializableStorageEntryData";
 import { RecentDocStorage } from "./RecentDocStorage";
 import { StoragePath } from "../common/storage/StoragePath";
 import { MemoryCachedStorage } from "../common/storage/MemoryCachedStorage";
 import { StorageEntryType } from "../common/storage/StorageLayer";
 import { FileSettingsProvider } from "../common/workspace/FileSettingsProvider";
+import { BrowserSyncMetadataStorage } from "./storage/BrowserSyncMetadataStorage";
 
 
 export class ClientWorkspace {
-  constructor(storage: MemoryCachedStorage, storageId: string) {
+  constructor(storage: MemoryCachedStorage, syncAdapter: SyncProvider, storageId: string) {
     makeObservable(this, {
       loading: observable,
       _selectedEntry: observable,
@@ -24,6 +27,12 @@ export class ClientWorkspace {
 
     this.storage = storage;
     this.remoteStorageId = storageId;
+
+    this.syncWorker = new SyncWorker(
+        syncAdapter,
+        new BrowserSyncMetadataStorage()
+    );
+    this.syncWorker.addRoot(this.storage.get(StoragePath.root));
   }
 
 
@@ -126,6 +135,7 @@ export class ClientWorkspace {
   private _selectedFile: StoragePath | undefined = undefined;
   storage: MemoryCachedStorage;
   private static _instance: ClientWorkspace | undefined;
+  syncWorker: SyncWorker;
 
 
   static get instance() {
@@ -137,7 +147,7 @@ export class ClientWorkspace {
   }
 
 
-  static init(storage: MemoryCachedStorage, wsId: string) {
-    this._instance = new ClientWorkspace(storage, wsId);
+  static init(storage: MemoryCachedStorage, syncAdapter: SyncProvider, wsId: string) {
+    this._instance = new ClientWorkspace(storage, syncAdapter, wsId);
   }
 }

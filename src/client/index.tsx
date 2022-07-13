@@ -4,6 +4,7 @@ import { configure } from "mobx";
 import { ClientWorkspace } from "./ClientWorkspace";
 import { ProfileManager } from "./ProfileManager";
 import { Workbox } from "workbox-window";
+import { HttpSyncProvider } from "./storage/HttpSyncProvider";
 import { AppThemeProvider } from "./Theme";
 import { registerPlugins } from "./plugin/BuiltInPlugins";
 import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
@@ -36,7 +37,8 @@ const DEFAULT_WORKSPACE_ID = "default";
 const remote = new StorageWithMounts(new RemoteHttpStorage(DEFAULT_WORKSPACE_ID));
 remote.mount(SpecialWorkspaceEntry.DeviceConfig, new DeviceConfigStorageEntry());
 const fs = new MemoryCachedStorage(remote);
-ClientWorkspace.init(fs, DEFAULT_WORKSPACE_ID);
+const syncAdapter = new HttpSyncProvider(DEFAULT_WORKSPACE_ID);
+ClientWorkspace.init(fs, syncAdapter, DEFAULT_WORKSPACE_ID);
 ProfileManager.instance.userName = params.userName;
 FileSettingsProvider.init(fs);
 

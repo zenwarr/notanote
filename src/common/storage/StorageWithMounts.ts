@@ -1,12 +1,12 @@
 import { walkSerializableStorageEntries } from "../workspace/SerializableStorageEntryData";
-import { FileStats, StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "./StorageLayer";
+import { StorageEntryStats, StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "./StorageLayer";
 import { StoragePath } from "./StoragePath";
 
 
 export abstract class MountedFile {
   abstract readText(path: StoragePath): Promise<string>;
 
-  abstract stats(path: StoragePath): Promise<FileStats>;
+  abstract stats(path: StoragePath): Promise<StorageEntryStats>;
 
   abstract write(path: StoragePath, content: Buffer | string): Promise<void>;
 }
@@ -129,7 +129,7 @@ export class StorageWithMounts extends StorageLayer {
   }
 
 
-  override async stats(path: StoragePath): Promise<FileStats> {
+  override async stats(path: StoragePath): Promise<StorageEntryStats> {
     const mounted = this.mounts.get(path.normalized);
     if (mounted) {
       return mounted.stats(path);

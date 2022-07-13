@@ -5,12 +5,15 @@ import { useLoad } from "../useLoad";
 import { observer } from "mobx-react-lite";
 
 
+const SAVED_BROWSER_FS_ROOT = "saved-browser-fs-root";
+
+
 export const DeviceConfigEditor = observer(() => {
   const [ browserStorage, setBrowserStorage ] = useState<BrowserFileStorageLayer | undefined>();
 
   const savedStorage = useLoad(
       useCallback(
-          async () => BrowserFileStorageLayer.fromSavedHandle("saved-browser-fs-root"),
+          async () => BrowserFileStorageLayer.fromSavedHandle(SAVED_BROWSER_FS_ROOT),
           []
       )
   );
@@ -19,7 +22,7 @@ export const DeviceConfigEditor = observer(() => {
     const storage = await BrowserFileStorageLayer.requestFromUser();
     if (storage) {
       setBrowserStorage(storage);
-      await storage.saveHandle("saved-browser-fs-root");
+      await storage.saveHandle(SAVED_BROWSER_FS_ROOT);
     }
   }
 

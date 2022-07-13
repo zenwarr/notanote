@@ -1,11 +1,15 @@
 import * as crypto from "crypto";
-import { StorageEntryPointer, StorageError, StorageErrorCode } from "../storage/StorageLayer";
+import { StorageEntryPointer, StorageEntrySize, StorageError, StorageErrorCode } from "../storage/StorageLayer";
 
 
 export interface ContentIdentity {
   hash: string | undefined;
-  size: number | "unk" | undefined;
+  size: StorageEntrySize;
 }
+
+
+export const DirContentIdentity = { hash: undefined, size: 0 };
+Object.freeze(DirContentIdentity);
 
 
 export function isContentIdentityEqual(a: ContentIdentity, b: ContentIdentity): boolean {
@@ -21,11 +25,16 @@ export function isContentIdentityEqual(a: ContentIdentity, b: ContentIdentity): 
 }
 
 
-export async function getContentIdentity(e: StorageEntryPointer, content: string | Buffer | undefined = undefined): Promise<ContentIdentity | undefined> {
+/**
+ * Calculates the content identity of a storage entry.
+ * Content identity is undefined if given entry does not exist.
+ */
+export async function getContentIdentity(ep: StorageEntryPointer, content: string | Buffer | undefined = undefined): Promise<ContentIdentity | undefined> {
   let size: number | "unk" | undefined;
   let isDir = false;
+
   try {
-    const stats = await e.stats();
+    const stats = await ep.stats();
     isDir = stats.isDirectory;
     size = stats.size;
   } catch (err: unknown) {
@@ -37,13 +46,14 @@ export async function getContentIdentity(e: StorageEntryPointer, content: string
   }
 
   if (isDir) {
-    return { hash: undefined, size: 0 };
+    return DirContentIdentity;
   }
 
   if (content == null && !isDir) {
-    content = await readTextIfAny(e);
+    content = await readEntityTextIfAny(ep);
   }
 
+  // todo: should we calculate hash based on binary or text content? in the former case, how to deal with storages not supporting binary content?
   return {
     hash: getContentHash(content),
     size: size,
@@ -51,7 +61,7 @@ export async function getContentIdentity(e: StorageEntryPointer, content: string
 }
 
 
-async function readTextIfAny(e: StorageEntryPointer): Promise<string | undefined> {
+export async function readEntityTextIfAny(e: StorageEntryPointer): Promise<string | undefined> {
   try {
     return await e.readText();
   } catch (err: unknown) {

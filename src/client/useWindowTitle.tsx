@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import * as path from "path";
+import { ClientWorkspace } from "./ClientWorkspace";
 import { DocumentManager } from "./DocumentManager";
 import { autorun } from "mobx";
 
@@ -17,12 +18,13 @@ function getDocTitle(hasUnsyncedChanges: boolean, fileId: string | undefined) {
 
 
 export function useWindowTitle(fileId: string | undefined) {
-  const [ hasUnsavedChanges, setHasUnsavedChanges ] = useState(DocumentManager.instance.hasUnsavedChanges);
+  const syncWorker = ClientWorkspace.instance.syncWorker;
+  const [ hasUnsavedChanges, setHasUnsavedChanges ] = useState(syncWorker.pendingRoots.length !== 0 || syncWorker.pendingConflicts.length !== 0);
 
   autorun(() => {
-    const newHasChanges = DocumentManager.instance.hasUnsavedChanges;
+    const newHasChanges = syncWorker.pendingConflicts.length !== 0 || syncWorker.pendingRoots.length !== 0;
     if (newHasChanges !== hasUnsavedChanges) {
-      setHasUnsavedChanges(DocumentManager.instance.hasUnsavedChanges);
+      setHasUnsavedChanges(newHasChanges);
     }
   });
 

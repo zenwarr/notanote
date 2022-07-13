@@ -1,11 +1,12 @@
 import { useEffect } from "react";
-import { DocumentManager } from "./DocumentManager";
+import { ClientWorkspace } from "./ClientWorkspace";
 
 
 export function usePreventClose() {
   useEffect(() => {
     window.onbeforeunload = e => {
-      if (DocumentManager.instance.hasUnsavedChanges) {
+      const syncWorker = ClientWorkspace.instance.syncWorker;
+      if (syncWorker.pendingConflicts.length || syncWorker.pendingRoots.length) {
         e.preventDefault();
         return "You have unsaved changes";
       } else {

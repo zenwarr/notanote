@@ -28,7 +28,7 @@ export abstract class StorageLayer {
   abstract remove(path: StoragePath): Promise<void>;
 
 
-  abstract stats(path: StoragePath): Promise<FileStats>;
+  abstract stats(path: StoragePath): Promise<StorageEntryStats>;
 
 
   abstract children(path: StoragePath): Promise<StorageEntryPointer[]>;
@@ -37,8 +37,23 @@ export abstract class StorageLayer {
   abstract exists(path: StoragePath): Promise<boolean>;
 
 
-  async loadAll(): Promise<SerializableStorageEntryData | undefined> {
-    return undefined;
+  async loadAll(): Promise<SerializableStorageEntryData> {
+    const d = await this.toSerializableEntry(this.get(StoragePath.root));
+    console.log("serialized", d);
+    return d;
+  }
+
+
+  private async toSerializableEntry(p: StorageEntryPointer): Promise<SerializableStorageEntryData> {
+    const stats = await p.stats();
+
+    const children = stats.isDirectory ? await this.children(p.path) : undefined;
+
+    return {
+      path: p.path.normalized,
+      stats,
+      children: children ? await Promise.all(children.map(c => this.toSerializableEntry(c))) : undefined
+    };
   }
 }
 
@@ -59,9 +74,15 @@ export enum StorageErrorCode {
 
 
 export class StorageError extends Error {
-  constructor(public code: StorageErrorCode, public path: StoragePath, public message: string) {
+  constructor(code: StorageErrorCode, path: StoragePath, message: string) {
     super(message);
+    this.code = code;
+    this.path = path;
   }
+
+
+  readonly code: StorageErrorCode;
+  readonly path: StoragePath;
 }
 
 
@@ -103,7 +124,7 @@ export class StorageEntryPointer {
   }
 
 
-  async stats(): Promise<FileStats> {
+  async stats(): Promise<StorageEntryStats> {
     return this.storage.stats(this.path);
   }
 
@@ -119,14 +140,21 @@ export class StorageEntryPointer {
 }
 
 
-export interface FileStats {
+/**
+ * Size is undefined for directories.
+ * Size is "unk" for entries that can have a size, but used storage implementation does not allow determining it.
+ */
+export type StorageEntrySize = number | "unk" | undefined;
+
+
+export interface StorageEntryStats {
   isDirectory: boolean;
 
   /**
    * Size should be set to undefined for directories.
    * If size cannot be determined because storage does not support it, it should be set to `unk`
    */
-  size: number | "unk" | undefined;
+  size: StorageEntrySize;
   createTs: number | undefined;
   updateTs: number | undefined;
 }

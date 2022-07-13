@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
+import { syncEntry, SyncEntry } from "../common/sync/StorageSync";
 import { getProfile, requireAuthenticatedUser } from "./auth";
 import S from "fluent-json-schema";
 import { ErrorCode, LogicError } from "../common/errors";
@@ -8,8 +9,7 @@ import * as fs from "fs";
 import { StoragePath } from "../common/storage/StoragePath";
 import { ServerStorageFactory } from "./storage/ServerStorageFactory";
 import { SerializableStorageEntryData } from "../common/workspace/SerializableStorageEntryData";
-import { FileStats, StorageEntryType, StorageLayer } from "../common/storage/StorageLayer";
-import { checksum } from "../common/workspace/Checksums";
+import { StorageEntryStats, StorageEntryType, StorageLayer } from "../common/storage/StorageLayer";
 
 
 type StorageRouteParams = {
@@ -104,7 +104,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     const text = req.query.text ? await entry.readText() : undefined;
 
     const childrenEntries = req.query.children ? await entry.children() : undefined;
-    const childrenStats: FileStats[] = [];
+    const childrenStats: StorageEntryStats[] = [];
 
     if (childrenEntries) {
       await Promise.all(childrenEntries.map(async (child, index) => {
@@ -116,7 +116,6 @@ export default async function initApiRoutes(app: FastifyInstance) {
       path: entry.path.normalized,
       stats,
       textContent: text,
-      checksum: checksum(text || ""),
       children: childrenEntries?.map((child, index) => ({
         path: child.path.normalized,
         stats: childrenStats[index]!
@@ -247,6 +246,19 @@ export default async function initApiRoutes(app: FastifyInstance) {
     await clonePlugin(realRoot, req.body.name, req.body.url);
 
     return {};
+  });
+
+
+  app.post<{
+    Params: StorageRouteParams,
+    Body: { entry: SyncEntry }
+  }>("/api/storages/:storageId/sync", {
+    schema: {
+      params: S.object().prop("storageId", S.string().required())
+    }
+  }, async (req, res) => {
+    const s = await getStorage(req);
+    return syncEntry(req.body.entry, s.storage);
   });
 }
 

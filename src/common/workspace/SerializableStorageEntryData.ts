@@ -1,12 +1,11 @@
-import { FileStats } from "../storage/StorageLayer";
+import { StorageEntryStats } from "../storage/StorageLayer";
 
 
 export interface SerializableStorageEntryData {
   path: string;
-  stats: FileStats;
+  stats: StorageEntryStats;
   children?: SerializableStorageEntryData[];
   textContent?: string;
-  checksum?: string;
 }
 
 

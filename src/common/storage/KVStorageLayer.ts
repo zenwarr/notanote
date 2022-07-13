@@ -1,4 +1,4 @@
-import { FileStats, StorageEntryPointer, StorageEntryType, StorageError, StorageErrorCode, StorageLayer } from "./StorageLayer";
+import { StorageEntryStats, StorageEntryPointer, StorageEntryType, StorageError, StorageErrorCode, StorageLayer } from "./StorageLayer";
 import { StoragePath } from "./StoragePath";
 
 
@@ -55,7 +55,7 @@ export class KVStorageLayer extends StorageLayer {
   override async children(entryPath: StoragePath): Promise<StorageEntryPointer[]> {
     const result: StorageEntryPointer[] = [];
     for await (const [ path ] of this._kv.enumerate()) {
-      if ((new StoragePath(path)).inside(entryPath, false)) {
+      if ((new StoragePath(path)).parentDir.isEqual(entryPath)) {
         const child = new StorageEntryPointer(new StoragePath(path), this);
         result.push(child);
       }
@@ -67,7 +67,7 @@ export class KVStorageLayer extends StorageLayer {
 
   override async exists(path: StoragePath): Promise<boolean> {
     const entry = await this._kv.get(path.normalized);
-    return !!entry;
+    return !!entry || path.isEqual(StoragePath.root);
   }
 
 
@@ -98,7 +98,7 @@ export class KVStorageLayer extends StorageLayer {
   }
 
 
-  override async stats(path: StoragePath): Promise<FileStats> {
+  override async stats(path: StoragePath): Promise<StorageEntryStats> {
     if (path.isEqual(StoragePath.root)) {
       return {
         isDirectory: true,

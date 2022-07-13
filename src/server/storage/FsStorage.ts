@@ -1,6 +1,6 @@
 import {
   StorageEntryPointer,
-  FileStats,
+  StorageEntryStats,
   StorageError,
   StorageErrorCode,
   StorageLayer
@@ -11,9 +11,13 @@ import { asyncExists } from "../plugin/PluginManager";
 
 
 export class FsStorage extends StorageLayer {
-  constructor(private rootPath: string) {
+  constructor(rootPath: string) {
     super();
+    this.rootPath = rootPath;
   }
+
+
+  private readonly rootPath: string;
 
 
   override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
@@ -73,7 +77,7 @@ export class FsStorage extends StorageLayer {
   }
 
 
-  override async stats(path: StoragePath): Promise<FileStats> {
+  override async stats(path: StoragePath): Promise<StorageEntryStats> {
     const absPath = this.toAbsolutePath(path);
     const stats = await fs.promises.stat(absPath);
     return {

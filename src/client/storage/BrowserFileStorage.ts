@@ -1,6 +1,6 @@
 import * as idb from "idb-keyval";
 import * as mobx from "mobx";
-import { FileStats, StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "../../common/storage/StorageLayer";
+import { StorageEntryStats, StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "../../common/storage/StorageLayer";
 import { StoragePath } from "../../common/storage/StoragePath";
 
 
@@ -193,7 +193,7 @@ export class BrowserFileStorageLayer extends StorageLayer {
   }
 
 
-  override async stats(path: StoragePath): Promise<FileStats> {
+  override async stats(path: StoragePath): Promise<StorageEntryStats> {
     const handles = await this.getHandle(path);
     if (!handles || !handles.child) {
       throw new StorageError(StorageErrorCode.NotExists, path, "File does not exist");

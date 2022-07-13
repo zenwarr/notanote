@@ -24,7 +24,10 @@ export function getStatusCodeForError(code: ErrorCode) {
 
 
 export class LogicError extends Error {
-  constructor(public code: ErrorCode, public text: string) {
+  constructor(code: ErrorCode, public text: string) {
     super(text);
+    this.code = code;
   }
+
+  readonly code: ErrorCode;
 }

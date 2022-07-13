@@ -6,9 +6,13 @@ import { StoragePath } from "../../common/storage/StoragePath";
 
 
 export class PluginConfigStorageEntry extends RuntimeStorageEntry {
-  constructor(private readonly wsId: string, private readonly realRootPath: string) {
+  constructor(readonly wsId: string, private readonly realRootPath: string) {
     super();
+    this.wsId = wsId;
   }
+
+
+  private readonly wsId: string;
 
 
   override async readText(): Promise<string> {

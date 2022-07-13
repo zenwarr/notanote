@@ -1,11 +1,9 @@
 import { makeObservable, observable } from "mobx";
-import * as luxon from "luxon";
 import { FileSettings } from "../common/Settings";
+import { ClientWorkspace } from "./ClientWorkspace";
 import { DocumentManager } from "./DocumentManager";
 import { StorageEntryPointer } from "../common/storage/StorageLayer";
-
-
-const AUTO_SAVE_TIMEOUT = luxon.Duration.fromObject({ seconds: 5 });
+import assert from "assert";
 
 
 export interface DocumentEditorStateAdapter {
@@ -18,12 +16,6 @@ export class Document {
     this.entry = entry;
     this.settings = settings;
     this.text = "";
-
-    makeObservable(this, {
-      lastSave: observable,
-      lastSaveError: observable,
-      saveState: observable
-    });
   }
 
 
@@ -57,69 +49,18 @@ export class Document {
 
 
   onChanges() {
-    if (this.saveTimer) {
-      clearTimeout(this.saveTimer);
-    }
-
-    if (this.saveState === SaveState.Saving) {
-      this.hadChangesWhileSaving = true;
-    } else {
-      this.saveState = SaveState.UnsavedChanges;
-    }
-
-    const doSave = () => {
-      this.saveTimer = undefined;
-      this.save().then(isSaved => {
-        if (!isSaved) {
-          this.saveTimer = setTimeout(doSave, AUTO_SAVE_TIMEOUT.as("milliseconds"));
-        }
-      });
-    };
-
-    this.saveTimer = setTimeout(doSave, AUTO_SAVE_TIMEOUT.as("milliseconds"));
+    this.onChangesAsync().catch(error => console.error("onChanges failed", error))
   }
 
 
-  async save(): Promise<boolean> {
-    this.saveState = SaveState.Saving;
-
-    try {
-      const content = await this.serializeContent();
-      await this.entry.writeOrCreate(content);
-      this.text = content;
-
-      this.lastSaveError = undefined;
-      this.lastSave = new Date();
-      this.saveState = this.hadChangesWhileSaving ? SaveState.UnsavedChanges : SaveState.NoChanges;
-      DocumentManager.instance.onDocumentSaved(this);
-      return true;
-    } catch (err: any) {
-      this.lastSaveError = err;
-      this.saveState = SaveState.UnsavedChanges;
-
-      console.error(`Failed to save document: ${ err.message }`);
-      return false;
-    } finally {
-      this.hadChangesWhileSaving = false;
-    }
+  private async onChangesAsync() {
+    await this.entry.writeOrCreate(await this.serializeContent());
+    ClientWorkspace.instance.syncWorker.addRoot(this.entry);
   }
 
 
-  private hadChangesWhileSaving = false;
-  private saveTimer: any = undefined;
   readonly entry: StorageEntryPointer;
   readonly settings: FileSettings;
   private text: string;
   private adapter: DocumentEditorStateAdapter | undefined;
-
-  lastSave: Date | undefined = undefined;
-  lastSaveError: string | undefined = undefined;
-  saveState: SaveState = SaveState.NoChanges;
-}
-
-
-export enum SaveState {
-  NoChanges,
-  Saving,
-  UnsavedChanges
 }

@@ -1,4 +1,4 @@
-import { StorageEntryPointer, FileStats, StorageLayer, StorageErrorCode, StorageError } from "../../common/storage/StorageLayer";
+import { StorageEntryPointer, StorageEntryStats, StorageLayer, StorageErrorCode, StorageError } from "../../common/storage/StorageLayer";
 import { StoragePath } from "../../common/storage/StoragePath";
 import ky from "ky";
 import { SerializableStorageEntryData } from "../../common/workspace/SerializableStorageEntryData";
@@ -69,7 +69,7 @@ export class RemoteHttpStorage extends StorageLayer {
   }
 
 
-  override async stats(path: StoragePath): Promise<FileStats> {
+  override async stats(path: StoragePath): Promise<StorageEntryStats> {
     const data = await this.getRemoteData(path);
     if (!data) {
       throw new StorageError(StorageErrorCode.NotExists, path, `File does not exist`);

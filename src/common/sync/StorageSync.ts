@@ -5,7 +5,7 @@ import assert from "assert";
 
 
 export enum DiffType {
-  InputUpdate = "iu",
+  LocalUpdate = "iu",
   RemoteUpdate = "ru",
   ConflictingUpdate = "cu",
 
@@ -20,21 +20,32 @@ export enum DiffType {
 }
 
 
+/**
+ * Piece of information about a storage entry that allows to calculate a differences that need to be synced.
+ */
 export interface SyncEntry {
   path: StoragePath;
 
   /**
-   * Identity at the time it was last synced
+   * Identity at the time it was last synced.
+   * `undefined` means that client has no sync info.
    */
   synced?: ContentIdentity;
 
   /**
-   * Identity now
+   * Identity now.
+   * `undefined` means the file does not exist now.
    */
   identity?: ContentIdentity;
 
   isDir: boolean;
   children?: SyncEntry[];
+
+  /**
+   * Data can be omitted.
+   * A client can provide data for a file immediately for a faster sync if he is sure that file content is going to be needed.
+   * But if content is omitted and it is required to sync, the server will request this content in its response.
+   */
   data?: string;
 }
 
@@ -46,11 +57,18 @@ export interface SyncEntry {
 async function getEntryDiff(local: SyncEntry | undefined, remote: StorageEntryPointer): Promise<DiffType | undefined> {
   const remoteIdentity = await getContentIdentity(remote);
   if (local && local.identity && remoteIdentity) {
-    // If we do not have local hash, we can either have corrupted metadata,
-    // or two files with same names are created on local and on remote
     if (!local.synced) {
+      // - two files with same names are created both on local and remote
+      // - the client has corrupted metadata (or this is initial sync)
+
+      // creating two directories is always ok
       const outIsDir = (await remote.stats()).isDirectory;
       if (local.isDir && outIsDir) {
+        return undefined;
+      }
+
+      // creating two files with identical content is also ok
+      if (isContentIdentityEqual(local.identity, remoteIdentity)) {
         return undefined;
       }
 
@@ -62,13 +80,19 @@ async function getEntryDiff(local: SyncEntry | undefined, remote: StorageEntryPo
       return undefined;
     } else if (isContentIdentityEqual(local.synced, remoteIdentity)) {
       // file is updated locally, we can safely update remote
-      return DiffType.InputUpdate;
+      return DiffType.LocalUpdate;
+    } else if (isContentIdentityEqual(local.synced, local.identity)) {
+      // local file was not changed since last sync, but it was updated remotely
+      // we can safely update local file
+      return DiffType.RemoteUpdate;
     } else {
       // file is updated locally, but synced hash does not match remote
       return DiffType.ConflictingUpdate;
     }
   } else if (!local?.identity && remoteIdentity) {
     if (!local?.synced) {
+      // - the entry was created on remote and missing on local
+      // - client has corrupted metata (or this is initial sync)
       return DiffType.RemoteCreate;
     }
 
@@ -96,40 +120,40 @@ async function getEntryDiff(local: SyncEntry | undefined, remote: StorageEntryPo
 
 
 /**
- * Calculates diff between two entries, performs actions required to sync on remote tree and returns actions required to be performed on local tree.
- * These actions can include user interaction, like asking for confirmation, resolving a merge conflict or submitting more data for next sync.
- * Local tree is represented by SyncEntries — a lightweight serializable structure that can hold local data, but can omit it.
- * Whether SyncEntry has local data is determined by some heuristic on client.
- * If local data is required to sync (for example, a file was created in local workspace), a corresponding action will be included in the result.
+ * Executes the following actions to sync a single entry (which can be a directory, and that results in syncing an entire tree of this directory):
+ * - Calculates diff between two entries
+ * - Performs actions required to sync on remote tree
+ * - Returns actions required to be performed on local tree and information on changes made to the remote tree
+ *
+ * Actions required for a local tree can require user interaction, for example, asking to confirm or resolving a merge conflict.
+ * Client can also be obliged to submit more data for the next sync.
+ *
+ * Local tree is represented by a collection of SyncEntry — a serializable structure that can hold local data, but can omit it.
  */
 export async function syncEntry(local: SyncEntry, remote: StorageLayer) {
-  const allPaths = new Set<string>(); // this is combination of all local and remote paths
+  const allPaths: string[] = []; // combination of all local and remote paths
   const localEntries = new Map<string, SyncEntry>(); // to speed-up lookup of local entries by path
 
-  // we collect all local paths
-  for (const localEntry of walkSyncEntries(local)) {
-    allPaths.add(localEntry.path.normalized);
+  // collect all local paths
+  for (const localEntry of walkSyncEntriesDownToTop(local)) {
+    allPaths.push(localEntry.path.normalized);
     localEntries.set(localEntry.path.normalized, localEntry);
   }
 
-  // and add missing remote paths under path matching received local entry.
-  // remote entry at requested path can be completely missing
-  for await (const entry of walkEntry(remote.get(local.path))) {
-    if (allPaths.has(entry.path.normalized)) {
-      continue;
+  // add remote paths missing from already collected local paths
+  for await (const entry of walkEntriesDownToTop(remote.get(local.path))) {
+    if (!allPaths.includes(entry.path.normalized)) {
+      allPaths.push(entry.path.normalized);
     }
-
-    allPaths.add(entry.path.normalized);
   }
 
   const result: SyncResult[] = [];
 
   for (const entryPath of allPaths.values()) {
     const local = localEntries.get(entryPath);
-    const remotePointer = remote.get(new StoragePath(entryPath)); // remote entry here can be missing
+    const remotePointer = remote.get(new StoragePath(entryPath));
 
     const diff = await getEntryDiff(local, remotePointer);
-    console.log(`diff: ${ entryPath } -> ${ diff }`);
     if (diff) {
       result.push(await resolveDiff(diff, local, remotePointer, true));
     }
@@ -143,16 +167,16 @@ export async function syncEntry(local: SyncEntry, remote: StorageLayer) {
  * Walks through all entries in the tree, including all children.
  * Children are walked in depth-first order.
  */
-function* walkSyncEntries(entry: SyncEntry): Generator<SyncEntry> {
+function* walkSyncEntriesDownToTop(entry: SyncEntry): Generator<SyncEntry> {
   for (const child of entry.children || []) {
-    yield* walkSyncEntries(child);
+    yield* walkSyncEntriesDownToTop(child);
   }
 
   yield entry;
 }
 
 
-async function* walkEntry(entry: StorageEntryPointer): AsyncGenerator<StorageEntryPointer> {
+async function* walkEntriesDownToTop(entry: StorageEntryPointer): AsyncGenerator<StorageEntryPointer> {
   let isDir = false;
   try {
     const stats = await entry.stats();
@@ -167,7 +191,7 @@ async function* walkEntry(entry: StorageEntryPointer): AsyncGenerator<StorageEnt
 
   if (isDir) {
     for (const child of await entry.children()) {
-      yield* await walkEntry(child);
+      yield* await walkEntriesDownToTop(child);
     }
   }
 
@@ -229,7 +253,7 @@ export async function resolveDiff(diff: DiffType,
                                   remote: StorageEntryPointer,
                                   performUnsafeOperations: boolean): Promise<SyncResult> {
   switch (diff) {
-    case DiffType.InputUpdate:
+    case DiffType.LocalUpdate:
       // replace output with input data
       assert(input != null);
       if (input.data) {

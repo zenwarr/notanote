@@ -1,4 +1,4 @@
-import { StorageEntryPointer, FileStats, StorageLayer, StorageEntryType, StorageError, StorageErrorCode } from "./StorageLayer";
+import { StorageEntryPointer, StorageEntryStats, StorageLayer, StorageEntryType, StorageError, StorageErrorCode } from "./StorageLayer";
 import { StoragePath } from "./StoragePath";
 import { MemoryStorage } from "../../client/storage/MemoryStorage";
 
@@ -41,7 +41,7 @@ export class MemoryCachedStorage extends StorageLayer {
 
   override async children(path: StoragePath): Promise<StorageEntryPointer[]> {
     const cachedChildren = await this.memory.children(path);
-    return cachedChildren.map(p => new StorageEntryPointer(path, this));
+    return cachedChildren.map(p => new StorageEntryPointer(p.path, this));
   }
 
 
@@ -74,7 +74,7 @@ export class MemoryCachedStorage extends StorageLayer {
   }
 
 
-  override async stats(path: StoragePath): Promise<FileStats> {
+  override async stats(path: StoragePath): Promise<StorageEntryStats> {
     return this.memory.stats(path);
   }
 

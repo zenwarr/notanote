@@ -1,7 +1,6 @@
-import { Document, SaveState } from "./Document";
-import { computed, makeObservable, observable } from "mobx";
+import { Document } from "./Document";
+import { makeObservable, observable } from "mobx";
 import { ClientWorkspace } from "./ClientWorkspace";
-import { SpecialFiles } from "../common/SpecialFiles";
 import { StoragePath } from "../common/storage/StoragePath";
 import { FileSettingsProvider } from "../common/workspace/FileSettingsProvider";
 import { DocumentEditorProvider } from "./DocumentEditorProvider";
@@ -13,8 +12,7 @@ export class DocumentManager {
 
   constructor() {
     makeObservable(this, {
-      documents: observable,
-      hasUnsavedChanges: computed
+      documents: observable
     });
   }
 
@@ -40,28 +38,6 @@ export class DocumentManager {
     const doc = this.documents.get(path.normalized);
     if (doc) {
       doc.usageCount -= 1;
-    }
-  }
-
-
-  get hasUnsavedChanges(): boolean {
-    for (const doc of this.documents.values()) {
-      if (doc.doc.saveState !== SaveState.NoChanges) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-
-  public onDocumentSaved(doc: Document) {
-    if (SpecialFiles.shouldReloadSettingsAfterSave(doc.entry.path)) {
-      for (const [ key, value ] of this.documents) {
-        if (value.usageCount === 0) {
-          this.documents.delete(key);
-        }
-      }
     }
   }
 
