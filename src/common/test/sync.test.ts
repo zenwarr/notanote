@@ -1,184 +1,221 @@
 import { KVStorageLayer } from "../storage/KVStorageLayer";
+import { LocalSyncWorker } from "../sync/LocalSync";
+import { MemorySyncMetadataStorage, SyncMetadataMap } from "../sync/SyncMetadataStorage";
+import { LocalSyncProvider } from "../sync/SyncProvider";
 import { MapKV } from "./map-kv";
 import { StoragePath } from "../storage/StoragePath";
-import { DiffType, SyncEntry, syncEntry, SyncResultAction } from "../sync/StorageSync";
-import { DirContentIdentity, getContentHash } from "../sync/ContentIdentity";
+import { DiffType } from "../sync/StorageSync";
 
 
-let remoteStorage = new KVStorageLayer(new MapKV());
+type CheckEntryMap = { [path: string]: string | undefined };
 
 
-function makeSyncEntryDir(path: string): SyncEntry {
-  return {
-    path: new StoragePath(path),
-    isDir: true,
-    identity: { hash: undefined, size: "unk" }
-  };
+function prepare() {
+  const local = new KVStorageLayer(new MapKV());
+
+  const remote = new KVStorageLayer(new MapKV());
+  const remoteSync = new LocalSyncProvider(remote);
+
+  const metadata = new MemorySyncMetadataStorage();
+  const localSync = new LocalSyncWorker(remoteSync, metadata);
+
+  return { local, remote, localSync, metadata };
 }
 
 
-function makeSyncEntryFile(path: string, data: string | undefined, syncedData: string | undefined = undefined): SyncEntry {
-  return {
-    path: new StoragePath(path),
-    isDir: false,
-    synced: syncedData ? {
-      hash: getContentHash(syncedData),
-      size: "unk"
-    } : undefined,
-    identity: data ? {
-      hash: getContentHash(data),
-      size: "unk"
-    } : undefined,
-    data,
-  };
+async function makeSync(local: KVStorageLayer, localSync: LocalSyncWorker) {
+  localSync.addRoot(local.get(StoragePath.root));
+  await localSync.sync();
 }
 
 
-beforeEach(() => {
-  remoteStorage = new KVStorageLayer(new MapKV());
+it("local file created", async () => {
+  const d = prepare();
+  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await makeSync(d.local, d.localSync);
+
+  let r: CheckEntryMap = {
+    "/file.txt": "Hello, world!"
+  };
+
+  expect(await d.local.entries()).toStrictEqual(r);
+  expect(await d.remote.entries()).toStrictEqual(r);
 });
 
 
-it("should create a directory on remote", async () => {
-  // should be left intact by the sync
-  await remoteStorage.get(new StoragePath("file.txt")).writeOrCreate("Hello, world!");
+it("local file updated", async () => {
+  const d = prepare();
+  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await makeSync(d.local, d.localSync);
 
-  // should be created on remote
-  const r = await syncEntry(makeSyncEntryDir("new-dir"), remoteStorage);
+  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world! Updated");
+  await makeSync(d.local, d.localSync);
 
-  expect(r).toEqual([
-    {
-      path: "/new-dir",
-      action: SyncResultAction.Created,
-      identity: DirContentIdentity
-    }
-  ]);
+  let r: CheckEntryMap = {
+    "/file.txt": "Hello, world! Updated"
+  };
+
+  expect(await d.local.entries()).toStrictEqual(r);
+  expect(await d.remote.entries()).toStrictEqual(r);
 });
 
 
-it("local file not changed since last sync", async () => {
-  await remoteStorage.get(new StoragePath("file.txt")).writeOrCreate("Hello, world!");
-  const r = await syncEntry(makeSyncEntryFile("file.txt", "Hello, world!", "Hello, world!"), remoteStorage);
+it("remote file updated", async () => {
+  const d = prepare();
+  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await makeSync(d.local, d.localSync);
 
-  expect(r).toHaveLength(0);
+  await d.remote.writeOrCreate(new StoragePath("file.txt"), "Hello, world! Updated");
+  await makeSync(d.local, d.localSync);
+
+  let r: CheckEntryMap = {
+    "/file.txt": "Hello, world! Updated"
+  };
+
+  expect(await d.local.entries()).toStrictEqual(r);
+  expect(await d.remote.entries()).toStrictEqual(r);
 });
 
 
-it("local file has no sync information", async () => {
-  await remoteStorage.get(new StoragePath("file.txt")).writeOrCreate("Hello, world!");
-  const r = await syncEntry(makeSyncEntryFile("file.txt", "Hello, world!"), remoteStorage);
+it("local and remote files updated", async () => {
+  const d = prepare();
+  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await makeSync(d.local, d.localSync);
 
-  expect(r).toHaveLength(0);
-});
+  await d.remote.writeOrCreate(new StoragePath("file.txt"), "Hello, world! Updated remote");
+  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world! Updated local");
+  await makeSync(d.local, d.localSync);
 
+  expect(await d.local.entries()).toStrictEqual({
+    "/file.txt": "Hello, world! Updated local"
+  });
+  expect(await d.remote.entries()).toStrictEqual({
+    "/file.txt": "Hello, world! Updated remote"
+  });
 
-it("local file is removed", async () => {
-  await remoteStorage.get(new StoragePath("file.txt")).writeOrCreate("Hello, world!");
-  const r = await syncEntry(makeSyncEntryFile("file.txt", undefined, "Hello, world!"), remoteStorage);
-
-  expect(r).toMatchObject([
-    {
-      path: "/file.txt",
-      action: SyncResultAction.Removed,
-    }
-  ]);
-});
-
-
-it("local file is missing, no sync info and remote file does exist", async () => {
-  await remoteStorage.get(new StoragePath("file.txt")).writeOrCreate("Hello, world!");
-  const r = await syncEntry(makeSyncEntryFile("file.txt", undefined, undefined), remoteStorage);
-
-  expect(r).toMatchObject([
-    {
-      path: "/file.txt",
-      action: SyncResultAction.LocalCreateRequired,
-      data: "Hello, world!"
-    }
-  ]);
-});
-
-
-it("remote file was updated", async () => {
-  await remoteStorage.get(new StoragePath("file.txt")).writeOrCreate("Hello, world! Updated");
-  const r = await syncEntry(makeSyncEntryFile("file.txt", "Hello, world!", "Hello, world!"), remoteStorage);
-
-  expect(r).toMatchObject([
-    {
-      path: "/file.txt",
-      action: SyncResultAction.LocalUpdateRequired,
-      data: "Hello, world! Updated"
-    }
-  ]);
-});
-
-
-it("remote file was removed", async () => {
-  const r = await syncEntry(makeSyncEntryFile("file.txt", "Hello, world!", "Hello, world!"), remoteStorage);
-
-  expect(r).toMatchObject([
-    {
-      path: "/file.txt",
-      action: SyncResultAction.LocalRemoveRequired
-    }
-  ]);
-});
-
-
-it("remote file was removed and local file was removed too", async () => {
-  const r = await syncEntry(makeSyncEntryFile("file.txt", undefined, "Hello, world!"), remoteStorage);
-
-  expect(r).toHaveLength(0);
-});
-
-
-it("remote file was removed and local file was updated since last sync", async () => {
-  const r = await syncEntry(makeSyncEntryFile("file.txt", "Hello, world! Updated", "Hello, world!"), remoteStorage);
-
-  expect(r).toMatchObject([
-    {
-      path: "/file.txt",
-      conflict: DiffType.ConflictingRemoteRemove
-    }
-  ]);
-});
-
-
-it("local file is updated", async () => {
-  await remoteStorage.get(new StoragePath("file.txt")).writeOrCreate("Hello, world!");
-  const r = await syncEntry(makeSyncEntryFile("file.txt", "Hello, world! Updated", "Hello, world!"), remoteStorage);
-
-  expect(r).toMatchObject([
-    {
-      path: "/file.txt",
-      action: SyncResultAction.Updated
-    }
-  ]);
-});
-
-
-it("local file was updated and remote file was updated too, but with different content", async () => {
-  await remoteStorage.get(new StoragePath("file.txt")).writeOrCreate("Hello, world! Server update");
-  const r = await syncEntry(makeSyncEntryFile("file.txt", "Hello, world! Updated", "Hello, world!"), remoteStorage);
-
-  expect(r).toMatchObject([
-    {
-      path: "/file.txt",
+  expect(d.localSync.pendingConflicts).toMatchObject([ {
+    syncResult: {
       conflict: DiffType.ConflictingUpdate,
-      data: "Hello, world! Server update"
+      data: "Hello, world! Updated remote",
+      path: "/file.txt"
     }
-  ]);
+  } ]);
 });
 
 
-it("local file was removed, but server file was updated", async () => {
-  await remoteStorage.get(new StoragePath("file.txt")).writeOrCreate("Hello, world!");
-  const r = await syncEntry(makeSyncEntryFile("file.txt",  undefined, "Hello, world! Updated"), remoteStorage);
+it("local file removed", async function() {
+  const d = prepare();
+  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await makeSync(d.local, d.localSync);
 
-  expect(r).toMatchObject([
-    {
-      path: "/file.txt",
-      conflict: DiffType.ConflictingLocalRemove
+  await d.local.remove(new StoragePath("file.txt"));
+  await makeSync(d.local, d.localSync);
+
+  expect(await d.local.entries()).toStrictEqual({});
+  expect(await d.remote.entries()).toStrictEqual({});
+});
+
+
+it("local file removed and remote file updated", async function() {
+  const d = prepare();
+  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await makeSync(d.local, d.localSync);
+
+  await d.local.remove(new StoragePath("file.txt"));
+  await d.remote.writeOrCreate(new StoragePath("file.txt"), "Hello, world! Updated");
+  await makeSync(d.local, d.localSync);
+
+  expect(await d.local.entries()).toStrictEqual({});
+  expect(await d.remote.entries()).toStrictEqual({
+    "/file.txt": "Hello, world! Updated"
+  });
+
+  expect(d.localSync.pendingConflicts).toMatchObject([ {
+    syncResult: {
+      conflict: DiffType.ConflictingLocalRemove,
+      data: "Hello, world! Updated",
+      path: "/file.txt"
     }
-  ]);
+  } ]);
+});
+
+
+it("local file removed and remote file removed too", async function() {
+  const d = prepare();
+  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await makeSync(d.local, d.localSync);
+
+  await d.local.remove(new StoragePath("file.txt"));
+  await d.remote.remove(new StoragePath("file.txt"));
+  await makeSync(d.local, d.localSync);
+
+  expect(await d.local.entries()).toStrictEqual({});
+  expect(await d.remote.entries()).toStrictEqual({});
+});
+
+
+it("local file turned into directory", async function() {
+  const d = prepare();
+  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await makeSync(d.local, d.localSync);
+
+  await d.local.remove(new StoragePath("file.txt"));
+  await d.local.createDir(new StoragePath("file.txt"));
+  await makeSync(d.local, d.localSync);
+
+  const r: CheckEntryMap = {
+    "/file.txt": undefined
+  };
+
+  expect(await d.local.entries()).toStrictEqual(r);
+  expect(await d.remote.entries()).toStrictEqual(r);
+});
+
+
+it("remote file turned into directory", async function() {
+  const d = prepare();
+  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await makeSync(d.local, d.localSync);
+
+  await d.remote.remove(new StoragePath("file.txt"));
+  await d.remote.createDir(new StoragePath("file.txt"));
+  await makeSync(d.local, d.localSync);
+
+  const r: CheckEntryMap = {
+    "/file.txt": undefined
+  };
+
+  expect(d.localSync.pendingConflicts).toHaveLength(0);
+  expect(await d.local.entries()).toStrictEqual(r);
+  expect(await d.remote.entries()).toStrictEqual(r);
+});
+
+
+it("handles sync when a directory turned into a file", async function() {
+  const d = prepare();
+
+  await d.local.writeOrCreate(new StoragePath("dir/file.txt"), "Hello, local!");
+
+  await makeSync(d.local, d.localSync);
+
+  let r: CheckEntryMap = {
+    "/dir": undefined,
+    "/dir/file.txt": "Hello, local!"
+  };
+
+  expect(await d.local.entries()).toStrictEqual(r);
+  expect(await d.remote.entries()).toStrictEqual(r);
+
+  await d.local.remove(new StoragePath("dir"));
+  await d.local.writeOrCreate(new StoragePath("dir"), "Hello, local!");
+  await d.remote.writeOrCreate(new StoragePath("dir/file.txt"), "Updated");
+
+  await makeSync(d.local, d.localSync);
+
+  r = {
+    "/dir": "Hello, local!"
+  };
+
+  expect(await d.local.entries()).toStrictEqual(r);
+  expect(await d.remote.entries()).toStrictEqual(r);
 });

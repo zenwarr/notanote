@@ -54,9 +54,6 @@ export class StorageWithMounts extends StorageLayer {
 
   override async loadAll() {
     const all = await this.base.loadAll();
-    if (!all) {
-      return undefined;
-    }
 
     const mountParentsToChildren = new Map<string, string[]>();
     for (const [ mountPath, mount ] of this.mounts.entries()) {

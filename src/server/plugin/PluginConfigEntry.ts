@@ -2,11 +2,10 @@ import { getWorkspacePlugins } from "./PluginManager";
 import { getRemoteOrigin } from "../github/Github";
 import path from "path";
 import { RuntimeStorageEntry } from "../../common/storage/RuntimeStorageEntry";
-import { StoragePath } from "../../common/storage/StoragePath";
 
 
 export class PluginConfigStorageEntry extends RuntimeStorageEntry {
-  constructor(readonly wsId: string, private readonly realRootPath: string) {
+  constructor(wsId: string, private readonly realRootPath: string) {
     super();
     this.wsId = wsId;
   }

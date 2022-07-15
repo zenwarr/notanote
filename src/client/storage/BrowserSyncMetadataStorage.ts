@@ -1,12 +1,12 @@
 import * as idb from "idb-keyval";
 import { StoragePath } from "../../common/storage/StoragePath";
 import { ContentIdentity } from "../../common/sync/ContentIdentity";
-import { SyncMetadataMap, SyncMetadataStorage } from "../../common/sync/SyncMetadataStorage";
+import { mergeMetadataMaps, SyncMetadataMap, SyncMetadataStorage } from "../../common/sync/SyncMetadataStorage";
 
 
 export class BrowserSyncMetadataStorage implements SyncMetadataStorage {
-  async get(path: StoragePath) {
-    return (await this.loadStoredData())[path.normalized];
+  async get() {
+    return await this.loadStoredData();
   }
 
 
@@ -17,7 +17,8 @@ export class BrowserSyncMetadataStorage implements SyncMetadataStorage {
 
 
   async setMulti(data: SyncMetadataMap): Promise<void> {
-    this._data = { ...(await this.loadStoredData()), ...data };
+    await this.loadStoredData();
+    mergeMetadataMaps(this._data!, data);
     await idb.set("sync-metadata", this._data);
   }
 

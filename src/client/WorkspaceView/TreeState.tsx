@@ -1,5 +1,6 @@
 import { FixedSizeNodeData } from "react-vtree";
 import { SerializableStorageEntryData } from "../../common/workspace/SerializableStorageEntryData.js";
+import * as mobx from "mobx";
 
 
 export type TreeNodeData = FixedSizeNodeData & {
@@ -32,12 +33,19 @@ export function* treeWalker(state: TreeState): any {
     };
   }
 
-  for (const child of state.root.children || []) {
+  const roots = state.root.children || [];
+  if (!roots.length) {
+    return;
+  }
+
+  for (const child of roots) {
     yield createEntry(child, 0);
   }
 
   while (true) {
-    const item: TreeNodeData = (yield).data;
+    let yielded: { data: TreeNodeData } = yield;
+
+    const item = yielded.data;
     for (const child of item.data.children || []) {
       yield createEntry(child, item.level + 1);
     }

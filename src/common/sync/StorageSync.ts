@@ -1,4 +1,4 @@
-import { ContentIdentity, getContentIdentity, isContentIdentityEqual } from "./ContentIdentity";
+import { ContentIdentity, DirContentIdentity, getContentIdentity, isContentIdentityEqual, isDirIdentity } from "./ContentIdentity";
 import { StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "../storage/StorageLayer";
 import { StoragePath } from "../storage/StoragePath";
 import assert from "assert";
@@ -38,7 +38,6 @@ export interface SyncEntry {
    */
   identity?: ContentIdentity;
 
-  isDir: boolean;
   children?: SyncEntry[];
 
   /**
@@ -47,6 +46,30 @@ export interface SyncEntry {
    * But if content is omitted and it is required to sync, the server will request this content in its response.
    */
   data?: string;
+}
+
+
+export type SerializedSyncEntry = Omit<SyncEntry, "path" | "children"> & {
+  path: string
+  children?: SerializedSyncEntry[]
+}
+
+
+export function serializeSyncEntry(e: SyncEntry): SerializedSyncEntry {
+  return {
+    ...e,
+    path: e.path.normalized,
+    children: e.children ? e.children.map(serializeSyncEntry) : undefined,
+  };
+}
+
+
+export function deserializeSyncEntry(e: SerializedSyncEntry): SyncEntry {
+  return {
+    ...e,
+    path: new StoragePath(e.path),
+    children: e.children ? e.children.map(deserializeSyncEntry) : undefined,
+  };
 }
 
 
@@ -63,7 +86,7 @@ async function getEntryDiff(local: SyncEntry | undefined, remote: StorageEntryPo
 
       // creating two directories is always ok
       const outIsDir = (await remote.stats()).isDirectory;
-      if (local.isDir && outIsDir) {
+      if (isDirIdentity(local.identity) && outIsDir) {
         return undefined;
       }
 
@@ -130,7 +153,7 @@ async function getEntryDiff(local: SyncEntry | undefined, remote: StorageEntryPo
  *
  * Local tree is represented by a collection of SyncEntry — a serializable structure that can hold local data, but can omit it.
  */
-export async function syncEntry(local: SyncEntry, remote: StorageLayer) {
+export async function syncRemoteEntry(local: SyncEntry, remote: StorageLayer) {
   const allPaths: string[] = []; // combination of all local and remote paths
   const localEntries = new Map<string, SyncEntry>(); // to speed-up lookup of local entries by path
 
@@ -176,7 +199,7 @@ function* walkSyncEntriesDownToTop(entry: SyncEntry): Generator<SyncEntry> {
 }
 
 
-async function* walkEntriesDownToTop(entry: StorageEntryPointer): AsyncGenerator<StorageEntryPointer> {
+export async function* walkEntriesDownToTop(entry: StorageEntryPointer): AsyncGenerator<StorageEntryPointer> {
   let isDir = false;
   try {
     const stats = await entry.stats();
@@ -263,6 +286,15 @@ export async function resolveDiff(diff: DiffType,
           identity: await writeEntry(remote, input.data),
           data: undefined
         };
+      } else if (input.identity && isDirIdentity(input.identity)) {
+        // we have a directory created locally, but we have a file here on the remote
+        await remote.remove();
+        return {
+          path: remote.path.normalized,
+          action: SyncResultAction.Updated,
+          identity: await createDir(remote),
+          data: undefined
+        };
       } else {
         return {
           path: remote.path.normalized,
@@ -290,14 +322,14 @@ export async function resolveDiff(diff: DiffType,
     case DiffType.LocalCreate:
       // create remote with local data
       assert(input != null);
-      if (!input.isDir && input.data != null) {
+      if (!isDirIdentity(input.identity) && input.data != null) {
         return {
           path: remote.path.normalized,
           action: SyncResultAction.Created,
           identity: await writeEntry(remote, input.data),
           data: undefined
         };
-      } else if (input.isDir) {
+      } else if (isDirIdentity(input.identity)) {
         return {
           path: remote.path.normalized,
           action: SyncResultAction.Created,

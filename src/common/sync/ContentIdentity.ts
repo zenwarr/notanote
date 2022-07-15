@@ -1,5 +1,6 @@
 import * as crypto from "crypto";
 import { StorageEntryPointer, StorageEntrySize, StorageError, StorageErrorCode } from "../storage/StorageLayer";
+import { walkEntriesDownToTop } from "./StorageSync";
 
 
 export interface ContentIdentity {
@@ -10,6 +11,11 @@ export interface ContentIdentity {
 
 export const DirContentIdentity = { hash: undefined, size: 0 };
 Object.freeze(DirContentIdentity);
+
+
+export function isDirIdentity(identity: ContentIdentity | undefined) {
+  return identity && identity.hash === DirContentIdentity.hash && identity.size === DirContentIdentity.size;
+}
 
 
 export function isContentIdentityEqual(a: ContentIdentity, b: ContentIdentity): boolean {

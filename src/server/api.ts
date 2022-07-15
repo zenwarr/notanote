@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
-import { syncEntry, SyncEntry } from "../common/sync/StorageSync";
+import { deserializeSyncEntry, SerializedSyncEntry, syncRemoteEntry, SyncEntry } from "../common/sync/StorageSync";
 import { getProfile, requireAuthenticatedUser } from "./auth";
 import S from "fluent-json-schema";
 import { ErrorCode, LogicError } from "../common/errors";
@@ -251,14 +251,14 @@ export default async function initApiRoutes(app: FastifyInstance) {
 
   app.post<{
     Params: StorageRouteParams,
-    Body: { entry: SyncEntry }
+    Body: { entry: SerializedSyncEntry }
   }>("/api/storages/:storageId/sync", {
     schema: {
       params: S.object().prop("storageId", S.string().required())
     }
   }, async (req, res) => {
     const s = await getStorage(req);
-    return syncEntry(req.body.entry, s.storage);
+    return syncRemoteEntry(deserializeSyncEntry(req.body.entry), s.storage);
   });
 }
 

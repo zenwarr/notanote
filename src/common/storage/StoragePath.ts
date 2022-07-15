@@ -45,12 +45,9 @@ export class StoragePath {
 
   inside(other: StoragePath, includeSelf = true): boolean {
     const includes = other._normalized === "/" || this._normalized.startsWith(other._normalized + "/");
-    if (includes && !includeSelf && this.isEqual(other)) {
-      return false;
-    }
-
-    return includes;
+    return includes || (includeSelf && this.isEqual(other));
   }
+
 
 
   static root = new StoragePath("/");

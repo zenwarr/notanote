@@ -1,6 +1,6 @@
 import ky from "ky";
 import { SyncProvider } from "../../common/sync/SyncProvider";
-import { SyncEntry, SyncResult } from "../../common/sync/StorageSync";
+import { serializeSyncEntry, SyncEntry, SyncResult } from "../../common/sync/StorageSync";
 
 
 export class HttpSyncProvider implements SyncProvider {
@@ -13,9 +13,9 @@ export class HttpSyncProvider implements SyncProvider {
 
 
   async sync(entry: SyncEntry): Promise<SyncResult[]> {
-    return ky.post(`/api/storages/${ this.storageId }/github/init`, {
+    return ky.post(`/api/storages/${ this.storageId }/sync`, {
       json: {
-        entry
+        entry: serializeSyncEntry(entry)
       }
     }).json<SyncResult[]>();
   }

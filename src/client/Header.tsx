@@ -1,7 +1,9 @@
 import { observer } from "mobx-react-lite";
 import { Box, Hidden, IconButton } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { SyncPanel } from "./SyncPanel";
+import { useState } from "react";
+import { SyncDialog } from "./sync/SyncDialog";
+import { SyncStatus } from "./sync/SyncStatus";
 import { ProfileHeader } from "./ProfileHeader";
 import MenuIcon from "@mui/icons-material/Menu";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
@@ -20,6 +22,7 @@ export interface HeaderProps {
 
 export const Header = observer((props: HeaderProps) => {
   const classes = useStyles();
+  const [ syncOpen, setSyncOpen ] = useState(false);
 
   return (
       <Box display={ "flex" } alignItems={ "center" } justifyContent={ "space-between" }>
@@ -30,7 +33,7 @@ export const Header = observer((props: HeaderProps) => {
         </Hidden>
 
         <div className={ classes.syncPanel }>
-          <SyncPanel/>
+          <SyncStatus onClick={ () => setSyncOpen(true) }/>
         </div>
 
         <Box mr={ 1 }>
@@ -54,6 +57,8 @@ export const Header = observer((props: HeaderProps) => {
         </IconButton>
 
         <ProfileHeader/>
+
+        <SyncDialog open={ syncOpen } onClose={ () => setSyncOpen(false) }/>
       </Box>
   );
 });

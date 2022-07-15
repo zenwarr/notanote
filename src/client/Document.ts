@@ -1,4 +1,5 @@
 import { makeObservable, observable } from "mobx";
+import * as _ from "lodash";
 import { FileSettings } from "../common/Settings";
 import { ClientWorkspace } from "./ClientWorkspace";
 import { DocumentManager } from "./DocumentManager";
@@ -16,6 +17,7 @@ export class Document {
     this.entry = entry;
     this.settings = settings;
     this.text = "";
+    this.onChangesDebounced = _.debounce(this.onChangesAsync.bind(this), 500);
   }
 
 
@@ -49,7 +51,7 @@ export class Document {
 
 
   onChanges() {
-    this.onChangesAsync().catch(error => console.error("onChanges failed", error))
+    this.onChangesDebounced()?.catch(error => console.error("onChanges failed", error))
   }
 
 
@@ -59,6 +61,7 @@ export class Document {
   }
 
 
+  private onChangesDebounced: () => Promise<void> | undefined;
   readonly entry: StorageEntryPointer;
   readonly settings: FileSettings;
   private text: string;

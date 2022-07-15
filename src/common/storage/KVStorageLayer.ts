@@ -4,9 +4,9 @@ import { StoragePath } from "./StoragePath";
 
 export interface SerializedKVStorageEntry {
   type: StorageEntryType;
-  createTs: number | undefined;
-  updateTs: number | undefined;
-  data: string | undefined;
+  createTs?: number;
+  updateTs?: number;
+  data?: string;
 }
 
 
@@ -28,6 +28,20 @@ export class KVStorageLayer extends StorageLayer {
   }
 
 
+  /**
+   * For testing and debugging purposes.
+   * Returns a map containing all entries in storage, where key is a path and value is a entry text content (for a file) or `undefined` (for a directory)
+   */
+  async entries(): Promise<{ [path: string]: string | undefined }> {
+    const result: { [path: string]: string | undefined } = {};
+    for await (const [ key, value ] of this._kv.enumerate()) {
+      const isDir = value.type === StorageEntryType.Dir;
+      result[key] = isDir ? undefined : value.data;
+    }
+    return result;
+  }
+
+
   override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
     let curPath = StoragePath.root;
     for (const part of path.parts) {
@@ -40,6 +54,8 @@ export class KVStorageLayer extends StorageLayer {
           updateTs: Date.now(),
           data: undefined,
         });
+      } else if (child.type !== StorageEntryType.Dir) {
+        throw new StorageError(StorageErrorCode.InvalidStructure, path, `Cannot create directory: a file with the same name already exists`);
       }
     }
 
@@ -123,6 +139,8 @@ export class KVStorageLayer extends StorageLayer {
 
 
   override async writeOrCreate(path: StoragePath, content: Buffer | string): Promise<StorageEntryPointer> {
+    await this.createDir(path.parentDir);
+
     const entry = await this._kv.get(path.normalized);
     if (!entry) {
       await this._kv.set(path.normalized, {

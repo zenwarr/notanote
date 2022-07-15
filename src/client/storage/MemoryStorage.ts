@@ -100,7 +100,7 @@ export class MemoryStorage extends StorageLayer {
     }
 
     if (parentEntry.children?.some(child => new StoragePath(child.path).isEqual(newPath))) {
-      throw new Error(`Entry ${ newEntryData.path } already exists`);
+      throw new StorageError(StorageErrorCode.AlreadyExists, new StoragePath(newEntryData.path), `Entry already exists`);
     } else {
       parentEntry.children = [ ...parentEntry.children || [], newEntryData ];
     }
@@ -148,7 +148,7 @@ export class MemoryStorage extends StorageLayer {
       return;
     }
 
-    parent.children = parent.children?.filter(c => new StoragePath(c.path).normalized === path.normalized);
+    parent.children = parent.children?.filter(c => !new StoragePath(c.path).isEqual(path));
   }
 
 

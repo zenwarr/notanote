@@ -11,12 +11,12 @@ import { CreateNewFolderOutlined, DeleteForever, PostAddOutlined } from "@mui/ic
 import { useNavigate } from "react-router";
 import { StoragePath } from "../../common/storage/StoragePath";
 import { StorageEntryType } from "../../common/storage/StorageLayer";
-import { FixedSizeTree } from "react-vtree";
 import { ContainerWithSizeDetection } from "../utils/ContainerWithSizeDetection";
 import { TreeNode } from "./TreeNode";
-import { TreeState, treeWalker } from "./TreeState";
+import { TreeState } from "./TreeState";
 import { TreeContext } from "./TreeContext";
 import { TreeMenu } from "./TreeMenu";
+import { TreeWrapper } from "./TreeWrapper";
 
 
 export interface WorkspaceViewProps {
@@ -192,10 +192,9 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
     <TreeContext.Provider value={ { openMenu: onMenuOpen, closeMenu: onMenuClose } }>
       <ContainerWithSizeDetection className={ containerClassName }>
         {
-          (width, height) => <FixedSizeTree treeWalker={ treeWalker.bind(null, treeState) } itemSize={ 25 } height={ height }
-                                            width={ width }>
+          (width, height) => <TreeWrapper state={ treeState } itemSize={ 25 } height={ height } width={ width }>
             { TreeNode as any }
-          </FixedSizeTree>
+          </TreeWrapper>
         }
       </ContainerWithSizeDetection>
     </TreeContext.Provider>

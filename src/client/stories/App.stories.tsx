@@ -1,6 +1,7 @@
 import { App } from "../App";
 import { AudioRecord } from "../audio/AudioRecord";
 import { Palette } from "../Palette";
+import { SyncStatusIcon } from "../sync/SyncStatusIcon";
 import { demoCompleter } from "./demo";
 import { DeviceConfigEditor } from "../device/DeviceConfigEditor";
 
@@ -13,4 +14,10 @@ export const palette = () => <Palette open completer={ demoCompleter } onSelect=
 
 export const audio = () => <AudioRecord/>;
 
-export const device = () => <DeviceConfigEditor />
+export const device = () => <DeviceConfigEditor />;
+
+export const syncStatus = () => <div>
+  <SyncStatusIcon color={"success"} />
+  <SyncStatusIcon color={"success" } rotate />
+  <SyncStatusIcon color={"error"} rotate />
+</div>

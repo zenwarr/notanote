@@ -13,6 +13,9 @@ module.exports = (env) => [
       publicPath: "/static/",
       chunkFilename: "[name]-[contenthash].js"
     },
+    cache: {
+      type: "filesystem"
+    },
     target: "web",
     mode: env.prod === "true" ? "production" : "development",
     devtool: env.prod === "true" ? undefined : "inline-source-map",

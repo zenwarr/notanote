@@ -38,9 +38,7 @@ export abstract class StorageLayer {
 
 
   async loadAll(): Promise<SerializableStorageEntryData> {
-    const d = await this.toSerializableEntry(this.get(StoragePath.root));
-    console.log("serialized", d);
-    return d;
+    return this.toSerializableEntry(this.get(StoragePath.root));
   }
 
 

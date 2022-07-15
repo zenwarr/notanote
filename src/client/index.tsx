@@ -1,10 +1,12 @@
 import { createRoot } from "react-dom/client";
+import { KVStorageLayer } from "../common/storage/KVStorageLayer";
 import { App } from "./App";
 import { configure } from "mobx";
 import { ClientWorkspace } from "./ClientWorkspace";
 import { ProfileManager } from "./ProfileManager";
 import { Workbox } from "workbox-window";
 import { HttpSyncProvider } from "./storage/HttpSyncProvider";
+import { IdbKvStorage } from "./storage/IdbKvStorage";
 import { AppThemeProvider } from "./Theme";
 import { registerPlugins } from "./plugin/BuiltInPlugins";
 import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
@@ -36,11 +38,13 @@ const DEFAULT_WORKSPACE_ID = "default";
 
 const remote = new StorageWithMounts(new RemoteHttpStorage(DEFAULT_WORKSPACE_ID));
 remote.mount(SpecialWorkspaceEntry.DeviceConfig, new DeviceConfigStorageEntry());
-const fs = new MemoryCachedStorage(remote);
 const syncAdapter = new HttpSyncProvider(DEFAULT_WORKSPACE_ID);
-ClientWorkspace.init(fs, syncAdapter, DEFAULT_WORKSPACE_ID);
+
+const local = new MemoryCachedStorage(new KVStorageLayer(new IdbKvStorage()));
+
+ClientWorkspace.init(local, syncAdapter, DEFAULT_WORKSPACE_ID);
 ProfileManager.instance.userName = params.userName;
-FileSettingsProvider.init(fs);
+FileSettingsProvider.init(local);
 
 try {
   registerPlugins(params.plugins);

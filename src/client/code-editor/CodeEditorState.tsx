@@ -271,10 +271,10 @@ export class CodeEditorStateAdapter implements DocumentEditorStateAdapter {
     const self = this;
     this.state = createEditorState(doc.getLastSavedText(), doc.entry.path, doc.settings, {
       onUpdate: upd => {
+        self.state = upd.state;
         if (upd.docChanged) {
           self.doc.onChanges();
         }
-        self.state = upd.state;
       }
     });
   }

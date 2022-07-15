@@ -1,5 +1,5 @@
 import { StorageLayer } from "../storage/StorageLayer";
-import { syncEntry, SyncEntry, SyncResult } from "./StorageSync";
+import { syncRemoteEntry, SyncEntry, SyncResult } from "./StorageSync";
 
 
 export interface SyncProvider {
@@ -15,6 +15,6 @@ export class LocalSyncProvider implements SyncProvider {
   private readonly storage: StorageLayer;
 
   async sync(entry: SyncEntry): Promise<SyncResult[]> {
-    return syncEntry(entry, this.storage)
+    return syncRemoteEntry(entry, this.storage)
   }
 }

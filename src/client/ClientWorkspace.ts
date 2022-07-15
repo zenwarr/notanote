@@ -1,6 +1,6 @@
 import { makeObservable, observable } from "mobx";
+import { LocalSyncWorker } from "../common/sync/LocalSync";
 import { SyncProvider } from "../common/sync/SyncProvider";
-import { SyncWorker } from "../common/sync/SyncWorker";
 import { SerializableStorageEntryData } from "../common/workspace/SerializableStorageEntryData";
 import { RecentDocStorage } from "./RecentDocStorage";
 import { StoragePath } from "../common/storage/StoragePath";
@@ -28,11 +28,12 @@ export class ClientWorkspace {
     this.storage = storage;
     this.remoteStorageId = storageId;
 
-    this.syncWorker = new SyncWorker(
+    this.syncWorker = new LocalSyncWorker(
         syncAdapter,
         new BrowserSyncMetadataStorage()
     );
     this.syncWorker.addRoot(this.storage.get(StoragePath.root));
+    this.syncWorker.runSync();
   }
 
 
@@ -78,12 +79,14 @@ export class ClientWorkspace {
       path = new StoragePath(path.normalized + ".md");
     }
 
+    const entry = this.storage.get(path);
     if (type === StorageEntryType.File) {
-      const entry = this.storage.get(path);
       await entry.writeOrCreate("");
     } else {
-      await this.storage.createDir(path);
+      await entry.createDir();
     }
+
+    this.syncWorker.addRoot(entry);
 
     if (type === "file") {
       this.selectedEntry = path;
@@ -103,6 +106,8 @@ export class ClientWorkspace {
 
     const pointer = await this.storage.get(path);
     await pointer.remove();
+
+    this.syncWorker.addRoot(pointer);
   }
 
 
@@ -135,7 +140,7 @@ export class ClientWorkspace {
   private _selectedFile: StoragePath | undefined = undefined;
   storage: MemoryCachedStorage;
   private static _instance: ClientWorkspace | undefined;
-  syncWorker: SyncWorker;
+  syncWorker: LocalSyncWorker;
 
 
   static get instance() {

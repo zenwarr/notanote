@@ -2,7 +2,7 @@ import { KVStorage, SerializedKVStorageEntry } from "../storage/KVStorageLayer";
 
 
 export class MapKV implements KVStorage {
-  constructor(map: object | Map<string, SerializedKVStorageEntry> = {}) {
+  constructor(map: { [path: string]: SerializedKVStorageEntry } | Map<string, SerializedKVStorageEntry> = {}) {
     if (map instanceof Map) {
       this._map = map;
     } else {

@@ -10,6 +10,9 @@ import { joinNestedPathSecure, StoragePath } from "../../common/storage/StorageP
 import { asyncExists } from "../plugin/PluginManager";
 
 
+const IGNORED_FILES = [ ".git" ];
+
+
 export class FsStorage extends StorageLayer {
   constructor(rootPath: string) {
     super();
@@ -43,11 +46,11 @@ export class FsStorage extends StorageLayer {
 
 
   override async children(path: StoragePath): Promise<StorageEntryPointer[]> {
-    const entryAbsPath = this.toAbsolutePath(path);
-
     try {
       const entries = await fs.promises.readdir(this.toAbsolutePath(path));
-      return entries.map(entry => new StorageEntryPointer(path.child(entry), this));
+      return entries
+          .filter(e => !IGNORED_FILES.includes(e))
+          .map(entry => new StorageEntryPointer(path.child(entry), this));
     } catch (err: any) {
       if (err.code === "ENOENT") {
         throw new StorageError(StorageErrorCode.NotExists, path, "Path does not exist");
@@ -60,7 +63,15 @@ export class FsStorage extends StorageLayer {
 
 
   override async readText(path: StoragePath): Promise<string> {
-    return fs.promises.readFile(this.toAbsolutePath(path), "utf-8");
+    try {
+      return await fs.promises.readFile(this.toAbsolutePath(path), "utf-8");
+    } catch (err: any) {
+      if (err.code === "EISDIR") {
+        throw new StorageError(StorageErrorCode.NotFile, path, "Cannot read a directory");
+      } else {
+        throw err;
+      }
+    }
   }
 
 
@@ -68,7 +79,7 @@ export class FsStorage extends StorageLayer {
     const absPath = this.toAbsolutePath(path);
     const stat = await fs.promises.stat(absPath);
     if (stat.isDirectory()) {
-      await fs.promises.rmdir(absPath, {
+      await fs.promises.rm(absPath, {
         recursive: true
       });
     } else {
@@ -79,13 +90,21 @@ export class FsStorage extends StorageLayer {
 
   override async stats(path: StoragePath): Promise<StorageEntryStats> {
     const absPath = this.toAbsolutePath(path);
-    const stats = await fs.promises.stat(absPath);
-    return {
-      isDirectory: stats.isDirectory(),
-      size: stats.isDirectory() ? undefined : stats.size,
-      createTs: Math.floor(stats.birthtimeMs),
-      updateTs: Math.floor(stats.mtimeMs)
-    };
+    try {
+      const stats = await fs.promises.stat(absPath);
+      return {
+        isDirectory: stats.isDirectory(),
+        size: stats.isDirectory() ? undefined : stats.size,
+        createTs: Math.floor(stats.birthtimeMs),
+        updateTs: Math.floor(stats.mtimeMs)
+      };
+    } catch (err: any) {
+      if (err.code === "ENOENT") {
+        throw new StorageError(StorageErrorCode.NotExists, path, "Path does not exist");
+      } else {
+        throw err;
+      }
+    }
   }
 
 
@@ -94,6 +113,8 @@ export class FsStorage extends StorageLayer {
     if (typeof content === "string") {
       content = Buffer.from(content, "utf-8");
     }
+
+    await this.createDir(path.parentDir);
 
     await fs.promises.writeFile(absPath, content);
     return new StorageEntryPointer(path, this);
