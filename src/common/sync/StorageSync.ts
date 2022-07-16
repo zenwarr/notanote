@@ -176,9 +176,13 @@ export async function syncRemoteEntry(local: SyncEntry, remote: StorageLayer) {
     const local = localEntries.get(entryPath);
     const remotePointer = remote.get(new StoragePath(entryPath));
 
-    const diff = await getEntryDiff(local, remotePointer);
-    if (diff) {
-      result.push(await resolveDiff(diff, local, remotePointer, true));
+    try {
+      const diff = await getEntryDiff(local, remotePointer);
+      if (diff) {
+        result.push(await resolveDiff(diff, local, remotePointer, true));
+      }
+    } catch (err: any) {
+      console.error(`Failed to process sync error: ${ err.message }`, err);
     }
   }
 
