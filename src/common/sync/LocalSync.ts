@@ -231,7 +231,10 @@ export class LocalSyncWorker {
   private async updateLocalEntry(p: StorageEntryPointer, identity: ContentIdentity | undefined, data: string | Buffer | undefined): Promise<void> {
     if (identity && isDirIdentity(identity)) {
       try {
-        await p.remove();
+        const existing = await p.stats();
+        if (!existing.isDirectory) {
+          await p.remove();
+        }
       } catch (err: any) {
         if (err.code === StorageErrorCode.NotExists) {
           return;
