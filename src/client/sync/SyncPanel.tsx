@@ -34,6 +34,28 @@ export const SyncPanel = mobx.observer(() => {
           }
         </ul>
       </Grid>
+
+      <Grid item xs={ 6 }>
+        <h2>Conflicts</h2>
+
+        <ul>
+          {
+            sw.pendingConflicts.map(r => <li key={ r.syncResult.path }>
+              { r.syncResult.path }: { "conflict" in r.syncResult ? r.syncResult.conflict : "malformed conflict info" }
+            </li>)
+          }
+        </ul>
+      </Grid>
     </Grid>
+
+    <h2>Errors</h2>
+
+    <ul>
+      {
+        sw.syncErrors.map(r => <li key={ r.ts.valueOf() }>
+          { r.ts.toLocaleString() }: { r.text }
+        </li>)
+      }
+    </ul>
   </Box>;
 });
