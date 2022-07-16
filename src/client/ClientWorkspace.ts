@@ -32,8 +32,6 @@ export class ClientWorkspace {
         syncAdapter,
         new BrowserSyncMetadataStorage()
     );
-    this.syncWorker.addRoot(this.storage.get(StoragePath.root));
-    this.syncWorker.runSync();
   }
 
 
@@ -41,13 +39,16 @@ export class ClientWorkspace {
   loading = true;
 
 
-  async load() {
+  async init() {
     const allEntries = await this.storage.loadAll();
     if (!allEntries) {
       throw new Error(`Failed to load storage entries: loadAll returns undefined`);
     }
 
     this.storage.memory.setData(allEntries);
+
+    this.syncWorker.addRoot(this.storage.get(StoragePath.root));
+    this.syncWorker.runSync();
 
     await FileSettingsProvider.instance.load();
 
