@@ -136,7 +136,7 @@ export class LocalSyncWorker {
     }
 
     for (const key of Object.keys(metadata)) {
-      if (!seen.has(key) && (new StoragePath(key)).inside(path, false)) {
+      if (!seen.has(key) && new StoragePath(key).parentDir.isEqual(path)) {
         result.push(await this.getSyncEntry(new StoragePath(key), undefined, metadata));
       }
     }

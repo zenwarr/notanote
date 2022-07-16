@@ -191,6 +191,26 @@ it("remote file turned into directory", async function() {
 });
 
 
+it("local tree not changed", async () => {
+  const d = prepare();
+  await d.local.writeOrCreate(new StoragePath("dir/file.txt"), "Hello, world!");
+  await makeSync(d.local, d.localSync);
+
+  let r: CheckEntryMap = {
+    "/dir": undefined,
+    "/dir/file.txt": "Hello, world!"
+  };
+
+  expect(await d.local.entries()).toStrictEqual(r);
+  expect(await d.remote.entries()).toStrictEqual(r);
+
+  await makeSync(d.local, d.localSync);
+
+  expect(await d.local.entries()).toStrictEqual(r);
+  expect(await d.remote.entries()).toStrictEqual(r);
+});
+
+
 it("handles sync when a directory turned into a file", async function() {
   const d = prepare();
 
