@@ -1,5 +1,6 @@
 import { StorageLayer } from "../storage/StorageLayer";
-import { syncRemoteEntry, SyncEntry, SyncResult } from "./StorageSync";
+import { syncRemoteEntry, SyncResult } from "./RemoteSync";
+import { SyncEntry } from "./SyncEntry";
 
 
 export interface SyncProvider {

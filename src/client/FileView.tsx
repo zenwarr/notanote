@@ -8,7 +8,7 @@ import { ClientWorkspace } from "./ClientWorkspace";
 import { useWindowTitle } from "./useWindowTitle";
 import { CircularProgress } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { EditorProps} from "./plugin/PluginManager";
+import { EditorProps } from "./plugin/PluginManager";
 import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
 import { StoragePath } from "../common/storage/StoragePath";
 import { DocumentEditorProvider } from "./DocumentEditorProvider";
@@ -54,7 +54,9 @@ export function FileView(props: FileViewProps) {
     const doc = await DocumentManager.instance.create(props.entryPath);
     applyGlobalDocSettings(doc);
     return doc;
-  }, [ props.entryPath ]));
+  }, [ props.entryPath ]), {
+    onError: err => console.error(`Failed to load file ${ props.entryPath }: ${ err.message }`),
+  });
 
   const componentLoad = useLoad<React.ComponentType<EditorProps> | undefined>(useCallback(async () => {
     if (!contentLoad.isLoaded) {
@@ -63,6 +65,12 @@ export function FileView(props: FileViewProps) {
 
     return DocumentEditorProvider.instance.getComponent(contentLoad.data);
   }, [ contentLoad.data?.settings.editor?.name, contentLoad.isLoaded ]));
+
+  if (contentLoad.loadError) {
+    return <div className={ classes.error }>
+      Error loading "{ props.entryPath.normalized }": { contentLoad.loadError }
+    </div>
+  }
 
   if (!contentLoad.isLoaded || !componentLoad.isLoaded || !componentLoad.data) {
     return <div className={ classes.loader }>
@@ -95,6 +103,13 @@ const useStyles = makeStyles(theme => ({
   loader: {
     padding: theme.spacing(2),
     display: "flex",
+    justifyContent: "center"
+  },
+
+  error: {
+    padding: theme.spacing(2),
+    display: "flex",
+    color: theme.palette.error.main,
     justifyContent: "center"
   }
 }));

@@ -1,10 +1,11 @@
 import { KVStorageLayer } from "../storage/KVStorageLayer";
+import { DirContentIdentity, getContentHash } from "../sync/ContentIdentity";
 import { LocalSyncWorker } from "../sync/LocalSync";
-import { MemorySyncMetadataStorage, SyncMetadataMap } from "../sync/SyncMetadataStorage";
+import { MemorySyncMetadataStorage } from "../sync/SyncMetadataStorage";
 import { LocalSyncProvider } from "../sync/SyncProvider";
 import { MapKV } from "./map-kv";
 import { StoragePath } from "../storage/StoragePath";
-import { DiffType } from "../sync/StorageSync";
+import { DiffType } from "../sync/RemoteSync";
 
 
 type CheckEntryMap = { [path: string]: string | undefined };
@@ -27,6 +28,44 @@ async function makeSync(local: KVStorageLayer, localSync: LocalSyncWorker) {
   localSync.addRoot(local.get(StoragePath.root));
   await localSync.sync();
 }
+
+
+it("creates remote tree on local when local tree is empty", async () => {
+  const d = prepare();
+  await d.remote.writeOrCreate(new StoragePath("/dir/file.txt"), "Hello, world!");
+  await makeSync(d.local, d.localSync);
+
+  let r: CheckEntryMap = {
+    "/dir": undefined,
+    "/dir/file.txt": "Hello, world!",
+  };
+
+  expect(await d.local.entries()).toStrictEqual(r);
+  expect(await d.remote.entries()).toStrictEqual(r);
+});
+
+
+it("creates local sync metadata when it is lost", async () => {
+  const d = prepare();
+  await d.remote.writeOrCreate(new StoragePath("/dir/file.txt"), "Hello, world!");
+  await d.local.writeOrCreate(new StoragePath("/dir/file.txt"), "Hello, world!");
+  await makeSync(d.local, d.localSync);
+
+  let r: CheckEntryMap = {
+    "/dir": undefined,
+    "/dir/file.txt": "Hello, world!",
+  }
+
+  expect(await d.local.entries()).toStrictEqual(r);
+  expect(await d.remote.entries()).toStrictEqual(r);
+  expect(await d.metadata.get()).toStrictEqual({
+    "/dir": DirContentIdentity,
+    "/dir/file.txt": {
+      hash: getContentHash("Hello, world!"),
+      size: "unk"
+    }
+  });
+})
 
 
 it("local file created", async () => {

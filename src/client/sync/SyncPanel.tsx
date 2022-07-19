@@ -1,7 +1,8 @@
 import * as mobx from "mobx-react-lite";
 import { formatRelative } from "date-fns";
 import { ClientWorkspace } from "../ClientWorkspace";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, Paper, Typography } from "@mui/material";
+import { ConflictItem } from "./ConflictItem";
 
 
 export const SyncPanel = mobx.observer(() => {
@@ -22,40 +23,40 @@ export const SyncPanel = mobx.observer(() => {
       </Box>
     </Box>
 
-    <Grid container>
+    <Grid container spacing={ 2 }>
       <Grid item xs={ 6 }>
-        <h2>Pending roots</h2>
+        <Paper sx={ { p: 2 } }>
+          <Typography variant={ "h5" }>Pending roots</Typography>
 
-        <ul>
           {
-            sw.pendingRoots.map(r => <li key={ r.path.normalized }>
+            sw.pendingRoots.map(r => <div key={ r.path.normalized }>
               { r.path.normalized }
-            </li>)
+            </div>)
           }
-        </ul>
+        </Paper>
       </Grid>
 
       <Grid item xs={ 6 }>
-        <h2>Conflicts</h2>
+        <Paper sx={ { p: 2 } }>
+          <Typography variant={ "h5" }>Conflicts</Typography>
 
-        <ul>
-          {
-            sw.pendingConflicts.map(r => <li key={ r.syncResult.path }>
-              { r.syncResult.path }: { "conflict" in r.syncResult ? r.syncResult.conflict : "malformed conflict info" }
-            </li>)
-          }
-        </ul>
+          <div>
+            {
+              sw.pendingConflicts.map(r => <ConflictItem key={ r.syncResult.path } syncResult={ r.syncResult }/>)
+            }
+          </div>
+        </Paper>
       </Grid>
     </Grid>
 
-    <h2>Errors</h2>
+    <Paper sx={ { p: 2, mt: 2 } }>
+      <Typography variant={ "h5" }>Errors</Typography>
 
-    <ul>
       {
-        sw.syncErrors.map(r => <li key={ r.ts.valueOf() }>
+        sw.syncErrors.map(r => <div key={ r.ts.valueOf() }>
           { r.ts.toLocaleString() }: { r.text }
-        </li>)
+        </div>)
       }
-    </ul>
+    </Paper>
   </Box>;
 });

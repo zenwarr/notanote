@@ -3,7 +3,8 @@ import * as mobx from "mobx";
 import { StorageEntryPointer, StorageErrorCode, StorageLayer } from "../storage/StorageLayer";
 import { StoragePath } from "../storage/StoragePath";
 import { ContentIdentity, getContentIdentity, isDirIdentity, readEntityTextIfAny } from "./ContentIdentity";
-import { SyncEntry, SyncResult, SyncResultAction } from "./StorageSync";
+import { SyncResult, SyncResultAction } from "./RemoteSync";
+import { SyncEntry, walkSyncEntriesDownToTop } from "./SyncEntry";
 import { SyncMetadataMap, SyncMetadataStorage } from "./SyncMetadataStorage";
 import { SyncProvider } from "./SyncProvider";
 
@@ -30,6 +31,8 @@ export class LocalSyncWorker {
       lastSyncError: mobx.observable,
       syncErrors: mobx.observable,
     });
+
+    setInterval(() => this.debouncedNextSync(), 10000);
   }
 
 
@@ -82,13 +85,13 @@ export class LocalSyncWorker {
       await this.sync();
 
       this.lastSyncOk = true;
+      this.lastSyncDate = new Date();
     } catch (error: any) {
       this.lastSyncOk = false;
       console.error("Sync failed:", error);
       this.lastSyncError = error.message;
     } finally {
       this.syncingNow = false;
-      this.lastSyncDate = new Date();
     }
   }
 
@@ -101,7 +104,7 @@ export class LocalSyncWorker {
 
 
   private async processNextSync(): Promise<void> {
-    const root = this.pendingRoots.shift();
+    const root = this.pendingRoots[0];
     if (!root) {
       return;
     }
@@ -110,8 +113,18 @@ export class LocalSyncWorker {
     const syncResults = await this.syncProvider.sync(syncEntry);
 
     let updatedMetadata: SyncMetadataMap = {};
+    const mentionedPaths = new Set<string>();
     for (const result of syncResults) {
       await this.applySyncResult(root.storage, result, updatedMetadata);
+      mentionedPaths.add(result.path);
+    }
+
+    // we need to write metadata for files that were synced and are identical to remote counterparts
+    // these files are not mentioned in remote reply, so we need to save their identities we sent to remote
+    for (const se of walkSyncEntriesDownToTop(syncEntry)) {
+      if (se.identity && !se.path.isEqual(StoragePath.root) && !mentionedPaths.has(se.path.normalized)) {
+        updatedMetadata[se.path.normalized] = se.identity;
+      }
     }
 
     await this.syncMetadata.setMulti(updatedMetadata);
@@ -120,6 +133,8 @@ export class LocalSyncWorker {
       ts: new Date(),
       syncResult: r
     }));
+
+    this.pendingRoots.shift();
   }
 
 

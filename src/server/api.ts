@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
-import { deserializeSyncEntry, SerializedSyncEntry, syncRemoteEntry, SyncEntry } from "../common/sync/StorageSync";
+import { syncRemoteEntry} from "../common/sync/RemoteSync";
+import { deserializeSyncEntry, SerializedSyncEntry, SyncEntry } from "../common/sync/SyncEntry";
 import { getProfile, requireAuthenticatedUser } from "./auth";
 import S from "fluent-json-schema";
 import { ErrorCode, LogicError } from "../common/errors";

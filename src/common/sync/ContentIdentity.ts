@@ -1,6 +1,5 @@
 import * as crypto from "crypto";
 import { StorageEntryPointer, StorageEntrySize, StorageError, StorageErrorCode } from "../storage/StorageLayer";
-import { walkEntriesDownToTop } from "./StorageSync";
 
 
 export interface ContentIdentity {
