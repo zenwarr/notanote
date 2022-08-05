@@ -1,6 +1,5 @@
 import { FixedSizeNodeData } from "react-vtree";
-import { SerializableStorageEntryData } from "../../common/workspace/SerializableStorageEntryData.js";
-import * as mobx from "mobx";
+import { SerializableStorageEntryData } from "@common/workspace/SerializableStorageEntryData";
 
 
 export type TreeNodeData = FixedSizeNodeData & {

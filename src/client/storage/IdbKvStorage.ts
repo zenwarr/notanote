@@ -1,38 +1,52 @@
-import * as idb from "idb-keyval";
-import { KVStorage, SerializedKVStorageEntry } from "../../common/storage/KVStorageLayer";
+import { uint8ArrayToBuffer } from "@common/utils/uint8ArrayToBuffer";
+import { KVStorage, KVStorageEntry } from "@storage/KVStorageLayer";
+import { ClientKeyValueStore } from "../keyValueStore/ClientKeyValueStore";
+
+
+export const DEFAULT_FS_IDB_DATABASE = "fs-kv-storage";
+const KV_STORE_NAME = "kv";
 
 
 export class IdbKvStorage implements KVStorage {
-  constructor(storeName = "fs-kv-storage") {
-    this.storeName = storeName;
-    this.store = idb.createStore(this.storeName, this.storeName)
+  constructor() {
+    this.store = new ClientKeyValueStore(DEFAULT_FS_IDB_DATABASE, KV_STORE_NAME);
   }
 
 
-  private readonly storeName: string;
-  private readonly store: idb.UseStore;
+  readonly store: ClientKeyValueStore;
 
 
-  async* enumerate(): AsyncGenerator<[ string, SerializedKVStorageEntry ]> {
-    for (const [ key, value ] of await idb.entries(this.store)) {
-      if (typeof key === "string") {
-        yield [ key, value ];
-      }
+  async* enumerate(): AsyncGenerator<[ string, KVStorageEntry ]> {
+    for await (const [ key, storedEntry ] of this.store.enumerate()) {
+      yield [ key, this.storedEntryToKVStorageEntry(storedEntry)! ];
     }
   }
 
 
-  async get(key: string): Promise<SerializedKVStorageEntry | undefined> {
-    return idb.get(key, this.store);
+  async get(key: string): Promise<KVStorageEntry | undefined> {
+    const d = await this.store.get<any>(key);
+    return this.storedEntryToKVStorageEntry(d);
   }
 
 
   async remove(key: string): Promise<void> {
-    await idb.del(key, this.store);
+    return this.store.remove(key);
   }
 
 
-  async set(key: string, value: SerializedKVStorageEntry): Promise<void> {
-    await idb.set(key, value, this.store);
+  async set(key: string, value: KVStorageEntry): Promise<void> {
+    return this.store.set(key, value);
+  }
+
+
+  private storedEntryToKVStorageEntry(storedEntry: any): KVStorageEntry | undefined {
+    if (!storedEntry) {
+      return undefined;
+    }
+
+    return {
+      ...storedEntry,
+      data: storedEntry.data ? uint8ArrayToBuffer(storedEntry.data) : undefined,
+    };
   }
 }

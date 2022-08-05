@@ -3,12 +3,11 @@ import { configure } from 'mobx';
 import { AppThemeProvider } from '../client/Theme';
 import { registerPlugins } from '../client/plugin/BuiltInPlugins';
 import { PluginManager } from '../client/plugin/PluginManager';
-import { MemoryCachedStorage } from '../common/storage/MemoryCachedStorage';
+import { MemoryCachedStorage } from '../storage/MemoryCachedStorage';
 import { ClientWorkspace } from '../client/ClientWorkspace';
-import { MemoryStorage } from '../client/storage/MemoryStorage';
 import { FileSettingsProvider } from '../common/workspace/FileSettingsProvider';
-import { LocalSyncProvider } from '../common/sync/SyncProvider';
-import { KVStorageLayer } from '../common/storage/KVStorageLayer';
+import { LocalSyncProvider } from '../sync/SyncProvider';
+import { KVStorageLayer } from '../storage/KVStorageLayer';
 import { IdbKvStorage } from '../client/storage/IdbKvStorage';
 
 

@@ -1,7 +1,7 @@
-import { StorageEntryPointer, StorageEntryStats, StorageLayer, StorageErrorCode, StorageError } from "../../common/storage/StorageLayer";
-import { StoragePath } from "../../common/storage/StoragePath";
+import { StorageEntryPointer, StorageEntryStats, StorageLayer, StorageErrorCode, StorageError } from "@storage/StorageLayer";
+import { StoragePath } from "@storage/StoragePath";
 import ky from "ky";
-import { SerializableStorageEntryData } from "../../common/workspace/SerializableStorageEntryData";
+import { SerializableStorageEntryData } from "@common/workspace/SerializableStorageEntryData";
 import assert from "assert";
 
 
@@ -51,15 +51,15 @@ export class RemoteHttpStorage extends StorageLayer {
   }
 
 
-  override async readText(path: StoragePath): Promise<string> {
+  override async read(path: StoragePath): Promise<Buffer> {
     const reply = await ky(`/api/storages/${ this.wsId }/files/${ path.normalized }`, {
       searchParams: {
         text: true
       }
     }).json<SerializableStorageEntryData>();
-    assert(reply.textContent != null);
+    assert(reply.content != null);
 
-    return reply.textContent;
+    return reply.content;
   }
 
 

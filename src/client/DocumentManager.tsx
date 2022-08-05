@@ -1,8 +1,8 @@
 import { Document } from "./Document";
 import { makeObservable, observable } from "mobx";
 import { ClientWorkspace } from "./ClientWorkspace";
-import { StoragePath } from "../common/storage/StoragePath";
-import { FileSettingsProvider } from "../common/workspace/FileSettingsProvider";
+import { StoragePath } from "@storage/StoragePath";
+import { FileSettingsProvider } from "@common/workspace/FileSettingsProvider";
 import { DocumentEditorProvider } from "./DocumentEditorProvider";
 
 
@@ -27,7 +27,7 @@ export class DocumentManager {
     const entry = ClientWorkspace.instance.storage.get(path);
 
     const document = new Document(entry, FileSettingsProvider.instance.getSettingsForPath(path));
-    await document.loadText();
+    await document.load();
     document.setEditorStateAdapter(await DocumentEditorProvider.instance.getStateAdapter(document));
     this.documents.set(path.normalized, { doc: document, usageCount: 1 });
     return document;

@@ -2,22 +2,22 @@ import { StorageEntryStats, StorageEntryPointer, StorageEntryType, StorageError,
 import { StoragePath } from "./StoragePath";
 
 
-export interface SerializedKVStorageEntry {
+export interface KVStorageEntry {
   type: StorageEntryType;
   createTs?: number;
   updateTs?: number;
-  data?: string;
+  data?: Buffer;
 }
 
 
 export interface KVStorage {
-  get(key: string): Promise<SerializedKVStorageEntry | undefined>;
+  get(key: string): Promise<KVStorageEntry | undefined>;
 
-  set(key: string, value: SerializedKVStorageEntry): Promise<void>;
+  set(key: string, value: KVStorageEntry): Promise<void>;
 
   remove(key: string): Promise<void>;
 
-  enumerate(): AsyncGenerator<[ string, SerializedKVStorageEntry ]>;
+  enumerate(): AsyncGenerator<[ string, KVStorageEntry ]>;
 }
 
 
@@ -32,8 +32,8 @@ export class KVStorageLayer extends StorageLayer {
    * For testing and debugging purposes.
    * Returns a map containing all entries in storage, where key is a path and value is a entry text content (for a file) or `undefined` (for a directory)
    */
-  async entries(): Promise<{ [path: string]: string | undefined }> {
-    const result: { [path: string]: string | undefined } = {};
+  async entries(): Promise<{ [path: string]: Buffer | undefined }> {
+    const result: { [path: string]: Buffer | undefined } = {};
     for await (const [ key, value ] of this._kv.enumerate()) {
       const isDir = value.type === StorageEntryType.Dir;
       result[key] = isDir ? undefined : value.data;
@@ -87,7 +87,7 @@ export class KVStorageLayer extends StorageLayer {
   }
 
 
-  override async readText(path: StoragePath): Promise<string> {
+  override async read(path: StoragePath): Promise<Buffer> {
     if (path.isEqual(StoragePath.root)) {
       throw new StorageError(StorageErrorCode.NotFile, path, "Entry is not a file");
     }
@@ -101,7 +101,7 @@ export class KVStorageLayer extends StorageLayer {
       throw new StorageError(StorageErrorCode.NotFile, path, `Entry is not a file`);
     }
 
-    return entry.data!;
+    return entry.data || Buffer.alloc(0);
   }
 
 
@@ -138,7 +138,7 @@ export class KVStorageLayer extends StorageLayer {
   }
 
 
-  override async writeOrCreate(path: StoragePath, content: Buffer | string): Promise<StorageEntryPointer> {
+  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<StorageEntryPointer> {
     await this.createDir(path.parentDir);
 
     const entry = await this._kv.get(path.normalized);
@@ -147,14 +147,14 @@ export class KVStorageLayer extends StorageLayer {
         type: StorageEntryType.File,
         createTs: Date.now(),
         updateTs: Date.now(),
-        data: content.toString(),
+        data: content,
       });
     } else {
       await this._kv.set(path.normalized, {
         type: StorageEntryType.File,
         createTs: entry.createTs,
         updateTs: Date.now(),
-        data: content.toString(),
+        data: content,
       });
     }
 

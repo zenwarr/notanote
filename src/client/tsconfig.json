@@ -3,7 +3,7 @@
     "sourceMap": true,
     "module": "ESNext",
     "moduleResolution": "Node",
-    "target": "ES6",
+    "target": "ESNext",
     "esModuleInterop": true,
     "noEmitOnError": true,
     "noImplicitReturns": true,
@@ -18,7 +18,19 @@
       "ES5",
       "DOM"
     ],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@common/*": [
+        "../common/*"
+      ],
+      "@storage/*": [
+        "../storage/*"
+      ],
+      "@sync/*": [
+        "../sync/*"
+      ]
+    }
   },
   "include": [
     "./**/*.*"

@@ -2,6 +2,7 @@ const path = require("path");
 const cssExtract = require("mini-css-extract-plugin");
 const webpack = require("webpack");
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
 
 module.exports = (env) => [
@@ -26,7 +27,10 @@ module.exports = (env) => [
         stream: require.resolve("stream-browserify"),
         assert: require.resolve("assert"),
         crypto: require.resolve("crypto-browserify")
-      }
+      },
+      plugins: [
+        new TsconfigPathsPlugin({ configFile: "./client/tsconfig.json" })
+      ]
     },
 
     module: {
@@ -79,7 +83,10 @@ module.exports = (env) => [
       extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
       fallback: {
         path: require.resolve("path-browserify")
-      }
+      },
+      plugins: [
+        new TsconfigPathsPlugin({ configFile: "./client/tsconfig.json" })
+      ]
     },
 
     module: {

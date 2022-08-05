@@ -1,11 +1,11 @@
-import { StorageLayer } from "../../common/storage/StorageLayer";
-import { ErrorCode, LogicError } from "../../common/errors";
-import { joinNestedPathSecure, StoragePath } from "../../common/storage/StoragePath";
+import { StorageLayer } from "@storage/StorageLayer";
+import { ErrorCode, LogicError } from "@common/errors";
+import { joinNestedPathSecure, StoragePath } from "@storage/StoragePath";
 import path from "path";
-import { createWorkspaceDefaults, SpecialWorkspaceEntry } from "../../common/workspace/Workspace";
+import { createWorkspaceDefaults, SpecialWorkspaceEntry } from "@common/workspace/Workspace";
 import { FsStorage } from "./FsStorage";
 import { PluginConfigStorageEntry } from "../plugin/PluginConfigEntry";
-import { StorageWithMounts } from "../../common/storage/StorageWithMounts";
+import { StorageWithMounts } from "@storage/StorageWithMounts";
 
 
 export const DEFAULT_STORAGE_ID = "default";

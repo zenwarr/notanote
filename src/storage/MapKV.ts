@@ -1,8 +1,8 @@
-import { KVStorage, SerializedKVStorageEntry } from "../storage/KVStorageLayer";
+import { KVStorage, KVStorageEntry } from "./KVStorageLayer";
 
 
 export class MapKV implements KVStorage {
-  constructor(map: { [path: string]: SerializedKVStorageEntry } | Map<string, SerializedKVStorageEntry> = {}) {
+  constructor(map: { [path: string]: KVStorageEntry } | Map<string, KVStorageEntry> = {}) {
     if (map instanceof Map) {
       this._map = map;
     } else {
@@ -11,10 +11,10 @@ export class MapKV implements KVStorage {
   }
 
 
-  private _map: Map<string, SerializedKVStorageEntry>;
+  private _map: Map<string, KVStorageEntry>;
 
 
-  async* enumerate(): AsyncGenerator<[ string, SerializedKVStorageEntry ]> {
+  async* enumerate(): AsyncGenerator<[ string, KVStorageEntry ]> {
     for (const [ key, value ] of this._map.entries()) {
       yield [ key, value ];
     }
@@ -31,7 +31,7 @@ export class MapKV implements KVStorage {
   }
 
 
-  async set(key: string, value: SerializedKVStorageEntry) {
+  async set(key: string, value: KVStorageEntry) {
     this._map.set(key, value);
   }
 }

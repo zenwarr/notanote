@@ -4,10 +4,10 @@ import * as crypto from "crypto";
 import * as os from "os";
 import * as fs from "fs";
 import * as _ from "lodash";
-import { RemotePluginSpec } from "../../common/plugin";
+import { RemotePluginSpec } from "@common/plugin";
 import { clone, pullChanges, runCommand } from "../github/Github";
-import { SpecialWorkspaceEntry } from "../../common/workspace/Workspace";
-import { ErrorCode, LogicError } from "../../common/errors";
+import { SpecialWorkspaceEntry } from "@common/workspace/Workspace";
+import { ErrorCode, LogicError } from "@common/errors";
 
 
 const cssExtract = require("mini-css-extract-plugin");

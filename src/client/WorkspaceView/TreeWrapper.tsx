@@ -1,6 +1,6 @@
 import * as mobx from "mobx-react-lite"
 import { FixedSizeTree, FixedSizeTreeProps } from "react-vtree";
-import { walkSerializableStorageEntries } from "../../common/workspace/SerializableStorageEntryData";
+import { walkSerializableStorageEntries } from "@common/workspace/SerializableStorageEntryData";
 import { TreeState, treeWalker } from "./TreeState";
 
 

@@ -17,16 +17,16 @@ import {
 } from "@codemirror/view";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { createHighlightStyle } from "./Highlight";
-import { FileSettings } from "../../common/Settings";
+import { FileSettings } from "@common/Settings";
 import { json } from "@codemirror/lang-json";
 import { javascript } from "@codemirror/lang-javascript";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-import { CHECKBOX_RE, checkboxPlugin } from "./ReactWidget";
+import { CHECKBOX_RE} from "./ReactWidget";
 import { NodeProp } from "@lezer/common";
 import { languages } from "@codemirror/language-data";
 import { format } from "date-fns";
 import { Document, DocumentEditorStateAdapter } from "../Document";
-import { StoragePath } from "../../common/storage/StoragePath";
+import { StoragePath } from "@storage/StoragePath";
 
 
 function getEditorPluginForFile(entryPath: StoragePath) {
@@ -269,7 +269,7 @@ export class CodeEditorStateAdapter implements DocumentEditorStateAdapter {
   constructor(doc: Document) {
     this.doc = doc;
     const self = this;
-    this.state = createEditorState(doc.getLastSavedText(), doc.entry.path, doc.settings, {
+    this.state = createEditorState(doc.getLastSavedData().toString(), doc.entry.path, doc.settings, {
       onUpdate: upd => {
         self.state = upd.state;
         if (upd.docChanged) {

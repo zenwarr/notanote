@@ -18,7 +18,19 @@
       "ES5",
       "DOM"
     ],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@common/*": [
+        "./common/*"
+      ],
+      "@storage/*": [
+        "./storage/*"
+      ],
+      "@sync/*": [
+        "./sync/*"
+      ]
+    }
   },
   "exclude": [
     "client/**/*.*",

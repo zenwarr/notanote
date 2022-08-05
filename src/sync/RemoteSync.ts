@@ -1,6 +1,6 @@
 import assert from "assert";
-import { StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "../storage/StorageLayer";
-import { StoragePath } from "../storage/StoragePath";
+import { StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "@storage/StorageLayer";
+import { StoragePath } from "@storage/StoragePath";
 import { ContentIdentity, getContentIdentity, isContentIdentityEqual, isDirIdentity } from "./ContentIdentity";
 import { SyncEntry, walkSyncEntriesDownToTop } from "./SyncEntry";
 
@@ -175,7 +175,7 @@ export enum SyncResultAction {
 
 export type SyncResult = {
   path: string;
-  data: string | Buffer | undefined;
+  data: Buffer | undefined;
   identity: ContentIdentity | undefined;
 } & ({
   conflict: DiffType;
@@ -184,7 +184,7 @@ export type SyncResult = {
 });
 
 
-async function writeEntry(output: StorageEntryPointer, data: string): Promise<ContentIdentity | undefined> {
+async function writeEntry(output: StorageEntryPointer, data: Buffer): Promise<ContentIdentity | undefined> {
   await output.writeOrCreate(data);
   return getContentIdentity(output);
 }
@@ -196,9 +196,9 @@ async function createDir(p: StorageEntryPointer): Promise<ContentIdentity | unde
 }
 
 
-async function readEntry(e: StorageEntryPointer): Promise<{ data: string | undefined, identity: ContentIdentity | undefined }> {
+async function readEntry(e: StorageEntryPointer): Promise<{ data: Buffer | undefined, identity: ContentIdentity | undefined }> {
   try {
-    const data = await e.readText();
+    const data = await e.read();
     return { data, identity: await getContentIdentity(e, data) };
   } catch (err: unknown) {
     if (err instanceof StorageError && err.code === StorageErrorCode.NotFile) {

@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { KVStorageLayer } from "../common/storage/KVStorageLayer";
+import { KVStorageLayer } from "@storage/KVStorageLayer";
 import { App } from "./App";
 import { configure } from "mobx";
 import { ClientWorkspace } from "./ClientWorkspace";
@@ -11,11 +11,11 @@ import { AppThemeProvider } from "./Theme";
 import { registerPlugins } from "./plugin/BuiltInPlugins";
 import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
 import { RemoteHttpStorage } from "./storage/RemoteHttpStorage";
-import { MemoryCachedStorage } from "../common/storage/MemoryCachedStorage";
-import { FileSettingsProvider } from "../common/workspace/FileSettingsProvider";
-import { StorageWithMounts } from "../common/storage/StorageWithMounts";
+import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
+import { FileSettingsProvider } from "@common/workspace/FileSettingsProvider";
+import { StorageWithMounts } from "@storage/StorageWithMounts";
 import { DeviceConfigStorageEntry } from "./device/DeviceConfigStorageEntry";
-import { SpecialWorkspaceEntry } from "../common/workspace/Workspace";
+import { SpecialWorkspaceEntry } from "@common/workspace/Workspace";
 
 
 if ("serviceWorker" in navigator) {

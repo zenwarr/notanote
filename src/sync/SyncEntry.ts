@@ -1,4 +1,4 @@
-import { StoragePath } from "../storage/StoragePath";
+import { StoragePath } from "@storage/StoragePath";
 import { ContentIdentity } from "./ContentIdentity";
 
 
@@ -27,7 +27,7 @@ export interface SyncEntry {
    * A client can provide data for a file immediately for a faster sync if he is sure that file content is going to be needed.
    * But if content is omitted and it is required to sync, the server will request this content in its response.
    */
-  data?: string;
+  data?: Buffer;
 }
 
 

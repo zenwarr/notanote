@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import * as path from "path";
 import { ClientWorkspace } from "./ClientWorkspace";
-import { DocumentManager } from "./DocumentManager";
 import { autorun } from "mobx";
 
 

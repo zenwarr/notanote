@@ -1,6 +1,6 @@
 import * as path from "path";
-import { StoragePath } from "../../common/storage/StoragePath";
-import { patternMatches } from "../../common/workspace/FileSettingsProvider";
+import { StoragePath } from "@storage/StoragePath";
+import { patternMatches } from "@common/workspace/FileSettingsProvider";
 
 
 beforeAll(() => {

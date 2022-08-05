@@ -1,5 +1,5 @@
 import * as React from "react";
-import { StoragePath } from "../../common/storage/StoragePath.js";
+import { StoragePath } from "@storage/StoragePath";
 
 
 export interface TreeCtxData {

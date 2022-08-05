@@ -1,5 +1,5 @@
 import { PluginManager } from "./PluginManager";
-import { RemotePluginSpec } from "../../common/plugin";
+import { RemotePluginSpec } from "@common/plugin";
 import { pluginConfigPlugin } from "./PluginConfigPlugin";
 
 

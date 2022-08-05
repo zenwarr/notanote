@@ -1,11 +1,11 @@
-import { StorageEntryStats } from "../storage/StorageLayer";
+import { StorageEntryStats } from "@storage/StorageLayer";
 
 
 export interface SerializableStorageEntryData {
   path: string;
   stats: StorageEntryStats;
   children?: SerializableStorageEntryData[];
-  textContent?: string;
+  content?: Buffer;
 }
 
 

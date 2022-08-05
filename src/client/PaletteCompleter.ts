@@ -1,6 +1,6 @@
 import levenshtein from "js-levenshtein";
-import { StoragePath } from "../common/storage/StoragePath";
-import { SerializableStorageEntryData } from "../common/workspace/SerializableStorageEntryData";
+import { StoragePath } from "@storage/StoragePath";
+import { SerializableStorageEntryData } from "@common/workspace/SerializableStorageEntryData";
 import { ClientWorkspace } from "./ClientWorkspace";
 import { PaletteOption } from "./Palette";
 import { RecentDocStorage } from "./RecentDocStorage";

@@ -5,7 +5,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import FolderIcon from "@mui/icons-material/Folder";
 import DescriptionIcon from "@mui/icons-material/Description";
 import { makeStyles } from "@mui/styles";
-import { StoragePath } from "../../common/storage/StoragePath";
+import { StoragePath } from "@storage/StoragePath";
 import { TreeNodeData } from "./TreeState";
 import { useTreeContext } from "./TreeContext";
 

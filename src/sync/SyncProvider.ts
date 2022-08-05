@@ -1,4 +1,4 @@
-import { StorageLayer } from "../storage/StorageLayer";
+import { StorageLayer } from "@storage/StorageLayer";
 import { syncRemoteEntry, SyncResult } from "./RemoteSync";
 import { SyncEntry } from "./SyncEntry";
 

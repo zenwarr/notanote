@@ -1,12 +1,12 @@
 import * as _ from "lodash";
 import * as mobx from "mobx";
-import { StorageEntryPointer, StorageErrorCode, StorageLayer } from "../storage/StorageLayer";
-import { StoragePath } from "../storage/StoragePath";
-import { ContentIdentity, getContentIdentity, isDirIdentity, readEntityTextIfAny } from "./ContentIdentity";
+import { StorageEntryPointer, StorageErrorCode, StorageLayer } from "@storage/StorageLayer";
+import { ContentIdentity, getContentIdentity, isDirIdentity, readEntityDataIfAny } from "./ContentIdentity";
 import { SyncResult, SyncResultAction } from "./RemoteSync";
 import { SyncEntry, walkSyncEntriesDownToTop } from "./SyncEntry";
 import { SyncMetadataMap, SyncMetadataStorage } from "./SyncMetadataStorage";
 import { SyncProvider } from "./SyncProvider";
+import { StoragePath } from "@storage/StoragePath";
 
 
 export interface PendingConflict {
@@ -173,10 +173,10 @@ export class LocalSyncWorker {
     const syncedIdentity = metadata[path.normalized];
     const curIdentity = sp ? await getContentIdentity(sp) : undefined;
 
-    let data: string | undefined;
+    let data: Buffer | undefined;
     if (sp && this.sendDataOnNextSync.has(sp.path.normalized)) {
-      data = await readEntityTextIfAny(sp);
-      if (data == null) { // data can be an empty string, but we get `undefined` when a file does not exist
+      data = await readEntityDataIfAny(sp);
+      if (data == null) { // data can be an empty, but we get `undefined` when a file does not exist
         // todo: handle this
         throw new Error("Failed to provide data for entry: " + sp.path.normalized);
       }
@@ -243,7 +243,7 @@ export class LocalSyncWorker {
   }
 
 
-  private async updateLocalEntry(p: StorageEntryPointer, identity: ContentIdentity | undefined, data: string | Buffer | undefined): Promise<void> {
+  private async updateLocalEntry(p: StorageEntryPointer, identity: ContentIdentity | undefined, data: Buffer | undefined): Promise<void> {
     if (identity && isDirIdentity(identity)) {
       try {
         const existing = await p.stats();

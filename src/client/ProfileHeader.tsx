@@ -1,5 +1,6 @@
-import { IconButton, Menu} from "@mui/material";
-import makeStyles from '@mui/styles/makeStyles';
+import { IconButton, Menu, MenuItem } from "@mui/material";
+import makeStyles from "@mui/styles/makeStyles";
+import { clearData } from "./clear-data/ClearData";
 import { ProfileManager } from "./ProfileManager";
 import { AccountCircle } from "@mui/icons-material";
 import { useState } from "react";
@@ -11,15 +12,21 @@ export function ProfileHeader() {
 
   return <>
     <IconButton
-      title={ ProfileManager.instance.userName }
-      onClick={ e => setMenuAnchor(e.currentTarget) }
-      size="large">
+        title={ ProfileManager.instance.userName }
+        onClick={ e => setMenuAnchor(e.currentTarget) }
+        size="large">
       <AccountCircle/>
     </IconButton>
 
     <Menu open={ menuAnchor != null } onClose={ () => setMenuAnchor(undefined) } anchorEl={ menuAnchor || null }
-          anchorOrigin={ { vertical: "bottom", horizontal: "left" } }
-    >
+          anchorOrigin={ { vertical: "bottom", horizontal: "left" } }>
+      <MenuItem onClick={ () => {
+        setMenuAnchor(undefined);
+        clearData();
+      } }>
+        Clear all data
+      </MenuItem>
+
       <div className={ classes.profileName }>
         { ProfileManager.instance.userName }
       </div>

@@ -1,11 +1,11 @@
-import { KVStorageLayer } from "../storage/KVStorageLayer";
-import { DirContentIdentity, getContentHash } from "../sync/ContentIdentity";
-import { LocalSyncWorker } from "../sync/LocalSync";
-import { MemorySyncMetadataStorage } from "../sync/SyncMetadataStorage";
-import { LocalSyncProvider } from "../sync/SyncProvider";
-import { MapKV } from "./map-kv";
-import { StoragePath } from "../storage/StoragePath";
-import { DiffType } from "../sync/RemoteSync";
+import { KVStorageLayer } from "@storage/KVStorageLayer";
+import { DirContentIdentity, getContentHash } from "../ContentIdentity";
+import { LocalSyncWorker } from "../LocalSync";
+import { MemorySyncMetadataStorage } from "../SyncMetadataStorage";
+import { LocalSyncProvider } from "../SyncProvider";
+import { MapKV } from "@storage/MapKV";
+import { StoragePath } from "@storage/StoragePath";
+import { DiffType } from "../RemoteSync";
 
 
 type CheckEntryMap = { [path: string]: string | undefined };
@@ -32,7 +32,7 @@ async function makeSync(local: KVStorageLayer, localSync: LocalSyncWorker) {
 
 it("creates remote tree on local when local tree is empty", async () => {
   const d = prepare();
-  await d.remote.writeOrCreate(new StoragePath("/dir/file.txt"), "Hello, world!");
+  await d.remote.writeOrCreate(new StoragePath("/dir/file.txt"), Buffer.from("Hello, world!"));
   await makeSync(d.local, d.localSync);
 
   let r: CheckEntryMap = {
@@ -47,30 +47,27 @@ it("creates remote tree on local when local tree is empty", async () => {
 
 it("creates local sync metadata when it is lost", async () => {
   const d = prepare();
-  await d.remote.writeOrCreate(new StoragePath("/dir/file.txt"), "Hello, world!");
-  await d.local.writeOrCreate(new StoragePath("/dir/file.txt"), "Hello, world!");
+  await d.remote.writeOrCreate(new StoragePath("/dir/file.txt"), Buffer.from("Hello, world!"));
+  await d.local.writeOrCreate(new StoragePath("/dir/file.txt"), Buffer.from("Hello, world!"));
   await makeSync(d.local, d.localSync);
 
   let r: CheckEntryMap = {
     "/dir": undefined,
     "/dir/file.txt": "Hello, world!",
-  }
+  };
 
   expect(await d.local.entries()).toStrictEqual(r);
   expect(await d.remote.entries()).toStrictEqual(r);
   expect(await d.metadata.get()).toStrictEqual({
     "/dir": DirContentIdentity,
-    "/dir/file.txt": {
-      hash: getContentHash("Hello, world!"),
-      size: "unk"
-    }
+    "/dir/file.txt": "t" + getContentHash("Hello, world!")
   });
-})
+});
 
 
 it("local file created", async () => {
   const d = prepare();
-  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await d.local.writeOrCreate(new StoragePath("file.txt"), Buffer.from("Hello, world!"));
   await makeSync(d.local, d.localSync);
 
   let r: CheckEntryMap = {
@@ -84,10 +81,10 @@ it("local file created", async () => {
 
 it("local file updated", async () => {
   const d = prepare();
-  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await d.local.writeOrCreate(new StoragePath("file.txt"), Buffer.from("Hello, world!"));
   await makeSync(d.local, d.localSync);
 
-  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world! Updated");
+  await d.local.writeOrCreate(new StoragePath("file.txt"), Buffer.from("Hello, world! Updated"));
   await makeSync(d.local, d.localSync);
 
   let r: CheckEntryMap = {
@@ -101,10 +98,10 @@ it("local file updated", async () => {
 
 it("remote file updated", async () => {
   const d = prepare();
-  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await d.local.writeOrCreate(new StoragePath("file.txt"), Buffer.from("Hello, world!"));
   await makeSync(d.local, d.localSync);
 
-  await d.remote.writeOrCreate(new StoragePath("file.txt"), "Hello, world! Updated");
+  await d.remote.writeOrCreate(new StoragePath("file.txt"), Buffer.from("Hello, world! Updated"));
   await makeSync(d.local, d.localSync);
 
   let r: CheckEntryMap = {
@@ -118,11 +115,11 @@ it("remote file updated", async () => {
 
 it("local and remote files updated", async () => {
   const d = prepare();
-  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await d.local.writeOrCreate(new StoragePath("file.txt"), Buffer.from("Hello, world!"));
   await makeSync(d.local, d.localSync);
 
-  await d.remote.writeOrCreate(new StoragePath("file.txt"), "Hello, world! Updated remote");
-  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world! Updated local");
+  await d.remote.writeOrCreate(new StoragePath("file.txt"), Buffer.from("Hello, world! Updated remote"));
+  await d.local.writeOrCreate(new StoragePath("file.txt"), Buffer.from("Hello, world! Updated local"));
   await makeSync(d.local, d.localSync);
 
   expect(await d.local.entries()).toStrictEqual({
@@ -144,7 +141,7 @@ it("local and remote files updated", async () => {
 
 it("local file removed", async function() {
   const d = prepare();
-  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await d.local.writeOrCreate(new StoragePath("file.txt"), Buffer.from("Hello, world!"));
   await makeSync(d.local, d.localSync);
 
   await d.local.remove(new StoragePath("file.txt"));
@@ -157,11 +154,11 @@ it("local file removed", async function() {
 
 it("local file removed and remote file updated", async function() {
   const d = prepare();
-  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await d.local.writeOrCreate(new StoragePath("file.txt"), Buffer.from("Hello, world!"));
   await makeSync(d.local, d.localSync);
 
   await d.local.remove(new StoragePath("file.txt"));
-  await d.remote.writeOrCreate(new StoragePath("file.txt"), "Hello, world! Updated");
+  await d.remote.writeOrCreate(new StoragePath("file.txt"), Buffer.from("Hello, world! Updated"));
   await makeSync(d.local, d.localSync);
 
   expect(await d.local.entries()).toStrictEqual({});
@@ -181,7 +178,7 @@ it("local file removed and remote file updated", async function() {
 
 it("local file removed and remote file removed too", async function() {
   const d = prepare();
-  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await d.local.writeOrCreate(new StoragePath("file.txt"), Buffer.from("Hello, world!"));
   await makeSync(d.local, d.localSync);
 
   await d.local.remove(new StoragePath("file.txt"));
@@ -195,7 +192,7 @@ it("local file removed and remote file removed too", async function() {
 
 it("local file turned into directory", async function() {
   const d = prepare();
-  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await d.local.writeOrCreate(new StoragePath("file.txt"), Buffer.from("Hello, world!"));
   await makeSync(d.local, d.localSync);
 
   await d.local.remove(new StoragePath("file.txt"));
@@ -213,7 +210,7 @@ it("local file turned into directory", async function() {
 
 it("remote file turned into directory", async function() {
   const d = prepare();
-  await d.local.writeOrCreate(new StoragePath("file.txt"), "Hello, world!");
+  await d.local.writeOrCreate(new StoragePath("file.txt"), Buffer.from("Hello, world!"));
   await makeSync(d.local, d.localSync);
 
   await d.remote.remove(new StoragePath("file.txt"));
@@ -232,7 +229,7 @@ it("remote file turned into directory", async function() {
 
 it("local tree not changed", async () => {
   const d = prepare();
-  await d.remote.writeOrCreate(new StoragePath("dir/file.txt"), "Hello, world!");
+  await d.remote.writeOrCreate(new StoragePath("dir/file.txt"), Buffer.from("Hello, world!"));
   await makeSync(d.local, d.localSync);
 
   let r: CheckEntryMap = {
@@ -258,7 +255,7 @@ it("local tree not changed", async () => {
 it("handles sync when a directory turned into a file", async function() {
   const d = prepare();
 
-  await d.local.writeOrCreate(new StoragePath("dir/file.txt"), "Hello, local!");
+  await d.local.writeOrCreate(new StoragePath("dir/file.txt"), Buffer.from("Hello, local!"));
 
   await makeSync(d.local, d.localSync);
 
@@ -271,8 +268,8 @@ it("handles sync when a directory turned into a file", async function() {
   expect(await d.remote.entries()).toStrictEqual(r);
 
   await d.local.remove(new StoragePath("dir"));
-  await d.local.writeOrCreate(new StoragePath("dir"), "Hello, local!");
-  await d.remote.writeOrCreate(new StoragePath("dir/file.txt"), "Updated");
+  await d.local.writeOrCreate(new StoragePath("dir"), Buffer.from("Hello, local!"));
+  await d.remote.writeOrCreate(new StoragePath("dir/file.txt"), Buffer.from("Updated"));
 
   await makeSync(d.local, d.localSync);
 

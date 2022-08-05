@@ -1,7 +1,7 @@
 import { FsStorage } from "../storage/FsStorage";
 import * as path from "path";
-import { StoragePath } from "../../common/storage/StoragePath";
-import { StorageErrorCode } from "../../common/storage/StorageLayer";
+import { StoragePath } from "@storage/StoragePath";
+import { StorageErrorCode } from "@storage/StorageLayer";
 import { MemoryStorage } from "../../client/storage/MemoryStorage";
 
 
@@ -18,7 +18,7 @@ describe("fs storage", () => {
   });
 
   it("should read file", async () => {
-    expect(await fs.get(new StoragePath("test.file.txt")).readText()).toEqual("hello, world\n");
+    expect(await fs.get(new StoragePath("test.file.txt")).read()).toEqual("hello, world\n");
   });
 
   it("exists", async () => {
@@ -74,16 +74,16 @@ describe("memory storage", () => {
 
   it("creates file", async () => {
     let file = fs.get(new StoragePath("/a/b/c.txt"));
-    await file.writeOrCreate("new file content");
+    await file.writeOrCreate(Buffer.from("new file content"));
 
     file = await fs.get(new StoragePath("/a/b/c.txt"));
     expect(await file.exists()).toBeTruthy();
-    expect(await file.readText()).toEqual("new file content");
+    expect(await file.read()).toEqual("new file content");
   });
 
   it("removes", async () => {
     let file = fs.get(new StoragePath("/a/b/c/d.txt"));
-    await file.writeOrCreate("new file content");
+    await file.writeOrCreate(Buffer.from("new file content"));
 
     const c = fs.get(new StoragePath("/a/b/c"));
     await c.remove();

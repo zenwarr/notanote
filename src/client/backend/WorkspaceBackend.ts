@@ -1,5 +1,5 @@
 import ky from "ky";
-import { timeout } from "../../common/utils/timeout";
+import { timeout } from "@common/utils/timeout";
 
 
 export class WorkspaceBackend {

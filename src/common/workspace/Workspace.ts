@@ -1,5 +1,5 @@
-import { StorageLayer } from "../storage/StorageLayer";
-import { StoragePath } from "../storage/StoragePath";
+import { StorageLayer } from "@storage/StorageLayer";
+import { StoragePath } from "@storage/StoragePath";
 
 
 export namespace SpecialWorkspaceEntry {
@@ -14,5 +14,5 @@ export namespace SpecialWorkspaceEntry {
 
 export async function createWorkspaceDefaults(fs: StorageLayer) {
   await fs.createDir(SpecialWorkspaceEntry.SpecialRoot);
-  await fs.get(SpecialWorkspaceEntry.Settings).writeOrCreate("{\n  \n}");
+  await fs.get(SpecialWorkspaceEntry.Settings).writeOrCreate(Buffer.from("{\n  \n}"));
 }

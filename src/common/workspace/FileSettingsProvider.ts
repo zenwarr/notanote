@@ -1,8 +1,8 @@
-import { StorageLayer, StorageErrorCode } from "../storage/StorageLayer";
+import { StorageLayer, StorageErrorCode } from "@storage/StorageLayer";
 import { tryParseJson } from "../utils/tryParse";
 import { SpecialWorkspaceEntry } from "./Workspace";
 import { FileSettings } from "../Settings";
-import { StoragePath } from "../storage/StoragePath";
+import { StoragePath } from "@storage/StoragePath";
 
 
 interface WorkspaceSettings {
@@ -22,7 +22,7 @@ export class FileSettingsProvider {
 
   async load(): Promise<void> {
     try {
-      const text = await this.fs.get(SpecialWorkspaceEntry.Settings).readText();
+      const text = (await this.fs.get(SpecialWorkspaceEntry.Settings).read()).toString();
       if (!text) {
         return;
       }

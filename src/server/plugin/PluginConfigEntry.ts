@@ -1,7 +1,7 @@
 import { getWorkspacePlugins } from "./PluginManager";
 import { getRemoteOrigin } from "../github/Github";
 import path from "path";
-import { RuntimeStorageEntry } from "../../common/storage/RuntimeStorageEntry";
+import { RuntimeStorageEntry } from "@storage/RuntimeStorageEntry";
 
 
 export class PluginConfigStorageEntry extends RuntimeStorageEntry {
@@ -14,7 +14,7 @@ export class PluginConfigStorageEntry extends RuntimeStorageEntry {
   private readonly wsId: string;
 
 
-  override async readText(): Promise<string> {
+  override async read(): Promise<Buffer> {
     const plugins = await getWorkspacePlugins(this.wsId, this.realRootPath);
 
     const result: any[] = [];
@@ -25,8 +25,10 @@ export class PluginConfigStorageEntry extends RuntimeStorageEntry {
       });
     }
 
-    return JSON.stringify({
+    const data = JSON.stringify({
       plugins: result
     });
+
+    return Buffer.from(data);
   }
 }

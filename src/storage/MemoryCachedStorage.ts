@@ -1,6 +1,6 @@
-import { StorageEntryPointer, StorageEntryStats, StorageLayer, StorageEntryType, StorageError, StorageErrorCode } from "./StorageLayer";
+import { StorageEntryPointer, StorageEntryStats, StorageLayer, StorageError, StorageErrorCode } from "./StorageLayer";
 import { StoragePath } from "./StoragePath";
-import { MemoryStorage } from "../../client/storage/MemoryStorage";
+import { MemoryStorage } from "../client/storage/MemoryStorage";
 
 
 /**
@@ -50,7 +50,7 @@ export class MemoryCachedStorage extends StorageLayer {
   }
 
 
-  override async readText(path: StoragePath): Promise<string> {
+  override async read(path: StoragePath): Promise<Buffer> {
     const cached = await this.memory.getDataAtPath(path);
     if (!cached) {
       throw new StorageError(StorageErrorCode.NotExists, path, `File does not exist`);
@@ -60,11 +60,11 @@ export class MemoryCachedStorage extends StorageLayer {
       throw new StorageError(StorageErrorCode.NotFile, path, `Not a file`);
     }
 
-    if (cached.textContent == null) {
-      cached.textContent = await this.remote.readText(path);
+    if (cached.content == null) {
+      cached.content = await this.remote.read(path);
     }
 
-    return cached.textContent;
+    return cached.content;
   }
 
 
@@ -79,7 +79,7 @@ export class MemoryCachedStorage extends StorageLayer {
   }
 
 
-  override async writeOrCreate(path: StoragePath, content: Buffer | string): Promise<StorageEntryPointer> {
+  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<StorageEntryPointer> {
     await this.remote.writeOrCreate(path, content);
     await this.memory.writeOrCreate(path, content);
     return new StorageEntryPointer(path, this);

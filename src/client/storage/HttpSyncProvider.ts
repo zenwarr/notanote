@@ -1,7 +1,7 @@
 import ky from "ky";
-import { serializeSyncEntry, SyncEntry } from "../../common/sync/SyncEntry";
-import { SyncProvider } from "../../common/sync/SyncProvider";
-import { SyncResult } from "../../common/sync/RemoteSync";
+import { serializeSyncEntry, SyncEntry } from "@sync/SyncEntry";
+import { SyncProvider } from "@sync/SyncProvider";
+import { SyncResult } from "@sync/RemoteSync";
 
 
 export class HttpSyncProvider implements SyncProvider {

@@ -1,14 +1,14 @@
-import { walkSerializableStorageEntries } from "../workspace/SerializableStorageEntryData";
+import { walkSerializableStorageEntries } from "@common/workspace/SerializableStorageEntryData";
 import { StorageEntryStats, StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "./StorageLayer";
 import { StoragePath } from "./StoragePath";
 
 
 export abstract class MountedFile {
-  abstract readText(path: StoragePath): Promise<string>;
+  abstract read(path: StoragePath): Promise<Buffer>;
 
   abstract stats(path: StoragePath): Promise<StorageEntryStats>;
 
-  abstract write(path: StoragePath, content: Buffer | string): Promise<void>;
+  abstract write(path: StoragePath, content: Buffer): Promise<void>;
 }
 
 
@@ -74,7 +74,7 @@ export class StorageWithMounts extends StorageLayer {
         entry.children.push({
           path: childPath,
           stats: await child.stats(new StoragePath(childPath)),
-          textContent: await child.readText(new StoragePath(childPath))
+          content: await child.read(new StoragePath(childPath))
         });
       }
     }
@@ -106,13 +106,13 @@ export class StorageWithMounts extends StorageLayer {
   }
 
 
-  override async readText(path: StoragePath): Promise<string> {
+  override async read(path: StoragePath): Promise<Buffer> {
     const mounted = this.mounts.get(path.normalized);
     if (mounted) {
-      return mounted.readText(path);
+      return mounted.read(path);
     }
 
-    return this.base.readText(path);
+    return this.base.read(path);
   }
 
 
@@ -136,7 +136,7 @@ export class StorageWithMounts extends StorageLayer {
   }
 
 
-  override async writeOrCreate(path: StoragePath, content: Buffer | string): Promise<StorageEntryPointer> {
+  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<StorageEntryPointer> {
     const mounted = this.mounts.get(path.normalized);
     if (mounted) {
       await mounted.write(path, content);

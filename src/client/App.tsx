@@ -1,6 +1,5 @@
 import { Box, CircularProgress, Hidden, SwipeableDrawer } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { MemoryCachedStorage } from "../common/storage/MemoryCachedStorage.js";
 import { WorkspaceView } from "./WorkspaceView/WorkspaceView";
 import { ConnectedFileView } from "./FileView";
 import { Header } from "./Header";
@@ -13,7 +12,7 @@ import "./App.css";
 import { useShortcuts } from "./Shortcuts";
 import { PaletteProvider } from "./PaletteProvider";
 import { useAppThemeContext } from "./Theme";
-import { StoragePath } from "../common/storage/StoragePath";
+import { StoragePath } from "@storage/StoragePath";
 import { observer } from "mobx-react-lite";
 
 
@@ -27,7 +26,7 @@ export const App = observer(() => {
   const appTheme = useAppThemeContext();
 
   useEffect(() => {
-    ClientWorkspace.instance.init().then(() => {}).catch(err => console.error(err.message));
+    ClientWorkspace.instance.init().then(() => {}).catch(err => console.error(err));
   }, []);
 
   function onMobileEntrySelected(path: StoragePath) {

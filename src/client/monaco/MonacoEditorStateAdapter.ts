@@ -21,8 +21,8 @@ export class MonacoEditorStateAdapter implements DocumentEditorStateAdapter {
   }
 
 
-  get initialText() {
-    return this.doc.getLastSavedText();
+  get initialText(): string {
+    return this.doc.getLastSavedData().toString();
   }
 
 

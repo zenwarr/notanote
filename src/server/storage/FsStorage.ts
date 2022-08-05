@@ -4,9 +4,9 @@ import {
   StorageError,
   StorageErrorCode,
   StorageLayer
-} from "../../common/storage/StorageLayer";
+} from "@storage/StorageLayer";
 import * as fs from "fs";
-import { joinNestedPathSecure, StoragePath } from "../../common/storage/StoragePath";
+import { joinNestedPathSecure, StoragePath } from "@storage/StoragePath";
 import { asyncExists } from "../plugin/PluginManager";
 
 
@@ -62,9 +62,9 @@ export class FsStorage extends StorageLayer {
   }
 
 
-  override async readText(path: StoragePath): Promise<string> {
+  override async read(path: StoragePath): Promise<Buffer> {
     try {
-      return await fs.promises.readFile(this.toAbsolutePath(path), "utf-8");
+      return await fs.promises.readFile(this.toAbsolutePath(path));
     } catch (err: any) {
       if (err.code === "EISDIR") {
         throw new StorageError(StorageErrorCode.NotFile, path, "Cannot read a directory");
@@ -108,11 +108,8 @@ export class FsStorage extends StorageLayer {
   }
 
 
-  override async writeOrCreate(path: StoragePath, content: Buffer | string): Promise<StorageEntryPointer> {
+  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<StorageEntryPointer> {
     const absPath = this.toAbsolutePath(path);
-    if (typeof content === "string") {
-      content = Buffer.from(content, "utf-8");
-    }
 
     await this.createDir(path.parentDir);
 

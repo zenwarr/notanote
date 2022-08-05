@@ -1,4 +1,4 @@
-import { StoragePath } from "./storage/StoragePath";
+import { StoragePath } from "@storage/StoragePath";
 
 
 export const SpecialFiles = {

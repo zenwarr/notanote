@@ -1,7 +1,10 @@
-import * as idb from "idb-keyval";
-import { StoragePath } from "../../common/storage/StoragePath";
-import { ContentIdentity } from "../../common/sync/ContentIdentity";
-import { mergeMetadataMaps, SyncMetadataMap, SyncMetadataStorage } from "../../common/sync/SyncMetadataStorage";
+import { StoragePath } from "@storage/StoragePath";
+import { ContentIdentity } from "@sync/ContentIdentity";
+import { mergeMetadataMaps, SyncMetadataMap, SyncMetadataStorage } from "@sync/SyncMetadataStorage";
+import { ClientKeyValueStore } from "../keyValueStore/ClientKeyValueStore";
+
+
+const SYNC_METADATA_KEY = "sync-metadata";
 
 
 export class BrowserSyncMetadataStorage implements SyncMetadataStorage {
@@ -12,20 +15,20 @@ export class BrowserSyncMetadataStorage implements SyncMetadataStorage {
 
   async set(path: StoragePath, identity: ContentIdentity) {
     (await this.loadStoredData())[path.normalized] = identity;
-    await idb.set("sync-metadata", this._data);
+    await ClientKeyValueStore.defaultInstance.set(SYNC_METADATA_KEY, this._data);
   }
 
 
   async setMulti(data: SyncMetadataMap): Promise<void> {
     await this.loadStoredData();
     mergeMetadataMaps(this._data!, data);
-    await idb.set("sync-metadata", this._data);
+    await ClientKeyValueStore.defaultInstance.set(SYNC_METADATA_KEY, this._data);
   }
 
 
   private async loadStoredData(): Promise<SyncMetadataMap> {
     if (this._data == null) {
-      this._data = await idb.get<SyncMetadataMap>("sync-metadata") || {};
+      this._data = await ClientKeyValueStore.defaultInstance.get<SyncMetadataMap>(SYNC_METADATA_KEY) || {};
     }
 
     return this._data;

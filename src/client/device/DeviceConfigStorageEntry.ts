@@ -1,5 +1,5 @@
-import { RuntimeStorageEntry } from "../../common/storage/RuntimeStorageEntry";
-import { StoragePath } from "../../common/storage/StoragePath";
+import { RuntimeStorageEntry } from "@storage/RuntimeStorageEntry";
+import { StoragePath } from "@storage/StoragePath";
 
 
 const DEVICE_CONFIG_KEY = "nuclear-device-config";
@@ -24,12 +24,15 @@ export interface DeviceConfig {
 
 
 export class DeviceConfigStorageEntry extends RuntimeStorageEntry {
-  override async readText(): Promise<string> {
+  override async read(): Promise<Buffer> {
+    let data: string;
     try {
-      return JSON.stringify(getDeviceConfig(), null, 2);
+      data = JSON.stringify(getDeviceConfig(), null, 2);
     } catch (error) {
-      return JSON.stringify({}, null, 2);
+      data = JSON.stringify({}, null, 2);
     }
+
+    return Buffer.from(data);
   }
 
 

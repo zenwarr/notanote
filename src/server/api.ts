@@ -1,16 +1,16 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
-import { syncRemoteEntry} from "../common/sync/RemoteSync";
-import { deserializeSyncEntry, SerializedSyncEntry, SyncEntry } from "../common/sync/SyncEntry";
+import { syncRemoteEntry} from "@sync/RemoteSync";
+import { deserializeSyncEntry, SerializedSyncEntry} from "@sync/SyncEntry";
 import { getProfile, requireAuthenticatedUser } from "./auth";
 import S from "fluent-json-schema";
-import { ErrorCode, LogicError } from "../common/errors";
+import { ErrorCode, LogicError } from "@common/errors";
 import { commitAndPushChanges, initGithubIntegration } from "./github/Github";
 import { buildStoragePlugin, clonePlugin, updatePlugin } from "./plugin/PluginManager";
 import * as fs from "fs";
-import { StoragePath } from "../common/storage/StoragePath";
+import { StoragePath } from "@storage/StoragePath";
 import { ServerStorageFactory } from "./storage/ServerStorageFactory";
-import { SerializableStorageEntryData } from "../common/workspace/SerializableStorageEntryData";
-import { StorageEntryStats, StorageEntryType, StorageLayer } from "../common/storage/StorageLayer";
+import { SerializableStorageEntryData } from "@common/workspace/SerializableStorageEntryData";
+import { StorageEntryStats, StorageEntryType, StorageLayer } from "@storage/StorageLayer";
 
 
 type StorageRouteParams = {
@@ -62,7 +62,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
    */
   app.post<{
     Params: StorageRouteParams,
-    Body: { entryPath: string; type: StorageEntryType, content?: string }
+    Body: { entryPath: string; type: StorageEntryType, content?: Buffer }
   }>("/api/storages/:storageId/files", {
     schema: {
       params: S.object().prop("storageId", S.string().required()),
@@ -75,7 +75,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     if (req.body.type === StorageEntryType.Dir) {
       await storage.createDir(new StoragePath(req.body.entryPath));
     } else {
-      await storage.get(new StoragePath(req.body.entryPath)).writeOrCreate(req.body.content ?? "");
+      await storage.get(new StoragePath(req.body.entryPath)).writeOrCreate(req.body.content ?? Buffer.alloc(0));
     }
 
     return {};
@@ -102,7 +102,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     }
 
     const stats = await entry.stats();
-    const text = req.query.text ? await entry.readText() : undefined;
+    const text = req.query.text ? await entry.read() : undefined;
 
     const childrenEntries = req.query.children ? await entry.children() : undefined;
     const childrenStats: StorageEntryStats[] = [];
@@ -116,7 +116,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     const d: SerializableStorageEntryData = {
       path: entry.path.normalized,
       stats,
-      textContent: text,
+      content: text,
       children: childrenEntries?.map((child, index) => ({
         path: child.path.normalized,
         stats: childrenStats[index]!
@@ -150,7 +150,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
 
   app.put<{
     Params: StorageRouteParams & FileRouteParams,
-    Body: { content: string }
+    Body: { content: Buffer }
   }>("/api/storages/:storageId/files/*", {
     schema: {
       params: S.object().prop("storageId", S.string().required())

@@ -141,7 +141,7 @@ class PluginConfigEditorState implements DocumentEditorStateAdapter {
     makeAutoObservable(this);
 
     try {
-      this.data = JSON.parse(doc.getLastSavedText());
+      this.data = JSON.parse(doc.getLastSavedData().toString());
     } catch (err: any) {
       this.data = {};
     }

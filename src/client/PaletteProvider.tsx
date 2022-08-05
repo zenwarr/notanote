@@ -4,7 +4,7 @@ import { Palette, PaletteCompleter } from "./Palette";
 import { ClientWorkspace } from "./ClientWorkspace";
 import { filePaletteCompleter } from "./PaletteCompleter";
 import { CommandManager, commandPaletteCompleter } from "./commands/CommandManager";
-import { StoragePath } from "../common/storage/StoragePath";
+import { StoragePath } from "@storage/StoragePath";
 
 
 export enum PaletteMode {

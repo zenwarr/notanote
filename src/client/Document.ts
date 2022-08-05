@@ -1,14 +1,11 @@
-import { makeObservable, observable } from "mobx";
 import * as _ from "lodash";
-import { FileSettings } from "../common/Settings";
+import { FileSettings } from "@common/Settings";
 import { ClientWorkspace } from "./ClientWorkspace";
-import { DocumentManager } from "./DocumentManager";
-import { StorageEntryPointer } from "../common/storage/StorageLayer";
-import assert from "assert";
+import { StorageEntryPointer } from "@storage/StorageLayer";
 
 
 export interface DocumentEditorStateAdapter {
-  serializeContent(): string | Promise<string>;
+  serializeContent(): string | Buffer | Promise<string | Buffer>;
 }
 
 
@@ -16,13 +13,13 @@ export class Document {
   constructor(entry: StorageEntryPointer, settings: FileSettings) {
     this.entry = entry;
     this.settings = settings;
-    this.text = "";
+    this.content = Buffer.alloc(0);
     this.onChangesDebounced = _.debounce(this.onChangesAsync.bind(this), 500);
   }
 
 
-  async loadText() {
-    this.text = await this.entry.readText();
+  async load(): Promise<void> {
+    this.content = await this.entry.read();
   }
 
 
@@ -36,17 +33,18 @@ export class Document {
   }
 
 
-  serializeContent(): string | Promise<string> {
+  async contentToBuffer(): Promise<Buffer> {
     if (this.adapter) {
-      return this.adapter.serializeContent();
+      const adapterData = await this.adapter.serializeContent();
+      return typeof adapterData === "string" ? Buffer.from(adapterData) : adapterData;
     } else {
-      return this.text;
+      return this.content;
     }
   }
 
 
-  getLastSavedText() {
-    return this.text;
+  getLastSavedData() {
+    return this.content;
   }
 
 
@@ -56,7 +54,7 @@ export class Document {
 
 
   private async onChangesAsync() {
-    await this.entry.writeOrCreate(await this.serializeContent());
+    await this.entry.writeOrCreate(await this.contentToBuffer());
     ClientWorkspace.instance.syncWorker.addRoot(this.entry);
   }
 
@@ -64,6 +62,6 @@ export class Document {
   private onChangesDebounced: () => Promise<void> | undefined;
   readonly entry: StorageEntryPointer;
   readonly settings: FileSettings;
-  private text: string;
+  private content: Buffer;
   private adapter: DocumentEditorStateAdapter | undefined;
 }

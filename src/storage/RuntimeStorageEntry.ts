@@ -19,7 +19,7 @@ export abstract class RuntimeStorageEntry extends MountedFile {
   }
 
 
-  override async readText(path: StoragePath): Promise<string> {
+  override async read(path: StoragePath): Promise<Buffer> {
     throw new StorageError(StorageErrorCode.NotSupported, path, "Operation not supported for this entry");
   }
 }

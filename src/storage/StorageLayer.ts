@@ -1,4 +1,4 @@
-import { SerializableStorageEntryData } from "../workspace/SerializableStorageEntryData";
+import { SerializableStorageEntryData } from "@common/workspace/SerializableStorageEntryData";
 import { StoragePath } from "./StoragePath";
 
 
@@ -19,10 +19,10 @@ export abstract class StorageLayer {
   abstract createDir(path: StoragePath): Promise<StorageEntryPointer>;
 
 
-  abstract readText(path: StoragePath): Promise<string>;
+  abstract read(path: StoragePath): Promise<Buffer>;
 
 
-  abstract writeOrCreate(path: StoragePath, content: Buffer | string): Promise<StorageEntryPointer>;
+  abstract writeOrCreate(path: StoragePath, content: Buffer): Promise<StorageEntryPointer>;
 
 
   abstract remove(path: StoragePath): Promise<void>;
@@ -107,12 +107,12 @@ export class StorageEntryPointer {
   }
 
 
-  async readText(): Promise<string> {
-    return this.storage.readText(this.path);
+  async read(): Promise<Buffer> {
+    return this.storage.read(this.path);
   }
 
 
-  async writeOrCreate(content: Buffer | string): Promise<void> {
+  async writeOrCreate(content: Buffer): Promise<void> {
     await this.storage.writeOrCreate(this.path, content);
   }
 

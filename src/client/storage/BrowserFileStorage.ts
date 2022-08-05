@@ -1,7 +1,7 @@
-import * as idb from "idb-keyval";
 import * as mobx from "mobx";
-import { StorageEntryStats, StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "../../common/storage/StorageLayer";
-import { StoragePath } from "../../common/storage/StoragePath";
+import { StorageEntryStats, StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "@storage/StorageLayer";
+import { StoragePath } from "@storage/StoragePath";
+import { ClientKeyValueStore } from "../keyValueStore/ClientKeyValueStore";
 
 
 export class BrowserFileStorageLayer extends StorageLayer {
@@ -129,7 +129,7 @@ export class BrowserFileStorageLayer extends StorageLayer {
 
 
   static async fromSavedHandle(key: string): Promise<BrowserFileStorageLayer | undefined> {
-    const value: FileSystemDirectoryHandle | undefined = await idb.get(key);
+    const value: FileSystemDirectoryHandle | undefined = await ClientKeyValueStore.defaultInstance.get(key);
     if (!value) {
       return undefined;
     } else {
@@ -140,7 +140,7 @@ export class BrowserFileStorageLayer extends StorageLayer {
 
 
   async saveHandle(key: string) {
-    return idb.set(key, this.root);
+    return ClientKeyValueStore.defaultInstance.set(key, this.root);
   }
 
 
@@ -164,7 +164,7 @@ export class BrowserFileStorageLayer extends StorageLayer {
   }
 
 
-  override async readText(path: StoragePath): Promise<string> {
+  override async read(path: StoragePath): Promise<Buffer> {
     const handles = await this.getHandle(path);
     if (!handles) {
       throw new StorageError(StorageErrorCode.NotExists, path, "File does not exist");
@@ -175,7 +175,8 @@ export class BrowserFileStorageLayer extends StorageLayer {
       throw new Error("Not a file");
     }
 
-    return (await fileHandle.getFile()).text();
+    const buf = await (await fileHandle.getFile()).arrayBuffer();
+    return Buffer.from(buf);
   }
 
 
@@ -208,7 +209,7 @@ export class BrowserFileStorageLayer extends StorageLayer {
   }
 
 
-  override async writeOrCreate(path: StoragePath, content: Buffer | string): Promise<StorageEntryPointer> {
+  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<StorageEntryPointer> {
     const handles = await this.getHandle(path, true);
     if (!handles) {
       throw new StorageError(StorageErrorCode.NotExists, path, "File does not exist");

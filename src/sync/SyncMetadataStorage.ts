@@ -1,4 +1,4 @@
-import { StoragePath } from "../storage/StoragePath";
+import { StoragePath } from "@storage/StoragePath";
 import { ContentIdentity } from "./ContentIdentity";
 import * as _ from "lodash";
 

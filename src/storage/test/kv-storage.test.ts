@@ -1,6 +1,6 @@
-import { KVStorageLayer } from "../storage/KVStorageLayer";
-import { StoragePath } from "../storage/StoragePath";
-import { MapKV } from "./map-kv";
+import { KVStorageLayer } from "../KVStorageLayer";
+import { StoragePath } from "../StoragePath";
+import { MapKV } from "../MapKV";
 
 
 const storage = new MapKV(new Map());
@@ -24,7 +24,7 @@ it("works", async () => {
   expect(file).toBeDefined();
   expect(await file.exists()).toBe(false);
 
-  await file.writeOrCreate("Hello, world!");
+  await file.writeOrCreate(Buffer.from("Hello, world!"));
   expect(await file.exists()).toBe(true);
-  expect(await file.readText()).toBe("Hello, world!");
+  expect(await file.read()).toBe("Hello, world!");
 });

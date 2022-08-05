@@ -1,5 +1,5 @@
 import { Box, Button } from "@mui/material";
-import { DiffType, SyncResult } from "../../common/sync/RemoteSync";
+import { DiffType, SyncResult } from "@sync/RemoteSync";
 
 
 export type ConflictItemProps = {

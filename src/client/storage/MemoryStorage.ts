@@ -1,9 +1,9 @@
 import * as _ from "lodash";
 import * as mobx from "mobx";
 import * as p from "path";
-import { StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "../../common/storage/StorageLayer";
-import { StoragePath } from "../../common/storage/StoragePath";
-import { SerializableStorageEntryData } from "../../common/workspace/SerializableStorageEntryData";
+import { StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "@storage/StorageLayer";
+import { StoragePath } from "@storage/StoragePath";
+import { SerializableStorageEntryData } from "@common/workspace/SerializableStorageEntryData";
 
 
 /**
@@ -123,17 +123,17 @@ export class MemoryStorage extends StorageLayer {
   }
 
 
-  override async readText(path: StoragePath) {
+  override async read(path: StoragePath): Promise<Buffer> {
     const p = this.getDataObject(path);
     if (!p) {
-      return "";
+      return Buffer.alloc(0);
     }
 
     if (p.stats.isDirectory) {
       throw new StorageError(StorageErrorCode.NotFile, path, "Not a file");
     }
 
-    return p.textContent || "";
+    return p.content || Buffer.alloc(0);
   }
 
 
@@ -162,28 +162,21 @@ export class MemoryStorage extends StorageLayer {
   }
 
 
-  override async writeOrCreate(path: StoragePath, content: Buffer | string): Promise<StorageEntryPointer> {
-    let textContent: string;
-    if (Buffer.isBuffer(content)) {
-      textContent = content.toString();
-    } else {
-      textContent = content;
-    }
-
+  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<StorageEntryPointer> {
     let p = this.getDataObject(path);
     if (!p) {
       p = this.createDataObject({
         path: path.normalized,
         stats: {
           isDirectory: false,
-          size: textContent.length,
+          size: content.length,
           createTs: new Date().valueOf(),
           updateTs: new Date().valueOf()
         }
       });
     }
 
-    p.textContent = textContent;
+    p.content = content;
 
     return new StorageEntryPointer(path, this);
   }

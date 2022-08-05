@@ -1,11 +1,12 @@
 import fastify from "fastify";
 import path from "path";
 import fastifyFormBody from "@fastify/formbody";
+import fastifyMultipart from "@fastify/multipart";
 import fastifyView from "@fastify/view";
 import hbs from "handlebars";
 import fastifyStatic from "@fastify/static";
 import { configureAuth } from "./auth";
-import { ErrorCode, getStatusCodeForError, LogicError } from "../common/errors";
+import { ErrorCode, getStatusCodeForError, LogicError } from "@common/errors";
 
 
 export async function startApp() {
@@ -18,6 +19,12 @@ export async function startApp() {
   });
 
   app.register(fastifyFormBody);
+  app.register(fastifyMultipart, {
+    limits: {
+      files: 1,
+      fileSize: 1024 * 1024 * 20 // 20MB
+    }
+  });
   app.register(fastifyView, {
     engine: {
       handlebars: hbs

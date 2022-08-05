@@ -1,12 +1,12 @@
 import { makeObservable, observable } from "mobx";
-import { LocalSyncWorker } from "../common/sync/LocalSync";
-import { SyncProvider } from "../common/sync/SyncProvider";
-import { SerializableStorageEntryData } from "../common/workspace/SerializableStorageEntryData";
+import { LocalSyncWorker } from "@sync/LocalSync";
+import { SyncProvider } from "@sync/SyncProvider";
+import { SerializableStorageEntryData } from "@common/workspace/SerializableStorageEntryData";
 import { RecentDocStorage } from "./RecentDocStorage";
-import { StoragePath } from "../common/storage/StoragePath";
-import { MemoryCachedStorage } from "../common/storage/MemoryCachedStorage";
-import { StorageEntryType } from "../common/storage/StorageLayer";
-import { FileSettingsProvider } from "../common/workspace/FileSettingsProvider";
+import { StoragePath } from "@storage/StoragePath";
+import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
+import { StorageEntryType } from "@storage/StorageLayer";
+import { FileSettingsProvider } from "@common/workspace/FileSettingsProvider";
 import { BrowserSyncMetadataStorage } from "./storage/BrowserSyncMetadataStorage";
 
 
@@ -82,7 +82,7 @@ export class ClientWorkspace {
 
     const entry = this.storage.get(path);
     if (type === StorageEntryType.File) {
-      await entry.writeOrCreate("");
+      await entry.writeOrCreate(Buffer.alloc(0));
     } else {
       await entry.createDir();
     }
