@@ -1,4 +1,4 @@
-import { walkSerializableStorageEntries } from "@common/workspace/SerializableStorageEntryData";
+import { walkStorageEntryData } from "@common/workspace/StorageEntryData";
 import { StorageEntryStats, StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "./StorageLayer";
 import { StoragePath } from "./StoragePath";
 
@@ -52,8 +52,8 @@ export class StorageWithMounts extends StorageLayer {
   }
 
 
-  override async loadAll() {
-    const all = await this.base.loadAll();
+  override async loadOutline() {
+    const all = await this.base.loadOutline();
 
     const mountParentsToChildren = new Map<string, string[]>();
     for (const [ mountPath, mount ] of this.mounts.entries()) {
@@ -63,8 +63,8 @@ export class StorageWithMounts extends StorageLayer {
       mountParentsToChildren.set(mountParentPath, children);
     }
 
-    for (const entry of walkSerializableStorageEntries(all)) {
-      for (const childPath of mountParentsToChildren.get(entry.path) || []) {
+    for (const entry of walkStorageEntryData(all)) {
+      for (const childPath of mountParentsToChildren.get(entry.path.normalized) || []) {
         const child = this.mounts.get(childPath)!;
 
         if (!entry.children) {
@@ -72,7 +72,7 @@ export class StorageWithMounts extends StorageLayer {
         }
 
         entry.children.push({
-          path: childPath,
+          path: new StoragePath(childPath),
           stats: await child.stats(new StoragePath(childPath)),
           content: await child.read(new StoragePath(childPath))
         });

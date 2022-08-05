@@ -3,7 +3,6 @@ import { useRef, useState } from "react";
 import cn from "classnames";
 import { Box, IconButton } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { SerializableStorageEntryData } from "@common/workspace/SerializableStorageEntryData";
 import { ClientWorkspace } from "../ClientWorkspace";
 import { observer } from "mobx-react-lite";
 import { CreateEntryDialog } from "../CreateEntryDialog";
@@ -107,7 +106,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 
     if (!isDir) {
       navigate(`/f/${ value }`);
-      props.onFileSelected?.(new StoragePath(selectedEntry.path));
+      props.onFileSelected?.(new StoragePath(value));
     } else {
       expand.onToggle(value);
     }
@@ -145,7 +144,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 
   const containerClassName = cn(classes.treeContainer, { [classes.treeContainerPadding]: props.treeWithPadding });
 
-  const [ menuEntry, setMenuEntry ] = useState<SerializableStorageEntryData | undefined>();
+  const [ menuEntryPath, setMenuEntryPath ] = useState<StoragePath | undefined>();
   const [ menuState, setMenuState ] = useState<{
     x: number;
     y: number
@@ -153,7 +152,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 
   function onMenuOpen(x: number, y: number, path: StoragePath) {
     setMenuState({ x, y });
-    setMenuEntry(ClientWorkspace.instance.storage.getMemoryData(path));
+    setMenuEntryPath(path);
   }
 
   function onMenuClose() {
@@ -200,7 +199,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
     </TreeContext.Provider>
 
     <TreeMenu open={ menuState != null } onClose={ () => setMenuState(undefined) }
-              entry={ menuEntry ? cw.storage.get(new StoragePath(menuEntry.path)) : undefined }
+              entry={ menuEntryPath ? cw.storage.get(menuEntryPath) : undefined }
               x={ menuState?.x } y={ menuState?.y }/>
   </>;
 });

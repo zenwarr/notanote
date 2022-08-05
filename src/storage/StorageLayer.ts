@@ -1,4 +1,4 @@
-import { SerializableStorageEntryData } from "@common/workspace/SerializableStorageEntryData";
+import { StorageEntryData } from "@common/workspace/StorageEntryData";
 import { StoragePath } from "./StoragePath";
 
 
@@ -37,20 +37,23 @@ export abstract class StorageLayer {
   abstract exists(path: StoragePath): Promise<boolean>;
 
 
-  async loadAll(): Promise<SerializableStorageEntryData> {
-    return this.toSerializableEntry(this.get(StoragePath.root));
+  /**
+   * Loading outline leads to building a complete tree of StorageEntryData objects, but without actual data in `content` field.
+   */
+  async loadOutline(): Promise<StorageEntryData> {
+    return this.toEntryData(this.get(StoragePath.root));
   }
 
 
-  private async toSerializableEntry(p: StorageEntryPointer): Promise<SerializableStorageEntryData> {
+  private async toEntryData(p: StorageEntryPointer): Promise<StorageEntryData> {
     const stats = await p.stats();
 
     const children = stats.isDirectory ? await this.children(p.path) : undefined;
 
     return {
-      path: p.path.normalized,
+      path: p.path,
       stats,
-      children: children ? await Promise.all(children.map(c => this.toSerializableEntry(c))) : undefined
+      children: children ? await Promise.all(children.map(c => this.toEntryData(c))) : undefined
     };
   }
 }

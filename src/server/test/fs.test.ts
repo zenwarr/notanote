@@ -2,7 +2,7 @@ import { FsStorage } from "../storage/FsStorage";
 import * as path from "path";
 import { StoragePath } from "@storage/StoragePath";
 import { StorageErrorCode } from "@storage/StorageLayer";
-import { MemoryStorage } from "../../client/storage/MemoryStorage";
+import { MemoryStorage } from "@storage/MemoryStorage";
 
 
 describe("fs storage", () => {

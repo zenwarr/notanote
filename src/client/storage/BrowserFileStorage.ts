@@ -1,7 +1,7 @@
 import * as mobx from "mobx";
 import { StorageEntryStats, StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "@storage/StorageLayer";
 import { StoragePath } from "@storage/StoragePath";
-import { ClientKeyValueStore } from "../keyValueStore/ClientKeyValueStore";
+import { ClientKeyValueStore } from "./ClientKeyValueStore";
 
 
 export class BrowserFileStorageLayer extends StorageLayer {

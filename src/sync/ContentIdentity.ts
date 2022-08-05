@@ -23,7 +23,6 @@ export function isContentIdentityEqual(a: ContentIdentity, b: ContentIdentity): 
  * Content identity is undefined if given entry does not exist.
  */
 export async function getContentIdentity(ep: StorageEntryPointer, content: Buffer | undefined = undefined): Promise<ContentIdentity | undefined> {
-  let size: number | "unk" | undefined;
   let isDir = false;
 
   try {
@@ -45,7 +44,6 @@ export async function getContentIdentity(ep: StorageEntryPointer, content: Buffe
     content = await readEntityDataIfAny(ep);
   }
 
-  // todo: should we calculate hash based on binary or text content? in the former case, how to deal with storages not supporting binary content?
   return "t" + getContentHash(content);
 }
 
@@ -63,7 +61,7 @@ export async function readEntityDataIfAny(e: StorageEntryPointer): Promise<Buffe
 }
 
 
-export function getContentHash(input: string | Buffer | undefined): string {
+export function getContentHash(input: Buffer | undefined): string {
   if (input === undefined) {
     return "";
   }

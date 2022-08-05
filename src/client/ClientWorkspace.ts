@@ -1,7 +1,7 @@
 import { makeObservable, observable } from "mobx";
 import { LocalSyncWorker } from "@sync/LocalSync";
 import { SyncProvider } from "@sync/SyncProvider";
-import { SerializableStorageEntryData } from "@common/workspace/SerializableStorageEntryData";
+import { StorageEntryData } from "@common/workspace/StorageEntryData";
 import { RecentDocStorage } from "./RecentDocStorage";
 import { StoragePath } from "@storage/StoragePath";
 import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
@@ -40,15 +40,11 @@ export class ClientWorkspace {
 
 
   async init() {
-    const allEntries = await this.storage.loadAll();
-    if (!allEntries) {
-      throw new Error(`Failed to load storage entries: loadAll returns undefined`);
-    }
-
-    this.storage.memory.setData(allEntries);
+    // todo: failing on this step can lead to damaging data
+    await this.storage.initWithRemoteOutline();
 
     this.syncWorker.addRoot(this.storage.get(StoragePath.root));
-    this.syncWorker.runSync();
+    await this.syncWorker.sync();
 
     await FileSettingsProvider.instance.load();
 
@@ -56,8 +52,8 @@ export class ClientWorkspace {
   }
 
 
-  walk(cb: (entry: SerializableStorageEntryData) => boolean) {
-    function walkList(entries: SerializableStorageEntryData[] | undefined): boolean {
+  walk(cb: (entry: StorageEntryData) => boolean) {
+    function walkList(entries: StorageEntryData[] | undefined): boolean {
       for (const e of entries || []) {
         if (cb(e)) {
           return true;

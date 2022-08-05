@@ -63,7 +63,7 @@ async function getEntryDiff(local: SyncEntry | undefined, remote: StorageEntryPo
   } else if (!local?.identity && remoteIdentity) {
     if (!local?.synced) {
       // - the entry was created on remote and missing on local
-      // - client has corrupted metata (or this is initial sync)
+      // - client has corrupted metadata (or this is initial sync)
       return DiffType.RemoteCreate;
     }
 

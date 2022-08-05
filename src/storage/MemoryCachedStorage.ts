@@ -1,6 +1,6 @@
 import { StorageEntryPointer, StorageEntryStats, StorageLayer, StorageError, StorageErrorCode } from "./StorageLayer";
 import { StoragePath } from "./StoragePath";
-import { MemoryStorage } from "../client/storage/MemoryStorage";
+import { MemoryStorage } from "./MemoryStorage";
 
 
 /**
@@ -10,6 +10,16 @@ export class MemoryCachedStorage extends StorageLayer {
   constructor(remoteStorage: StorageLayer) {
     super();
     this.remote = remoteStorage;
+  }
+
+
+  async initWithRemoteOutline() {
+    const treeOutline = await this.remote.loadOutline();
+    if (!treeOutline) {
+      throw new Error(`Failed to load storage entries: loadAll returns undefined`);
+    }
+
+    this.memory.setData(treeOutline);
   }
 
 
@@ -34,8 +44,8 @@ export class MemoryCachedStorage extends StorageLayer {
   }
 
 
-  override async loadAll() {
-    return this.remote.loadAll();
+  override async loadOutline() {
+    return this.remote.loadOutline();
   }
 
 

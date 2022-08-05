@@ -1,16 +1,16 @@
 import { FixedSizeNodeData } from "react-vtree";
-import { SerializableStorageEntryData } from "@common/workspace/SerializableStorageEntryData";
+import { StorageEntryData } from "@common/workspace/StorageEntryData";
 
 
 export type TreeNodeData = FixedSizeNodeData & {
-  data: SerializableStorageEntryData;
+  data: StorageEntryData;
   level: number;
   state: TreeState;
 }
 
 
 export type TreeState = {
-  root: SerializableStorageEntryData;
+  root: StorageEntryData;
   selected: string | undefined;
   onSelect: (node: string) => void;
   expanded: string[];
@@ -18,10 +18,10 @@ export type TreeState = {
 
 
 export function* treeWalker(state: TreeState): any {
-  function createEntry(e: SerializableStorageEntryData, level: number) {
+  function createEntry(e: StorageEntryData, level: number) {
     const d: TreeNodeData = {
-      id: e.path,
-      isOpenByDefault: state.expanded.includes(e.path),
+      id: e.path.normalized,
+      isOpenByDefault: state.expanded.includes(e.path.normalized),
       data: e,
       level,
       state

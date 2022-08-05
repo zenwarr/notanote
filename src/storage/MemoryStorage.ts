@@ -3,7 +3,7 @@ import * as mobx from "mobx";
 import * as p from "path";
 import { StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "@storage/StorageLayer";
 import { StoragePath } from "@storage/StoragePath";
-import { SerializableStorageEntryData } from "@common/workspace/SerializableStorageEntryData";
+import { StorageEntryData } from "@common/workspace/StorageEntryData";
 
 
 /**
@@ -14,7 +14,7 @@ export class MemoryStorage extends StorageLayer {
   /**
    * Data for the entire memory storage can be restored from a serializable object `initial`.
    */
-  constructor(initial?: SerializableStorageEntryData) {
+  constructor(initial?: StorageEntryData) {
     super();
 
     this.setData(initial);
@@ -25,9 +25,9 @@ export class MemoryStorage extends StorageLayer {
   }
 
 
-  setData(data: SerializableStorageEntryData | undefined) {
+  setData(data: StorageEntryData | undefined) {
     this.data = _.cloneDeep(data) || {
-      path: StoragePath.root.normalized,
+      path: StoragePath.root,
       stats: {
         isDirectory: true,
         size: undefined,
@@ -43,22 +43,22 @@ export class MemoryStorage extends StorageLayer {
   }
 
 
-  override async loadAll() {
+  override async loadOutline() {
     return mobx.toJS(this.data);
   }
 
 
-  private getDataAtPathInternal(startFrom: SerializableStorageEntryData, pathPartsLeft: string[], createDirs: boolean): SerializableStorageEntryData | undefined {
+  private getDataAtPathInternal(startFrom: StorageEntryData, pathPartsLeft: string[], createDirs: boolean): StorageEntryData | undefined {
     const topPart = pathPartsLeft[0];
     if (!topPart) {
       return startFrom;
     }
 
-    let child = startFrom.children?.find(c => new StoragePath(c.path).basename === topPart);
+    let child = startFrom.children?.find(c => c.path.basename === topPart);
     if (!child) {
       if (createDirs) {
         child = {
-          path: new StoragePath(startFrom.path).child(topPart).normalized,
+          path: startFrom.path.child(topPart),
           stats: {
             isDirectory: true,
             size: undefined,
@@ -86,8 +86,8 @@ export class MemoryStorage extends StorageLayer {
   }
 
 
-  private createDataObject(newEntryData: SerializableStorageEntryData) {
-    const newPath = new StoragePath(newEntryData.path);
+  private createDataObject(newEntryData: StorageEntryData) {
+    const newPath = newEntryData.path;
     const parentPath = newPath.parentDir;
 
     const parentEntry = this.getDataAtPathInternal(this.data, getPathParts(parentPath.normalized), true);
@@ -99,8 +99,8 @@ export class MemoryStorage extends StorageLayer {
       throw new StorageError(StorageErrorCode.InvalidStructure, newPath, `Failed to create entry: invalid structure`);
     }
 
-    if (parentEntry.children?.some(child => new StoragePath(child.path).isEqual(newPath))) {
-      throw new StorageError(StorageErrorCode.AlreadyExists, new StoragePath(newEntryData.path), `Entry already exists`);
+    if (parentEntry.children?.some(child => child.path.isEqual(newPath))) {
+      throw new StorageError(StorageErrorCode.AlreadyExists, newEntryData.path, `Entry already exists`);
     } else {
       parentEntry.children = [ ...parentEntry.children || [], newEntryData ];
     }
@@ -119,7 +119,7 @@ export class MemoryStorage extends StorageLayer {
       throw new StorageError(StorageErrorCode.NotDirectory, path, "Not a directory");
     }
 
-    return (p.children || []).map(c => new StorageEntryPointer(new StoragePath(c.path), this));
+    return (p.children || []).map(c => new StorageEntryPointer(c.path, this));
   }
 
 
@@ -148,7 +148,7 @@ export class MemoryStorage extends StorageLayer {
       return;
     }
 
-    parent.children = parent.children?.filter(c => !new StoragePath(c.path).isEqual(path));
+    parent.children = parent.children?.filter(c => !c.path.isEqual(path));
   }
 
 
@@ -166,7 +166,7 @@ export class MemoryStorage extends StorageLayer {
     let p = this.getDataObject(path);
     if (!p) {
       p = this.createDataObject({
-        path: path.normalized,
+        path,
         stats: {
           isDirectory: false,
           size: content.length,
@@ -189,7 +189,7 @@ export class MemoryStorage extends StorageLayer {
 
   override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
     this.createDataObject({
-      path: path.normalized,
+      path,
       stats: {
         isDirectory: true,
         size: undefined,
@@ -202,7 +202,7 @@ export class MemoryStorage extends StorageLayer {
   }
 
 
-  data!: SerializableStorageEntryData;
+  data!: StorageEntryData;
 }
 
 

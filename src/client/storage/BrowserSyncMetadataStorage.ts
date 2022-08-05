@@ -1,7 +1,7 @@
 import { StoragePath } from "@storage/StoragePath";
 import { ContentIdentity } from "@sync/ContentIdentity";
 import { mergeMetadataMaps, SyncMetadataMap, SyncMetadataStorage } from "@sync/SyncMetadataStorage";
-import { ClientKeyValueStore } from "../keyValueStore/ClientKeyValueStore";
+import { ClientKeyValueStore } from "./ClientKeyValueStore";
 
 
 const SYNC_METADATA_KEY = "sync-metadata";

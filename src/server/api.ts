@@ -7,19 +7,11 @@ import { ErrorCode, LogicError } from "@common/errors";
 import { commitAndPushChanges, initGithubIntegration } from "./github/Github";
 import { buildStoragePlugin, clonePlugin, updatePlugin } from "./plugin/PluginManager";
 import * as fs from "fs";
-import { StoragePath } from "@storage/StoragePath";
 import { ServerStorageFactory } from "./storage/ServerStorageFactory";
-import { SerializableStorageEntryData } from "@common/workspace/SerializableStorageEntryData";
-import { StorageEntryStats, StorageEntryType, StorageLayer } from "@storage/StorageLayer";
 
 
 type StorageRouteParams = {
   storageId: string;
-}
-
-
-type FileRouteParams = {
-  "*": string;
 }
 
 
@@ -36,133 +28,6 @@ async function getStorage(req: FastifyRequest<{ Params: StorageRouteParams }>) {
 
 export default async function initApiRoutes(app: FastifyInstance) {
   requireAuthenticatedUser(app);
-
-  app.get<{
-    Params: StorageRouteParams
-  }>("/api/storages/:storageId/tree", {
-    schema: {
-      params: S.object().prop("storageId", S.string().required())
-    }
-  }, async (req, res) => {
-    const { storage } = await getStorage(req);
-    const children = await getAllStorageEntries(storage, StoragePath.root);
-
-    const data: SerializableStorageEntryData = {
-      path: StoragePath.root.normalized,
-      stats: await storage.get(StoragePath.root).stats(),
-      children
-    };
-
-    return data;
-  });
-
-
-  /**
-   * Create workspace entry
-   */
-  app.post<{
-    Params: StorageRouteParams,
-    Body: { entryPath: string; type: StorageEntryType, content?: Buffer }
-  }>("/api/storages/:storageId/files", {
-    schema: {
-      params: S.object().prop("storageId", S.string().required()),
-      body: S.object().prop("entryPath", S.string().required())
-      .prop("type", S.string().required())
-      .prop("content", S.string())
-    }
-  }, async (req, res) => {
-    const { storage } = await getStorage(req);
-    if (req.body.type === StorageEntryType.Dir) {
-      await storage.createDir(new StoragePath(req.body.entryPath));
-    } else {
-      await storage.get(new StoragePath(req.body.entryPath)).writeOrCreate(req.body.content ?? Buffer.alloc(0));
-    }
-
-    return {};
-  });
-
-
-  app.get<{
-    Params: StorageRouteParams & FileRouteParams,
-    Querystring: { children?: boolean, text?: boolean }
-  }>("/api/storages/:storageId/files/*", {
-    schema: {
-      params: S.object().prop("storageId", S.string().required())
-      .prop("*", S.string().required()),
-      querystring: S.object().prop("children", S.boolean())
-      .prop("text", S.boolean())
-    }
-  }, async (req, res): Promise<string | SerializableStorageEntryData> => {
-    const { storage } = await getStorage(req);
-
-    const fileID = decodeURIComponent(req.params["*"]);
-    const entry = storage.get(new StoragePath(fileID));
-    if (!entry) {
-      throw new LogicError(ErrorCode.NotFound, "file not found");
-    }
-
-    const stats = await entry.stats();
-    const text = req.query.text ? await entry.read() : undefined;
-
-    const childrenEntries = req.query.children ? await entry.children() : undefined;
-    const childrenStats: StorageEntryStats[] = [];
-
-    if (childrenEntries) {
-      await Promise.all(childrenEntries.map(async (child, index) => {
-        childrenStats[index] = await child.stats();
-      }));
-    }
-
-    const d: SerializableStorageEntryData = {
-      path: entry.path.normalized,
-      stats,
-      content: text,
-      children: childrenEntries?.map((child, index) => ({
-        path: child.path.normalized,
-        stats: childrenStats[index]!
-      }))
-    };
-
-    return d;
-  });
-
-
-  app.delete<{
-    Params: StorageRouteParams & FileRouteParams
-  }>("/api/storages/:storageId/files/*", {
-    schema: {
-      params: S.object().prop("storageId", S.string().required())
-      .prop("*", S.string().required())
-    }
-  }, async req => {
-    const { storage } = await getStorage(req);
-
-    const fileID = decodeURIComponent(req.params["*"]);
-    const entry = await storage.get(new StoragePath(fileID));
-    if (!entry) {
-      throw new LogicError(ErrorCode.NotFound, "file not found");
-    }
-
-    await entry.remove();
-    return {};
-  });
-
-
-  app.put<{
-    Params: StorageRouteParams & FileRouteParams,
-    Body: { content: Buffer }
-  }>("/api/storages/:storageId/files/*", {
-    schema: {
-      params: S.object().prop("storageId", S.string().required())
-      .prop("*", S.string().required())
-    }
-  }, async (req, res) => {
-    const fileID = decodeURIComponent(req.params["*"]);
-
-    const { storage } = await getStorage(req);
-    await storage.get(new StoragePath(fileID)).writeOrCreate(req.body.content);
-    return {};
-  });
 
 
   app.get("/api/latest-version", async req => {
@@ -261,37 +126,4 @@ export default async function initApiRoutes(app: FastifyInstance) {
     const s = await getStorage(req);
     return syncRemoteEntry(deserializeSyncEntry(req.body.entry), s.storage);
   });
-}
-
-
-const IGNORED_ENTRIES: string[] = [
-  ".git",
-  ".idea",
-  "node_modules"
-];
-
-
-async function getAllStorageEntries(fs: StorageLayer, start: StoragePath): Promise<SerializableStorageEntryData[]> {
-  const result: SerializableStorageEntryData[] = [];
-
-  const entries = await fs.get(start).children();
-  if (!entries) {
-    return [];
-  }
-
-  for (const entry of entries) {
-    if (IGNORED_ENTRIES.includes(entry.path.basename)) {
-      continue;
-    }
-
-    const stats = await entry.stats();
-
-    result.push({
-      path: entry.path.normalized,
-      stats,
-      children: stats.isDirectory ? await getAllStorageEntries(fs, entry.path) : undefined
-    });
-  }
-
-  return result;
 }

@@ -1,6 +1,6 @@
 import { uint8ArrayToBuffer } from "@common/utils/uint8ArrayToBuffer";
 import { KVStorage, KVStorageEntry } from "@storage/KVStorageLayer";
-import { ClientKeyValueStore } from "../keyValueStore/ClientKeyValueStore";
+import { ClientKeyValueStore } from "./ClientKeyValueStore";
 
 
 export const DEFAULT_FS_IDB_DATABASE = "fs-kv-storage";

@@ -10,12 +10,8 @@ import { IdbKvStorage } from "./storage/IdbKvStorage";
 import { AppThemeProvider } from "./Theme";
 import { registerPlugins } from "./plugin/BuiltInPlugins";
 import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
-import { RemoteHttpStorage } from "./storage/RemoteHttpStorage";
 import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
 import { FileSettingsProvider } from "@common/workspace/FileSettingsProvider";
-import { StorageWithMounts } from "@storage/StorageWithMounts";
-import { DeviceConfigStorageEntry } from "./device/DeviceConfigStorageEntry";
-import { SpecialWorkspaceEntry } from "@common/workspace/Workspace";
 
 
 if ("serviceWorker" in navigator) {
@@ -36,8 +32,6 @@ const params = JSON.parse(root?.dataset.params ?? "{}");
 
 const DEFAULT_WORKSPACE_ID = "default";
 
-const remote = new StorageWithMounts(new RemoteHttpStorage(DEFAULT_WORKSPACE_ID));
-remote.mount(SpecialWorkspaceEntry.DeviceConfig, new DeviceConfigStorageEntry());
 const syncAdapter = new HttpSyncProvider(DEFAULT_WORKSPACE_ID);
 
 const local = new MemoryCachedStorage(new KVStorageLayer(new IdbKvStorage()));

@@ -5,7 +5,6 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import FolderIcon from "@mui/icons-material/Folder";
 import DescriptionIcon from "@mui/icons-material/Description";
 import { makeStyles } from "@mui/styles";
-import { StoragePath } from "@storage/StoragePath";
 import { TreeNodeData } from "./TreeState";
 import { useTreeContext } from "./TreeContext";
 
@@ -23,7 +22,7 @@ export function TreeNode(props: TreeNodeProps) {
   const classes = useStyles();
   const treeCtx = useTreeContext();
 
-  const id = new StoragePath(e.path).normalized;
+  const id = e.path.normalized;
   const isSelected = props.data.state.selected === id;
   const isDir = e.stats.isDirectory;
   const padding = `${ props.data.level + (isDir ? 0 : 1.5) }em`;
@@ -41,7 +40,7 @@ export function TreeNode(props: TreeNodeProps) {
 
   function onContextMenu(e: React.MouseEvent) {
     e.preventDefault();
-    treeCtx.openMenu(e.clientX - 2, e.clientY - 4, new StoragePath(props.data.data.path));
+    treeCtx.openMenu(e.clientX - 2, e.clientY - 4, props.data.data.path);
   }
 
   return <span className={ rootClass } onClick={ onClick } style={ { ...props.style, paddingLeft: padding } }
@@ -61,7 +60,7 @@ export function TreeNode(props: TreeNodeProps) {
     }
 
     <span>
-      { new StoragePath(e.path).basename }
+      { e.path.basename }
     </span>
   </span>;
 }

@@ -60,7 +60,7 @@ it("creates local sync metadata when it is lost", async () => {
   expect(await d.remote.entries()).toStrictEqual(r);
   expect(await d.metadata.get()).toStrictEqual({
     "/dir": DirContentIdentity,
-    "/dir/file.txt": "t" + getContentHash("Hello, world!")
+    "/dir/file.txt": "t" + getContentHash(Buffer.from("Hello, world!"))
   });
 });
 
