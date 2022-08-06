@@ -35,5 +35,10 @@
   "exclude": [
     "client/**/*.*",
     "static/**/*.*"
-  ]
+  ],
+  "ts-node": {
+    "require": [
+      "tsconfig-paths/register"
+    ]
+  }
 }

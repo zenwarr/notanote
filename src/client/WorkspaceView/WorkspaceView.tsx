@@ -1,55 +1,23 @@
-import * as React from "react";
-import { useRef, useState } from "react";
-import cn from "classnames";
+import { CreateNewFolderOutlined, DeleteForever, PostAddOutlined } from "@mui/icons-material";
 import { Box, IconButton } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { ClientWorkspace } from "../ClientWorkspace";
-import { observer } from "mobx-react-lite";
-import { CreateEntryDialog } from "../CreateEntryDialog";
-import { CreateNewFolderOutlined, DeleteForever, PostAddOutlined } from "@mui/icons-material";
-import { useNavigate } from "react-router";
-import { StoragePath } from "@storage/StoragePath";
 import { StorageEntryType } from "@storage/StorageLayer";
+import { StoragePath } from "@storage/StoragePath";
+import cn from "classnames";
+import { observer } from "mobx-react-lite";
+import * as React from "react";
+import { useRef, useState } from "react";
+import { useNavigate } from "react-router";
+import { ClientWorkspace } from "../ClientWorkspace";
+import { CreateEntryDialog } from "../CreateEntryDialog";
 import { ContainerWithSizeDetection } from "../utils/ContainerWithSizeDetection";
-import { TreeNode } from "./TreeNode";
-import { TreeState } from "./TreeState";
-import { TreeContext } from "./TreeContext";
 import { TreeMenu } from "./TreeMenu";
-import { TreeWrapper } from "./TreeWrapper";
+import { WorkspaceTree } from "./WorkspaceTree";
 
 
 export interface WorkspaceViewProps {
   onFileSelected?: (entry: StoragePath) => void;
   treeWithPadding?: boolean;
-}
-
-
-function getParents(p: string) {
-  const parts = p.split("/").filter(x => !!x);
-  const result: string[] = [];
-  for (let q = 0; q < parts.length; ++q) {
-    result.push("/" + parts.slice(0, q + 1).join("/"));
-  }
-  return result;
-}
-
-
-function useExpanded(selected: string | undefined) {
-  const [ expanded, setExpanded ] = useState<string[]>(selected ? [ ...getParents(selected) ] : []);
-
-  return {
-    expanded,
-    onToggle: (node: string) => {
-      const isAlreadyExpanded = expanded.includes(node);
-      if (isAlreadyExpanded) {
-        // collapse this item and all its children
-        setExpanded(expanded.filter(x => x !== node && !x.startsWith(node + "/")));
-      } else {
-        const parents = getParents(node);
-        setExpanded([ ...new Set([ ...expanded, ...parents ]) ]);
-      }
-    }
-  };
 }
 
 
@@ -89,27 +57,14 @@ function getCreateOptions(selectedPath: StoragePath | undefined, createType: Sto
 export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const cw = ClientWorkspace.instance;
   const [ entryDialogOpened, setEntryDialogOpened ] = useState(false);
-  const expand = useExpanded(cw.selectedEntry?.normalized);
   const createOptions = useRef<CreateOptions | undefined>(undefined);
 
   const navigate = useNavigate();
   const classes = useStyles();
 
-  function onNodeSelect(value: string) {
-    const selectedEntry = ClientWorkspace.instance.storage.getMemoryData(new StoragePath(value));
-    if (!selectedEntry) {
-      return;
-    }
-
-    ClientWorkspace.instance.selectedEntry = new StoragePath(value);
-    const isDir = selectedEntry.stats.isDirectory;
-
-    if (!isDir) {
-      navigate(`/f/${ value }`);
-      props.onFileSelected?.(new StoragePath(value));
-    } else {
-      expand.onToggle(value);
-    }
+  function onSelect(path: StoragePath) {
+    navigate(`/f/${ path.normalized }`);
+    props.onFileSelected?.(path);
   }
 
   function createFile() {
@@ -134,13 +89,6 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 
     await ClientWorkspace.instance.remove(cw.selectedEntry);
   }
-
-  const treeState: TreeState = {
-    root: cw.storage.memory.data,
-    selected: cw.selectedEntry?.normalized || "",
-    onSelect: onNodeSelect,
-    expanded: expand.expanded
-  };
 
   const containerClassName = cn(classes.treeContainer, { [classes.treeContainerPadding]: props.treeWithPadding });
 
@@ -188,15 +136,13 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
       </Box>
     </Box>
 
-    <TreeContext.Provider value={ { openMenu: onMenuOpen, closeMenu: onMenuClose } }>
-      <ContainerWithSizeDetection className={ containerClassName }>
-        {
-          (width, height) => <TreeWrapper state={ treeState } itemSize={ 25 } height={ height } width={ width }>
-            { TreeNode as any }
-          </TreeWrapper>
-        }
-      </ContainerWithSizeDetection>
-    </TreeContext.Provider>
+    <ContainerWithSizeDetection className={ containerClassName }>
+      {
+        (width, height) => <WorkspaceTree height={ height } width={ width } onMenuOpen={ onMenuOpen }
+                                          onSelect={ onSelect }
+                                          onMenuClose={ onMenuClose }/>
+      }
+    </ContainerWithSizeDetection>
 
     <TreeMenu open={ menuState != null } onClose={ () => setMenuState(undefined) }
               entry={ menuEntryPath ? cw.storage.get(menuEntryPath) : undefined }

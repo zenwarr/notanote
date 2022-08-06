@@ -55,7 +55,7 @@ export function FileView(props: FileViewProps) {
     applyGlobalDocSettings(doc);
     return doc;
   }, [ props.entryPath ]), {
-    onError: err => console.error(`Failed to load file ${ props.entryPath }: ${ err.message }`),
+    onError: err => console.error(`Failed to load file ${ props.entryPath.normalized }: ${ err.message }`),
   });
 
   const componentLoad = useLoad<React.ComponentType<EditorProps> | undefined>(useCallback(async () => {

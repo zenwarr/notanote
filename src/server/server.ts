@@ -1,9 +1,9 @@
 import fastify from "fastify";
 import path from "path";
 import fastifyFormBody from "@fastify/formbody";
-import fastifyMultipart from "@fastify/multipart";
 import fastifyView from "@fastify/view";
 import hbs from "handlebars";
+import * as bson from "bson";
 import fastifyStatic from "@fastify/static";
 import { configureAuth } from "./auth";
 import { ErrorCode, getStatusCodeForError, LogicError } from "@common/errors";
@@ -19,12 +19,6 @@ export async function startApp() {
   });
 
   app.register(fastifyFormBody);
-  app.register(fastifyMultipart, {
-    limits: {
-      files: 1,
-      fileSize: 1024 * 1024 * 20 // 20MB
-    }
-  });
   app.register(fastifyView, {
     engine: {
       handlebars: hbs
@@ -34,6 +28,35 @@ export async function startApp() {
   app.register(fastifyStatic, {
     root: path.join(__dirname, "../static"),
     prefix: "/static"
+  });
+
+  app.addContentTypeParser("application/bson", (_, payload, done) => {
+    let buf: Buffer | undefined = undefined;
+    payload.on("data", chunk => {
+      if (!Buffer.isBuffer(chunk)) {
+        done(new Error("invalid data for application/bson: buffer expected"));
+        return;
+      }
+
+      if (!buf) {
+        buf = chunk;
+      } else {
+        buf = Buffer.concat([ buf, chunk ]);
+      }
+    });
+    payload.on("error", done);
+    payload.on("end", () => {
+      if (!buf) {
+        done(new Error("no data for application/bson request"));
+        return;
+      }
+
+      try {
+        done(null, bson.deserialize(buf, { promoteBuffers: true }));
+      } catch (err: any) {
+        done(err);
+      }
+    });
   });
 
   await configureAuth(app);

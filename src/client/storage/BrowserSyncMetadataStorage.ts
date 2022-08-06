@@ -1,6 +1,6 @@
 import { StoragePath } from "@storage/StoragePath";
 import { ContentIdentity } from "@sync/ContentIdentity";
-import { mergeMetadataMaps, SyncMetadataMap, SyncMetadataStorage } from "@sync/SyncMetadataStorage";
+import { EntrySyncMetadata, mergeMetadataMaps, SyncMetadataMap, SyncMetadataStorage } from "@sync/SyncMetadataStorage";
 import { ClientKeyValueStore } from "./ClientKeyValueStore";
 
 
@@ -13,12 +13,26 @@ export class BrowserSyncMetadataStorage implements SyncMetadataStorage {
   }
 
 
-  async set(path: StoragePath, identity: ContentIdentity | undefined) {
+  async set(path: StoragePath, meta: EntrySyncMetadata | undefined) {
     const data = await this.loadStoredData();
-    if (!identity) {
+    if (!meta) {
       delete data[path.normalized];
     } else {
-      data[path.normalized] = identity;
+      data[path.normalized] = meta;
+    }
+
+    await ClientKeyValueStore.defaultInstance.set(SYNC_METADATA_KEY, data);
+  }
+
+
+  async update(path: StoragePath, updater: (d: EntrySyncMetadata | undefined) => EntrySyncMetadata | undefined) {
+    const data = await this.loadStoredData();
+
+    const updated = updater(data[path.normalized]);
+    if (updated) {
+      data[path.normalized] = updated;
+    } else {
+      delete data[path.normalized];
     }
 
     await ClientKeyValueStore.defaultInstance.set(SYNC_METADATA_KEY, data);

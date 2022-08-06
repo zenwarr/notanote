@@ -1,6 +1,9 @@
+import { ContentIdentity } from "@sync/ContentIdentity";
+import { SyncDiffEntry } from "@sync/SyncDiffEntry";
+import { SyncJobRunner } from "@sync/test/SyncJobRunner";
 import { makeObservable, observable } from "mobx";
-import { LocalSyncWorker } from "@sync/LocalSync";
-import { SyncProvider } from "@sync/SyncProvider";
+import { LocalSyncWorker } from "@sync/LocalSyncWorker";
+import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";
 import { StorageEntryData } from "@common/workspace/StorageEntryData";
 import { RecentDocStorage } from "./RecentDocStorage";
 import { StoragePath } from "@storage/StoragePath";
@@ -11,7 +14,7 @@ import { BrowserSyncMetadataStorage } from "./storage/BrowserSyncMetadataStorage
 
 
 export class ClientWorkspace {
-  constructor(storage: MemoryCachedStorage, syncAdapter: SyncProvider, storageId: string) {
+  constructor(storage: MemoryCachedStorage, syncAdapter: RemoteSyncProvider, storageId: string) {
     makeObservable(this, {
       loading: observable,
       _selectedEntry: observable,
@@ -33,6 +36,7 @@ export class ClientWorkspace {
         syncAdapter,
         new BrowserSyncMetadataStorage()
     );
+    this.syncJobRunner = new SyncJobRunner(this.syncWorker);
   }
 
 
@@ -44,8 +48,8 @@ export class ClientWorkspace {
     // todo: failing on this step can lead to damaging data
     await this.storage.initWithRemoteOutline();
 
-    this.syncWorker.addRoot(this.storage.get(StoragePath.root));
-    await this.syncWorker.sync();
+    // todo: run in background
+    await this.syncWorker.updateDiff(StoragePath.root);
 
     await FileSettingsProvider.instance.load();
 
@@ -84,7 +88,8 @@ export class ClientWorkspace {
       await entry.createDir();
     }
 
-    this.syncWorker.addRoot(entry);
+    await this.syncWorker.updateDiff(entry.path);
+    await this.syncJobRunner.run();
 
     if (type === "file") {
       this.selectedEntry = path;
@@ -105,7 +110,14 @@ export class ClientWorkspace {
     const pointer = await this.storage.get(path);
     await pointer.remove();
 
-    this.syncWorker.addRoot(pointer);
+    await this.syncWorker.updateDiff(pointer.path);
+    await this.syncJobRunner.run();
+  }
+
+
+  async acceptChanges(path: StoragePath, diff: SyncDiffEntry[], acceptRemote: boolean) {
+    await this.syncWorker.acceptMulti(getIdentityMapFromDiff(path, diff, acceptRemote), acceptRemote);
+    await this.syncJobRunner.run();
   }
 
 
@@ -139,6 +151,7 @@ export class ClientWorkspace {
   storage: MemoryCachedStorage;
   private static _instance: ClientWorkspace | undefined;
   syncWorker: LocalSyncWorker;
+  syncJobRunner: SyncJobRunner;
 
 
   static get instance() {
@@ -150,7 +163,20 @@ export class ClientWorkspace {
   }
 
 
-  static init(storage: MemoryCachedStorage, syncAdapter: SyncProvider, wsId: string) {
+  static init(storage: MemoryCachedStorage, syncAdapter: RemoteSyncProvider, wsId: string) {
     this._instance = new ClientWorkspace(storage, syncAdapter, wsId);
   }
+}
+
+
+function getIdentityMapFromDiff(path: StoragePath, diff: SyncDiffEntry[], acceptRemote: boolean) {
+  let map: { [path: string]: ContentIdentity | undefined } = {};
+
+  for (const d of diff) {
+    if (d.path.inside(path, true)) {
+      map[d.path.normalized] = acceptRemote ? d.remote : d.actual;
+    }
+  }
+
+  return map;
 }

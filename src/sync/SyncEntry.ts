@@ -1,5 +1,17 @@
+import { StorageEntryStats } from "@storage/StorageLayer";
 import { StoragePath } from "@storage/StoragePath";
 import { ContentIdentity } from "./ContentIdentity";
+
+
+export interface SyncOutlineEntry {
+  name: string;
+
+  identity: ContentIdentity;
+
+  stats: StorageEntryStats;
+
+  children?: SyncOutlineEntry[];
+}
 
 
 /**

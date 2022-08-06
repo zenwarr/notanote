@@ -1,6 +1,7 @@
+import { StoragePath } from "@storage/StoragePath";
+import { ContentIdentity } from "@sync/ContentIdentity";
+import { RemoteSyncWorker } from "@sync/RemoteSyncWorker";
 import { FastifyInstance, FastifyRequest } from "fastify";
-import { syncRemoteEntry} from "@sync/RemoteSync";
-import { deserializeSyncEntry, SerializedSyncEntry} from "@sync/SyncEntry";
 import { getProfile, requireAuthenticatedUser } from "./auth";
 import S from "fluent-json-schema";
 import { ErrorCode, LogicError } from "@common/errors";
@@ -115,15 +116,88 @@ export default async function initApiRoutes(app: FastifyInstance) {
   });
 
 
-  app.post<{
+  app.get<{
     Params: StorageRouteParams,
-    Body: { entry: SerializedSyncEntry }
-  }>("/api/storages/:storageId/sync", {
+    Querystring: { path: string }
+  }>("/api/storages/:storageId/sync/outline", {
     schema: {
-      params: S.object().prop("storageId", S.string().required())
+      params: S.object().prop("storageId", S.string().required()),
+      querystring: S.object().prop("path", S.string().required())
     }
   }, async (req, res) => {
     const s = await getStorage(req);
-    return syncRemoteEntry(deserializeSyncEntry(req.body.entry), s.storage);
+    const path = req.query.path;
+
+    const worker = new RemoteSyncWorker(s.storage);
+    return worker.getOutline(new StoragePath(path));
+  });
+
+
+  app.post<{
+    Params: StorageRouteParams,
+    Body: { path: string, data: Buffer, remoteIdentity: ContentIdentity }
+  }>("/api/storages/:storageId/sync/update", {
+    schema: {
+      params: S.object().prop("storageId", S.string().required()),
+      body: S.object().prop("path", S.string().required())
+      .prop("data", S.object().required())
+      .prop("remoteIdentity", S.string().required())
+    }
+  }, async (req, res) => {
+    const s = await getStorage(req);
+    const worker = new RemoteSyncWorker(s.storage);
+    await worker.update(new StoragePath(req.body.path), req.body.data, req.body.remoteIdentity);
+    return {};
+  });
+
+
+  app.post<{
+    Params: StorageRouteParams,
+    Body: { path: string, remoteIdentity: ContentIdentity }
+  }>("/api/storages/:storageId/sync/create-dir", {
+    schema: {
+      params: S.object().prop("storageId", S.string().required()),
+      body: S.object().prop("path", S.string().required())
+      .prop("remoteIdentity", S.string())
+    }
+  }, async (req, res) => {
+    const s = await getStorage(req);
+    const worker = new RemoteSyncWorker(s.storage);
+    await worker.createDir(new StoragePath(req.body.path), req.body.remoteIdentity);
+    return {};
+  });
+
+
+  app.post<{
+    Params: StorageRouteParams,
+    Body: { path: string, remoteIdentity: ContentIdentity }
+  }>("/api/storages/:storageId/sync/remove", {
+    schema: {
+      params: S.object().prop("storageId", S.string().required()),
+      body: S.object().prop("path", S.string().required())
+      .prop("remoteIdentity", S.string())
+    }
+  }, async (req, res) => {
+    const s = await getStorage(req);
+    const worker = new RemoteSyncWorker(s.storage);
+    await worker.remove(new StoragePath(req.body.path), req.body.remoteIdentity);
+    return {};
+  });
+
+
+  app.get<{
+    Params: StorageRouteParams,
+    Querystring: { path: string }
+  }>("/api/storages/:storageId/sync/read", {
+    schema: {
+      params: S.object().prop("storageId", S.string().required()),
+      querystring: S.object().prop("path", S.string().required())
+    }
+  }, async (req, res) => {
+    const s = await getStorage(req);
+    const path = req.query.path;
+
+    const worker = new RemoteSyncWorker(s.storage);
+    return worker.read(new StoragePath(path));
   });
 }

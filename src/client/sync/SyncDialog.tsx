@@ -1,5 +1,3 @@
-import { Dialog, Box, IconButton, Toolbar, AppBar, Typography } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
 import { FullScreenDialog } from "../utils/FullScreenDialog";
 import { SyncPanel } from "./SyncPanel";
 

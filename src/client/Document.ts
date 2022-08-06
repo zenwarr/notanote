@@ -55,7 +55,7 @@ export class Document {
 
   private async onChangesAsync() {
     await this.entry.writeOrCreate(await this.contentToBuffer());
-    ClientWorkspace.instance.syncWorker.addRoot(this.entry);
+    await ClientWorkspace.instance.syncWorker.updateDiff(this.entry.path);
   }
 
 

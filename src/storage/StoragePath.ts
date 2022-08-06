@@ -49,6 +49,19 @@ export class StoragePath {
   }
 
 
+  /**
+   * Returns true if this path is a direct child of the other path.
+   */
+  isDirectChildOf(parent: StoragePath): boolean {
+    return this.parentDir.isEqual(parent);
+  }
+
+
+  toString() {
+    return this._normalized;
+  }
+
+
 
   static root = new StoragePath("/");
 

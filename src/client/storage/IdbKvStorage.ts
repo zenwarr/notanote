@@ -8,8 +8,8 @@ const KV_STORE_NAME = "kv";
 
 
 export class IdbKvStorage implements KVStorage {
-  constructor() {
-    this.store = new ClientKeyValueStore(DEFAULT_FS_IDB_DATABASE, KV_STORE_NAME);
+  constructor(dbName = DEFAULT_FS_IDB_DATABASE) {
+    this.store = new ClientKeyValueStore(dbName, KV_STORE_NAME);
   }
 
 

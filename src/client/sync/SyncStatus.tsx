@@ -11,26 +11,23 @@ export interface SyncStatusProps {
 
 
 export const SyncStatus = observer((props: SyncStatusProps) => {
-  const sw = ClientWorkspace.instance.syncWorker;
+  const sync = ClientWorkspace.instance.syncWorker;
+  const jobs = ClientWorkspace.instance.syncJobRunner;
 
-  let color: SyncStatusIconColor = sw.lastSyncOk ? "success" : "error";
-  if (sw.pendingConflicts.length) {
-    color = "warning";
-  }
-
-  let syncDate = sw.lastSyncDate ? formatRelative(sw.lastSyncDate, new Date()) : "Unknown";
+  let color: SyncStatusIconColor = !jobs.errors.length ? "success" : "error";
+  let syncDate = jobs.lastSuccessfulJobDone ? formatRelative(jobs.lastSuccessfulJobDone, new Date()) : "Unknown";
+  const diffCount = sync.actualDiff.length;
 
   return <Tooltip title={ "Last sync: " + syncDate } placement={ "bottom-start" }>
     <Button onClick={ props.onClick }>
       <Box display={ "flex" }>
-        <SyncStatusIcon color={ color }
-                        rotate={ sw.syncingNow }/>
+        <SyncStatusIcon color={ color } rotate={ jobs.runningJobs.length > 0 }/>
 
-        <Box ml={ 1 }>
-          {
-              sw.pendingConflicts.length || ""
-          }
-        </Box>
+        &nbsp;
+
+        <span>
+          { diffCount > 0 ? diffCount : "" }
+        </span>
       </Box>
     </Button>
   </Tooltip>;
