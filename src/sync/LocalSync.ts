@@ -1,12 +1,12 @@
+import { StorageEntryPointer, StorageErrorCode, StorageLayer } from "@storage/StorageLayer";
+import { StoragePath } from "@storage/StoragePath";
 import * as _ from "lodash";
 import * as mobx from "mobx";
-import { StorageEntryPointer, StorageErrorCode, StorageLayer } from "@storage/StorageLayer";
 import { ContentIdentity, getContentIdentity, isDirIdentity, readEntityDataIfAny } from "./ContentIdentity";
-import { SyncResult, SyncResultAction } from "./RemoteSync";
+import { DiffType, SyncResult, SyncResultAction } from "./RemoteSync";
 import { SyncEntry, walkSyncEntriesDownToTop } from "./SyncEntry";
 import { SyncMetadataMap, SyncMetadataStorage } from "./SyncMetadataStorage";
 import { SyncProvider } from "./SyncProvider";
-import { StoragePath } from "@storage/StoragePath";
 
 
 export interface PendingConflict {
@@ -15,10 +15,17 @@ export interface PendingConflict {
 }
 
 
+export enum ConflictResolveMethod {
+  AcceptLocal = "accept_left",
+  AcceptRemote = "accept_right",
+}
+
+
 export class LocalSyncWorker {
-  constructor(syncProvider: SyncProvider, syncMetadata: SyncMetadataStorage) {
+  constructor(local: StorageLayer, syncProvider: SyncProvider, syncMetadata: SyncMetadataStorage) {
     this.syncMetadata = syncMetadata;
     this.syncProvider = syncProvider;
+    this.storage = local;
 
     this.debouncedNextSync = _.debounce(this.processNextSyncWrapper.bind(this), 5000);
 
@@ -47,8 +54,10 @@ export class LocalSyncWorker {
    */
   pendingRoots: StorageEntryPointer[] = [];
   pendingConflicts: PendingConflict[] = [];
+  storage: StorageLayer;
 
   private sendDataOnNextSync = new Set<string>();
+  private pendingConflictResolve = new Map<string, SyncResult>();
   private readonly syncMetadata: SyncMetadataStorage;
   private readonly syncProvider: SyncProvider;
 
@@ -116,7 +125,7 @@ export class LocalSyncWorker {
     const mentionedPaths = new Set<string>();
     for (const result of syncResults) {
       await this.applySyncResult(root.storage, result, updatedMetadata);
-      mentionedPaths.add(result.path);
+      mentionedPaths.add(result.path.normalized);
     }
 
     // we need to write metadata for files that were synced and are identical to remote counterparts
@@ -203,24 +212,24 @@ export class LocalSyncWorker {
     switch (result.action) {
       case SyncResultAction.Updated:
       case SyncResultAction.Created:
-        metadataUpdate[result.path] = result.identity;
+        metadataUpdate[result.path.normalized] = result.identity;
         break;
 
       case SyncResultAction.Removed:
-        metadataUpdate[result.path] = undefined;
+        metadataUpdate[result.path.normalized] = undefined;
         break;
 
       case SyncResultAction.CreateDataRequired:
       case SyncResultAction.UpdateDataRequired:
-        this.sendDataOnNextSync.add(result.path);
-        this.pendingRoots.unshift(storage.get(new StoragePath(result.path)));
+        this.sendDataOnNextSync.add(result.path.normalized);
+        this.pendingRoots.unshift(storage.get(result.path));
         break;
 
       case SyncResultAction.LocalUpdateRequired:
       case SyncResultAction.LocalCreateRequired: {
         try {
-          await this.updateLocalEntry(storage.get(new StoragePath(result.path)), result.identity, result.data);
-          metadataUpdate[result.path] = result.identity;
+          await this.updateLocalEntry(storage.get(result.path), result.identity, result.data);
+          metadataUpdate[result.path.normalized] = result.identity;
         } catch (err: any) {
           console.error(`Failed to create/update "${ result.path }": ${ err.message }`, err);
           this.syncErrors.push({ ts: new Date(), text: `Failed to create/update "${ result.path }": ${ err.message }` });
@@ -230,7 +239,7 @@ export class LocalSyncWorker {
 
       case SyncResultAction.LocalRemoveRequired: {
         try {
-          const wp = storage.get(new StoragePath(result.path));
+          const wp = storage.get(result.path);
           await wp.remove();
         } catch (err: any) {
           if (err.code !== StorageErrorCode.NotExists) {
@@ -239,6 +248,42 @@ export class LocalSyncWorker {
         }
         break;
       }
+    }
+  }
+
+
+  async resolveConflict(sr: SyncResult, resolveMethod: ConflictResolveMethod) {
+    const conflict = "conflict" in sr ? sr.conflict : undefined;
+    if (!conflict) {
+      throw new Error("Cannot resolve conflict: no conflict in result");
+    }
+
+    if (resolveMethod === ConflictResolveMethod.AcceptRemote) {
+      switch (conflict) {
+        case DiffType.ConflictingUpdate:
+        case DiffType.ConflictingCreate:
+        case DiffType.ConflictingLocalRemove:
+          // use remote data to overwrite local data, we should never have this type of conflict for directories
+          if (!sr.data) {
+            throw new Error("Cannot resolve conflict: no data in result");
+          }
+          await this.storage.writeOrCreate(sr.path, sr.data);
+          await this.syncMetadata.set(sr.path, sr.identity);
+          this.pendingRoots.push(this.storage.get(sr.path));
+          break;
+
+        case DiffType.ConflictingRemoteRemove:
+          await this.storage.remove(sr.path);
+          await this.syncMetadata.set(sr.path, undefined);
+          this.pendingRoots.push(this.storage.get(sr.path));
+          break;
+
+        default:
+          throw new Error(`Cannot resolve conflict: unknown conflict type ${ conflict }`);
+      }
+    } else if (resolveMethod === ConflictResolveMethod.AcceptLocal) {
+      this.pendingConflictResolve.set(sr.path.normalized, sr);
+      this.pendingRoots.push(this.storage.get(sr.path));
     }
   }
 

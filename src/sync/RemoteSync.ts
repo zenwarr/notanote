@@ -174,7 +174,7 @@ export enum SyncResultAction {
 
 
 export type SyncResult = {
-  path: string;
+  path: StoragePath;
   data: Buffer | undefined;
   identity: ContentIdentity | undefined;
 } & ({
@@ -220,7 +220,7 @@ export async function resolveDiff(diff: DiffType,
       assert(input != null);
       if (input.data) {
         return {
-          path: remote.path.normalized,
+          path: remote.path,
           action: SyncResultAction.Updated,
           identity: await writeEntry(remote, input.data),
           data: undefined
@@ -229,14 +229,14 @@ export async function resolveDiff(diff: DiffType,
         // we have a directory created locally, but we have a file here on the remote
         await remote.remove();
         return {
-          path: remote.path.normalized,
+          path: remote.path,
           action: SyncResultAction.Updated,
           identity: await createDir(remote),
           data: undefined
         };
       } else {
         return {
-          path: remote.path.normalized,
+          path: remote.path,
           action: SyncResultAction.UpdateDataRequired,
           identity: undefined,
           data: undefined
@@ -246,38 +246,44 @@ export async function resolveDiff(diff: DiffType,
     case DiffType.RemoteUpdate:
       // replace local with remote data
       return {
-        path: remote.path.normalized,
+        path: remote.path,
         action: SyncResultAction.LocalUpdateRequired,
         ...await readEntry(remote)
       };
 
-    case DiffType.ConflictingUpdate:
+    case DiffType.ConflictingUpdate: {
+      const r = await resolveConflictByOverwrite(input, remote);
+      if (r) {
+        return r;
+      }
+
       return {
-        path: remote.path.normalized,
+        path: remote.path,
         conflict: diff,
         ...await readEntry(remote)
       };
+    }
 
     case DiffType.LocalCreate:
       // create remote with local data
       assert(input != null);
       if (!isDirIdentity(input.identity) && input.data != null) {
         return {
-          path: remote.path.normalized,
+          path: remote.path,
           action: SyncResultAction.Created,
           identity: await writeEntry(remote, input.data),
           data: undefined
         };
       } else if (isDirIdentity(input.identity)) {
         return {
-          path: remote.path.normalized,
+          path: remote.path,
           action: SyncResultAction.Created,
           identity: await createDir(remote),
           data: undefined
         };
       } else {
         return {
-          path: remote.path.normalized,
+          path: remote.path,
           action: SyncResultAction.CreateDataRequired,
           identity: undefined,
           data: undefined
@@ -287,23 +293,29 @@ export async function resolveDiff(diff: DiffType,
     case DiffType.RemoteCreate:
       // create local with remote data
       return {
-        path: remote.path.normalized,
+        path: remote.path,
         action: SyncResultAction.LocalCreateRequired,
         ...await readEntry(remote)
       };
 
-    case DiffType.ConflictingCreate:
+    case DiffType.ConflictingCreate: {
+      const r = await resolveConflictByOverwrite(input, remote);
+      if (r) {
+        return r;
+      }
+
       return {
-        path: remote.path.normalized,
+        path: remote.path,
         conflict: diff,
         ...await readEntry(remote)
       };
+    }
 
     case DiffType.LocalRemove:
       if (performUnsafeOperations) {
         await remote.remove();
         return {
-          path: remote.path.normalized,
+          path: remote.path,
           conflict: undefined,
           action: SyncResultAction.Removed,
           data: undefined,
@@ -311,7 +323,7 @@ export async function resolveDiff(diff: DiffType,
         };
       } else {
         return {
-          path: remote.path.normalized,
+          path: remote.path,
           conflict: diff,
           data: undefined,
           identity: undefined
@@ -319,15 +331,35 @@ export async function resolveDiff(diff: DiffType,
       }
 
     case DiffType.ConflictingLocalRemove:
+      if (input && input.forceConflictResolve) {
+        if (input.identity) {
+          throw new Error(`Forcing resolving local remove conflict, but identity is set incosistently`);
+        } else if (!input.conflictIdentity) {
+          throw new Error(`Forcing resolving local remove conflict, but conflict identity is not set`);
+        }
+
+        const remoteIdentity = (await readEntry(remote)).identity;
+        if (remoteIdentity && isContentIdentityEqual(input.conflictIdentity, remoteIdentity)) {
+          await remote.remove();
+
+          return {
+            path: remote.path,
+            action: SyncResultAction.Removed,
+            data: undefined,
+            identity: undefined
+          };
+        }
+      }
+
       return {
-        path: remote.path.normalized,
+        path: remote.path,
         conflict: diff,
         ...await readEntry(remote)
       };
 
     case DiffType.RemoteRemove:
       return {
-        path: remote.path.normalized,
+        path: remote.path,
         conflict: undefined,
         action: SyncResultAction.LocalRemoveRequired,
         data: undefined,
@@ -335,11 +367,56 @@ export async function resolveDiff(diff: DiffType,
       };
 
     case DiffType.ConflictingRemoteRemove:
+      if (input && input.forceConflictResolve) {
+        if (input.conflictIdentity) {
+          throw new Error(`Forcing resolving remote remove conflict, but conflict identity is set incosistently`);
+        } else if (!input.identity) {
+          throw new Error(`Forcing resolving remote remove conflict, but identity is not set`);
+        } else if (!input.data) {
+          throw new Error(`Forcing resolving remote remove conflict, but data is not set`);
+        }
+
+        await remote.writeOrCreate(input.data);
+        return {
+          path: remote.path,
+          action: SyncResultAction.Created,
+          identity: input.identity,
+          data: undefined
+        };
+      }
+
       return {
-        path: remote.path.normalized,
+        path: remote.path,
         conflict: diff,
         data: undefined,
         identity: undefined
       };
   }
+}
+
+
+async function resolveConflictByOverwrite(input: SyncEntry | undefined, remote: StorageEntryPointer): Promise<SyncResult | undefined> {
+  if (input && input.forceConflictResolve) {
+    if (!input.data) {
+      throw new Error("Cannot resolve conflict without data");
+    } else if (!input.conflictIdentity) {
+      throw new Error("Cannot resolve conflict without conflict identity");
+    } else if (!input.identity) {
+      throw new Error("Cannot resolve conflict without local identity");
+    }
+
+    const remoteIdentity = (await readEntry(remote)).identity;
+    if (remoteIdentity && isContentIdentityEqual(input.conflictIdentity, remoteIdentity)) {
+      await writeEntry(remote, input.data);
+
+      return {
+        path: remote.path,
+        action: SyncResultAction.Updated,
+        data: undefined,
+        identity: input.identity
+      };
+    }
+  }
+
+  return undefined;
 }

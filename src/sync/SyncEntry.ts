@@ -28,6 +28,19 @@ export interface SyncEntry {
    * But if content is omitted and it is required to sync, the server will request this content in its response.
    */
   data?: Buffer;
+
+  /**
+   * If true, the conflict for this entry should be forcibly resolved.
+   * Such entries are created when user forces conflict to be resolved as "AcceptLocal".
+   * `conflictIdentity` should also be set for such entries.
+   */
+  forceConflictResolve?: boolean;
+
+  /**
+   * When resolving a previously detected conflict, this value should match identity of the remote entry that was used to resolve the conflict.
+   * Conflict is going to be resolved only if actual identity matches this value.
+   */
+  conflictIdentity?: ContentIdentity;
 }
 
 

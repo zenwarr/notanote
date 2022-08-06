@@ -13,9 +13,15 @@ export class BrowserSyncMetadataStorage implements SyncMetadataStorage {
   }
 
 
-  async set(path: StoragePath, identity: ContentIdentity) {
-    (await this.loadStoredData())[path.normalized] = identity;
-    await ClientKeyValueStore.defaultInstance.set(SYNC_METADATA_KEY, this._data);
+  async set(path: StoragePath, identity: ContentIdentity | undefined) {
+    const data = await this.loadStoredData();
+    if (!identity) {
+      delete data[path.normalized];
+    } else {
+      data[path.normalized] = identity;
+    }
+
+    await ClientKeyValueStore.defaultInstance.set(SYNC_METADATA_KEY, data);
   }
 
 

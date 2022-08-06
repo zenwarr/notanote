@@ -29,6 +29,10 @@ export class MemorySyncMetadataStorage implements SyncMetadataStorage {
 
 
   async set(path: StoragePath, identity: ContentIdentity | undefined): Promise<void> {
+    if (!identity) {
+      delete this._data[path.normalized];
+    }
+
     this._data[path.normalized] = identity;
   }
 

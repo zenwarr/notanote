@@ -1,5 +1,5 @@
 import { KVStorageLayer } from "@storage/KVStorageLayer";
-import { DirContentIdentity, getContentHash } from "../ContentIdentity";
+import { DirContentIdentity, getContentHash, getContentIdentityForData } from "../ContentIdentity";
 import { LocalSyncWorker } from "../LocalSync";
 import { MemorySyncMetadataStorage } from "../SyncMetadataStorage";
 import { LocalSyncProvider } from "../SyncProvider";
@@ -8,7 +8,7 @@ import { StoragePath } from "@storage/StoragePath";
 import { DiffType } from "../RemoteSync";
 
 
-type CheckEntryMap = { [path: string]: string | undefined };
+type CheckEntryMap = { [path: string]: Buffer | undefined };
 
 
 function prepare() {
@@ -18,7 +18,7 @@ function prepare() {
   const remoteSync = new LocalSyncProvider(remote);
 
   const metadata = new MemorySyncMetadataStorage();
-  const localSync = new LocalSyncWorker(remoteSync, metadata);
+  const localSync = new LocalSyncWorker(local, remoteSync, metadata);
 
   return { local, remote, localSync, metadata };
 }
@@ -37,7 +37,7 @@ it("creates remote tree on local when local tree is empty", async () => {
 
   let r: CheckEntryMap = {
     "/dir": undefined,
-    "/dir/file.txt": "Hello, world!",
+    "/dir/file.txt": Buffer.from("Hello, world!"),
   };
 
   expect(await d.local.entries()).toStrictEqual(r);
@@ -53,14 +53,14 @@ it("creates local sync metadata when it is lost", async () => {
 
   let r: CheckEntryMap = {
     "/dir": undefined,
-    "/dir/file.txt": "Hello, world!",
+    "/dir/file.txt": Buffer.from("Hello, world!"),
   };
 
   expect(await d.local.entries()).toStrictEqual(r);
   expect(await d.remote.entries()).toStrictEqual(r);
   expect(await d.metadata.get()).toStrictEqual({
     "/dir": DirContentIdentity,
-    "/dir/file.txt": "t" + getContentHash(Buffer.from("Hello, world!"))
+    "/dir/file.txt": getContentIdentityForData(Buffer.from("Hello, world!"))
   });
 });
 
@@ -71,7 +71,7 @@ it("local file created", async () => {
   await makeSync(d.local, d.localSync);
 
   let r: CheckEntryMap = {
-    "/file.txt": "Hello, world!"
+    "/file.txt": Buffer.from("Hello, world!")
   };
 
   expect(await d.local.entries()).toStrictEqual(r);
@@ -88,7 +88,7 @@ it("local file updated", async () => {
   await makeSync(d.local, d.localSync);
 
   let r: CheckEntryMap = {
-    "/file.txt": "Hello, world! Updated"
+    "/file.txt": Buffer.from("Hello, world! Updated")
   };
 
   expect(await d.local.entries()).toStrictEqual(r);
@@ -105,7 +105,7 @@ it("remote file updated", async () => {
   await makeSync(d.local, d.localSync);
 
   let r: CheckEntryMap = {
-    "/file.txt": "Hello, world! Updated"
+    "/file.txt": Buffer.from("Hello, world! Updated")
   };
 
   expect(await d.local.entries()).toStrictEqual(r);
@@ -123,17 +123,17 @@ it("local and remote files updated", async () => {
   await makeSync(d.local, d.localSync);
 
   expect(await d.local.entries()).toStrictEqual({
-    "/file.txt": "Hello, world! Updated local"
+    "/file.txt": Buffer.from("Hello, world! Updated local")
   });
   expect(await d.remote.entries()).toStrictEqual({
-    "/file.txt": "Hello, world! Updated remote"
+    "/file.txt": Buffer.from("Hello, world! Updated remote")
   });
 
   expect(d.localSync.pendingConflicts).toMatchObject([ {
     syncResult: {
       conflict: DiffType.ConflictingUpdate,
-      data: "Hello, world! Updated remote",
-      path: "/file.txt"
+      data: Buffer.from("Hello, world! Updated remote"),
+      path: new StoragePath("/file.txt")
     }
   } ]);
 });
@@ -163,14 +163,14 @@ it("local file removed and remote file updated", async function() {
 
   expect(await d.local.entries()).toStrictEqual({});
   expect(await d.remote.entries()).toStrictEqual({
-    "/file.txt": "Hello, world! Updated"
+    "/file.txt": Buffer.from("Hello, world! Updated")
   });
 
   expect(d.localSync.pendingConflicts).toMatchObject([ {
     syncResult: {
       conflict: DiffType.ConflictingLocalRemove,
-      data: "Hello, world! Updated",
-      path: "/file.txt"
+      data: Buffer.from("Hello, world! Updated"),
+      path: new StoragePath("/file.txt")
     }
   } ]);
 });
@@ -234,7 +234,7 @@ it("local tree not changed", async () => {
 
   let r: CheckEntryMap = {
     "/dir": undefined,
-    "/dir/file.txt": "Hello, world!"
+    "/dir/file.txt": Buffer.from("Hello, world!")
   };
 
   expect(await d.local.entries()).toStrictEqual(r);
@@ -261,7 +261,7 @@ it("handles sync when a directory turned into a file", async function() {
 
   let r: CheckEntryMap = {
     "/dir": undefined,
-    "/dir/file.txt": "Hello, local!"
+    "/dir/file.txt": Buffer.from("Hello, local!")
   };
 
   expect(await d.local.entries()).toStrictEqual(r);
@@ -274,7 +274,7 @@ it("handles sync when a directory turned into a file", async function() {
   await makeSync(d.local, d.localSync);
 
   r = {
-    "/dir": "Hello, local!"
+    "/dir": Buffer.from("Hello, local!")
   };
 
   expect(await d.local.entries()).toStrictEqual(r);

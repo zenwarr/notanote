@@ -29,6 +29,7 @@ export class ClientWorkspace {
     this.remoteStorageId = storageId;
 
     this.syncWorker = new LocalSyncWorker(
+        this.storage,
         syncAdapter,
         new BrowserSyncMetadataStorage()
     );

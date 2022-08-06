@@ -37,14 +37,30 @@ export async function getContentIdentity(ep: StorageEntryPointer, content: Buffe
   }
 
   if (isDir) {
-    return DirContentIdentity;
+    return getContentIdentityForData(undefined, true);
   }
 
   if (content == null && !isDir) {
     content = await readEntityDataIfAny(ep);
   }
 
-  return "t" + getContentHash(content);
+  if (!content) {
+    // file does not exist, although we have checked its presence before; this race condition should not lead to problems
+    return undefined;
+  }
+
+  return getContentIdentityForData(content || Buffer.alloc(0));
+}
+
+
+export function getContentIdentityForData(content: Buffer): ContentIdentity;
+export function getContentIdentityForData(content: undefined, isDir: true): ContentIdentity;
+export function getContentIdentityForData(content: Buffer | undefined, isDir = false): ContentIdentity {
+  if (isDir) {
+    return DirContentIdentity;
+  }
+
+  return "f" + getContentHash(content || Buffer.alloc(0));
 }
 
 
