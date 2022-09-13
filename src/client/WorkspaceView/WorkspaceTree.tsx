@@ -38,16 +38,16 @@ export const WorkspaceTree = mobx.observer((props: WorkspaceTreeProps) => {
     openMenu: (x: number, y: number, id: string) => props.onMenuOpen?.(x, y, new StoragePath(id)),
     selected: cw.selectedEntry?.normalized,
     onSelect: (id: string) => {
-      const selected = cw.storage.getMemoryData(new StoragePath(id));
+      let path = new StoragePath(id);
+      const selected = cw.storage.getMemoryData(path);
       if (!selected) {
         return;
       }
 
-      cw.selectedEntry = new StoragePath(id);
       const isDir = selected.stats.isDirectory;
 
       if (!isDir) {
-        props.onSelect?.(new StoragePath(id));
+        props.onSelect?.(path);
       } else {
         expand.onToggle(id);
       }

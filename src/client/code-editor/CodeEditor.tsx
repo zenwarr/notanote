@@ -42,7 +42,7 @@ export function CodeEditor(props: CodeEditorProps) {
       view.destroy();
       DocumentManager.instance.close(props.doc.entry.path);
     };
-  }, []);
+  }, [ props.doc ]);
 
   useEffect(() => {
     viewRef.current?.focus();
