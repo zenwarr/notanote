@@ -7,6 +7,7 @@
   "private": true,
   "scripts": {
     "build": "tsc",
+    "build-replace-paths": "tsconfig-replace-paths --project tsconfig.json",
     "build-client": "webpack --env prod=true",
     "build-client-dev": "webpack --env prod=false",
     "storybook": "start-storybook -p 6006",
@@ -80,6 +81,7 @@
     "ts-jest": "^28.0.6",
     "ts-node": "^10.9.1",
     "tsconfig-paths-webpack-plugin": "^4.0.0",
+    "tsconfig-replace-paths": "^0.0.11",
     "tslib": "^2.4.0",
     "unified": "^10.1.2",
     "webpack-cli": "^4.10.0",

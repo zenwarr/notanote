@@ -19,6 +19,7 @@
       "DOM"
     ],
     "jsx": "react-jsx",
+    "outDir": ".",
     "baseUrl": ".",
     "paths": {
       "@common/*": [

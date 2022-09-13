@@ -19,6 +19,7 @@ WORKDIR /app
 RUN --mount=type=cache,target=/yarn-cache cd /app && \
     yarn install --frozen-lockfile --production=false && \
     yarn build-client && \
+    yarn build-replace-paths && \
     yarn build && \
     rm -rf node_modules && \
     yarn install --frozen-lockfile --production=true && \
