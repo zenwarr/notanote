@@ -141,7 +141,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
       params: S.object().prop("storageId", S.string().required()),
       body: S.object().prop("path", S.string().required())
       .prop("data", S.object().required())
-      .prop("remoteIdentity", S.string().required())
+      .prop("remoteIdentity", S.string())
     }
   }, async (req, res) => {
     const s = await getStorage(req);
