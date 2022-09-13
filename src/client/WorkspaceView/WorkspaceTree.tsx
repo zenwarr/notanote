@@ -21,13 +21,6 @@ export const WorkspaceTree = mobx.observer((props: WorkspaceTreeProps) => {
   const cw = ClientWorkspace.instance;
   const root = cw.storage.getMemoryData(StoragePath.root);
 
-  const roots = root?.children?.length;
-  if (!roots) {
-    return <div>
-      Empty workspace
-    </div>;
-  }
-
   const expand = useExpandedPaths(cw.selectedEntry?.normalized);
 
   // we need to touch all nodes to subscribe to their changes because FixedTreeSize is not a mobx observer
@@ -54,6 +47,13 @@ export const WorkspaceTree = mobx.observer((props: WorkspaceTreeProps) => {
     },
     expanded: expand.expanded
   }), [ props.onMenuOpen, props.onMenuClose ]);
+  
+  const roots = root?.children?.length;
+  if (!roots) {
+    return <div>
+      Empty workspace
+    </div>;
+  }
 
   return <TreeContext.Provider value={ treeCtx }>
     <FixedSizeTree { ...props } itemSize={ 25 } treeWalker={ workspaceTreeWalker.bind(null, root, expand.expanded) as any }>
