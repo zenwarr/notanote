@@ -18,7 +18,7 @@ export const SyncPanel = mobx.observer(() => {
     </Box>
 
     <Grid container spacing={ 2 }>
-      <Grid item xs={ 6 }>
+      <Grid item xs={ 12 } md={ 6 }>
         <Paper sx={ { p: 2, mt: 2 } }>
           <Typography mb={ 2 } variant={ "h5" }>Changes</Typography>
 
@@ -26,11 +26,11 @@ export const SyncPanel = mobx.observer(() => {
         </Paper>
       </Grid>
 
-      <Grid item xs={ 6 }>
+      <Grid item xs={ 12 } md={ 6 }>
         <Paper sx={ { p: 2, mt: 2 } }>
           <Typography mb={ 2 } variant={ "h5" }>Jobs</Typography>
 
-          <SyncJobs />
+          <SyncJobs/>
 
           {
             jobs.errors.map(err => <div key={ err.date.valueOf() }>
