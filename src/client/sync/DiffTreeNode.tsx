@@ -1,9 +1,10 @@
-import SyncProblemIcon from "@mui/icons-material/SyncProblem";
 import { makeStyles } from "@mui/styles";
 import { StoragePath } from "@storage/StoragePath";
-import { isConflictingDiff, SyncDiffType } from "@sync/LocalSyncWorker";
+import { isConflictingDiff, SyncDiffType, isCleanRemoteDiff } from "@sync/LocalSyncWorker";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import cn from "classnames";
+import DownloadIcon from '@mui/icons-material/Download';
+import VerticalAlignCenterIcon from '@mui/icons-material/VerticalAlignCenter';
 
 
 export type DiffTreeNodeProps = {
@@ -16,26 +17,46 @@ export function DiffTreeNode(props: DiffTreeNodeProps) {
   const classes = useStyles();
 
   const d = props.diff;
-  const isNew = d && d.actual != null && d.syncMetadata?.synced == null;
-  const isUpdated = d && d.actual != null && d.syncMetadata?.synced != null && d.syncMetadata.synced !== d.actual;
-  const isRemoved = d && d.actual == null && d.syncMetadata?.synced != null;
-  const isAccepted = d && d.syncMetadata?.accepted === d.actual;
-  const isConflict = d && isConflictingDiff(d.diff);
 
-  const className = cn({
-    [classes.new]: isNew,
-    [classes.updated]: isUpdated,
-    [classes.removed]: isRemoved,
-    [classes.accepted]: isAccepted
+  const containerClassName = cn({
+    [classes.accepted]: d && d.syncMetadata?.accepted === d.actual
   });
 
-  return <span className={ className }>
-    { props.path.isEqual(StoragePath.root) ? "<root>" : props.path.basename }
+  const itemClassName = cn({
+    [classes.new]: d && (d.diff === SyncDiffType.LocalCreate || d.diff === SyncDiffType.ConflictingCreate),
+    [classes.updated]: d && (d.diff === SyncDiffType.LocalUpdate || d.diff === SyncDiffType.ConflictingUpdate || d.diff === SyncDiffType.ConflictingRemoteRemove),
+    [classes.removed]: d && (d.diff === SyncDiffType.LocalRemove || d.diff === SyncDiffType.ConflictingLocalRemove)
+  });
+
+  const isCleanRemote = d && isCleanRemoteDiff(d.diff);
+  const remoteIconClassName = cn(classes.icon, {
+    [classes.new]: d && d.diff === SyncDiffType.RemoteCreate,
+    [classes.updated]: d && d.diff === SyncDiffType.RemoteUpdate,
+    [classes.removed]: d && d.diff === SyncDiffType.RemoteRemove
+  });
+
+  const isConflict = d && isConflictingDiff(d.diff);
+  const conflictTextClass = cn({
+    [classes.new]: d && d.diff === SyncDiffType.ConflictingCreate,
+    [classes.updated]: d && (d.diff === SyncDiffType.ConflictingUpdate || d.diff === SyncDiffType.ConflictingLocalRemove),
+    [classes.removed]: d && d.diff === SyncDiffType.ConflictingRemoteRemove
+  });
+
+  return <span className={ containerClassName }>
+    <span className={ itemClassName }>
+      { props.path.isEqual(StoragePath.root) ? "<root>" : props.path.basename }
+    </span>
+
+    {
+      isCleanRemote && <span>
+        <DownloadIcon className={ remoteIconClassName }/>
+      </span>
+    }
 
     {
       isConflict && <span>
-        <SyncProblemIcon color={ "error" } className={ classes.conflictIcon }/>
-        <span className={ classes.conflictText }>
+        <VerticalAlignCenterIcon color={ "error" } className={ classes.icon }/>
+        <span className={ conflictTextClass }>
           { getConflictText(d?.diff) }
         </span>
       </span>
@@ -49,20 +70,18 @@ const useStyles = makeStyles(theme => ({
     color: "green"
   },
   updated: {
-    color: "blue"
+    color: "#7b7bff"
   },
   removed: {
-    color: "gray"
+    color: "#ff6565"
   },
   accepted: {
     opacity: 0.5
   },
-  conflictIcon: {
+  icon: {
     verticalAlign: "middle",
-    marginLeft: theme.spacing(0.5)
-  },
-  conflictText: {
-    marginLeft: theme.spacing(0.5)
+    marginLeft: theme.spacing(0.5),
+    marginRight: theme.spacing(0.5)
   }
 }));
 

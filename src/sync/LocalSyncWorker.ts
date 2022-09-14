@@ -11,14 +11,15 @@ import { EntrySyncMetadata, SyncMetadataMap, SyncMetadataStorage, walkSyncMetada
 
 
 export enum SyncDiffType {
-  ConflictingCreate = "conflicting_create",
-  ConflictingUpdate = "conflicting_update",
-  LocalUpdate = "local_update",
-  RemoteCreate = "remote_create",
-  LocalRemove = "local_remove",
-  ConflictingLocalRemove = "conflicting_local_remove",
   LocalCreate = "local_create",
+  RemoteCreate = "remote_create",
+  ConflictingCreate = "conflicting_create",
+  LocalUpdate = "local_update",
+  RemoteUpdate = "remote_update",
+  ConflictingUpdate = "conflicting_update",
+  LocalRemove = "local_remove",
   RemoteRemove = "remote_remove",
+  ConflictingLocalRemove = "conflicting_local_remove",
   ConflictingRemoteRemove = "conflicting_remote_remove",
 }
 
@@ -32,6 +33,28 @@ export function isConflictingDiff(diff: SyncDiffType): boolean {
   ];
 
   return conflictingTypes.includes(diff);
+}
+
+
+export function isCleanLocalDiff(diff: SyncDiffType): boolean {
+  const localTypes: SyncDiffType[] = [
+    SyncDiffType.LocalUpdate,
+    SyncDiffType.LocalRemove,
+    SyncDiffType.LocalCreate,
+  ];
+
+  return localTypes.includes(diff);
+}
+
+
+export function isCleanRemoteDiff(diff: SyncDiffType): boolean {
+  const cleanRemoteTypes: SyncDiffType[] = [
+    SyncDiffType.RemoteCreate,
+    SyncDiffType.RemoteUpdate,
+    SyncDiffType.RemoteRemove,
+  ];
+
+  return cleanRemoteTypes.includes(diff);
 }
 
 
@@ -302,6 +325,8 @@ export class LocalSyncWorker {
       } else if (synced === remote) {
         // local was overwritten after sync
         return SyncDiffType.LocalUpdate;
+      } else if (local === synced) {
+        return SyncDiffType.RemoteUpdate;
       } else {
         // local was updated locally, but remote was updated too
         return SyncDiffType.ConflictingUpdate;
