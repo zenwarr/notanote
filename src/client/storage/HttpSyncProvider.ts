@@ -16,11 +16,17 @@ export class HttpSyncProvider implements RemoteSyncProvider {
 
 
   async getOutline(path: StoragePath): Promise<SyncOutlineEntry | undefined> {
-    return await ky.get(`/api/storages/${ this.storageId }/sync/outline`, {
+    const data = await ky.get(`/api/storages/${ this.storageId }/sync/outline`, {
       searchParams: {
         path: path.normalized
       }
-    }).json();
+    }).text();
+
+    if (!data) {
+      return undefined;
+    }
+
+    return JSON.parse(data);
   }
 
 
