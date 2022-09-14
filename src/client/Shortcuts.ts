@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { PaletteMode, togglePalette } from "./PaletteProvider";
+import { PaletteMode, togglePalette } from "./palette/PaletteProvider";
 
 
 function runShortcutAction(e: KeyboardEvent) {

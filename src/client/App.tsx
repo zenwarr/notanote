@@ -10,7 +10,7 @@ import { HashRouter } from "react-router-dom";
 import { ClientWorkspace } from "./ClientWorkspace";
 import "./App.css";
 import { useShortcuts } from "./Shortcuts";
-import { PaletteProvider } from "./PaletteProvider";
+import { PaletteProvider } from "./palette/PaletteProvider";
 import { useAppThemeContext } from "./Theme";
 import { StoragePath } from "@storage/StoragePath";
 import { observer } from "mobx-react-lite";

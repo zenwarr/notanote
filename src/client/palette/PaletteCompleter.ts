@@ -1,8 +1,8 @@
 import levenshtein from "js-levenshtein";
 import { StorageEntryData } from "@common/workspace/StorageEntryData";
-import { ClientWorkspace } from "./ClientWorkspace";
+import { ClientWorkspace } from "../ClientWorkspace";
 import { PaletteOption } from "./Palette";
-import { RecentDocStorage } from "./RecentDocStorage";
+import { RecentDocStorage } from "../RecentDocStorage";
 
 
 const COMPLETE_RESULT_COUNT = 10;

@@ -1,4 +1,4 @@
-import { PaletteOption } from "../Palette";
+import { PaletteOption } from "../palette/Palette";
 
 
 export function demoCompleter(value: string) {

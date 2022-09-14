@@ -2,7 +2,7 @@ import { App } from "../App";
 import { AudioRecord } from "../audio/AudioRecord";
 import { DeviceConfigEditor } from "../device/DeviceConfigEditor";
 import { ErrorDisplay } from "../error-boundary/ErrorDisplay";
-import { Palette } from "../Palette";
+import { Palette } from "../palette/Palette";
 import { demoCompleter } from "./demo";
 
 

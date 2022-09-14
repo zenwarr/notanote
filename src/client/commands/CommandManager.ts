@@ -3,7 +3,7 @@ import { Backend } from "../backend/Backend";
 import { SystemBackend } from "../backend/SystemBackend";
 import { WorkspaceBackend } from "../backend/WorkspaceBackend";
 import { ClientWorkspace } from "../ClientWorkspace";
-import { PaletteOption } from "../Palette";
+import { PaletteOption } from "../palette/Palette";
 import * as nanoid from "nanoid";
 
 
