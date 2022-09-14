@@ -6,7 +6,7 @@ import { FixedSizeNodeData, FixedSizeTree, FixedSizeTreeProps } from "react-vtre
 import { ClientWorkspace } from "../ClientWorkspace";
 import { TreeContext, TreeCtxData } from "../tree/TreeContext";
 import { TreeNode } from "../tree/TreeNode";
-import { TreeNodeData, TreeNodeDataBox } from "../tree/TreeNodeData";
+import { TreeNodeDataBox } from "../tree/TreeNodeData";
 import { useExpandedPaths } from "../tree/useExpandedPaths";
 
 
@@ -21,10 +21,12 @@ export const WorkspaceTree = mobx.observer((props: WorkspaceTreeProps) => {
   const cw = ClientWorkspace.instance;
   const root = cw.storage.getMemoryData(StoragePath.root);
 
-  const expand = useExpandedPaths(cw.selectedEntry?.normalized);
+  const expand = useExpandedPaths(cw.selectedEntry);
 
   // we need to touch all nodes to subscribe to their changes because FixedTreeSize is not a mobx observer
-  for (const _ of walkStorageEntryData(root)) {
+  if (root) {
+    for (const _ of walkStorageEntryData(root)) {
+    }
   }
 
   const treeCtx = useMemo<TreeCtxData>(() => ({
@@ -42,12 +44,12 @@ export const WorkspaceTree = mobx.observer((props: WorkspaceTreeProps) => {
       if (!isDir) {
         props.onSelect?.(path);
       } else {
-        expand.onToggle(id);
+        expand.onToggle(path);
       }
     },
     expanded: expand.expanded
-  }), [ props.onMenuOpen, props.onMenuClose ]);
-  
+  }), [ props.onMenuOpen, props.onMenuClose, expand.onToggle ]);
+
   const roots = root?.children?.length;
   if (!roots) {
     return <div>

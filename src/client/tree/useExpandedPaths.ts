@@ -1,28 +1,31 @@
-import { useState } from "react";
+import { StoragePath } from "@storage/StoragePath";
+import { useCallback, useMemo, useState } from "react";
 
 
-function getParents(p: string) {
-  const parts = p.split("/").filter(x => !!x);
+function getParents(p: StoragePath) {
   const result: string[] = [];
-  for (let q = 0; q < parts.length; ++q) {
-    result.push("/" + parts.slice(0, q + 1).join("/"));
-  }
+
+  do {
+    result.push(p.normalized);
+    p = p.parentDir;
+  } while (!p.isEqual(StoragePath.root));
+
   return result;
 }
 
 
-export function useExpandedPaths(selected: string | undefined) {
+export function useExpandedPaths(selected: StoragePath | undefined) {
   const [ expanded, setExpanded ] = useState<string[]>(selected ? [ ...getParents(selected) ] : []);
 
   return {
     expanded,
-    onToggle: (node: string) => {
-      const isAlreadyExpanded = expanded.includes(node);
+    onToggle: (path: StoragePath) => {
+      const isAlreadyExpanded = expanded.includes(path.normalized);
       if (isAlreadyExpanded) {
         // collapse this item and all its children
-        setExpanded(expanded.filter(x => x !== node && !x.startsWith(node + "/")));
+        setExpanded(expanded.filter(x => !new StoragePath(x).inside(path, true)));
       } else {
-        const parents = getParents(node);
+        const parents = getParents(path);
         setExpanded([ ...new Set([ ...expanded, ...parents ]) ]);
       }
     }
