@@ -1,6 +1,6 @@
 import { makeStyles } from "@mui/styles";
 import { StoragePath } from "@storage/StoragePath";
-import { isConflictingDiff, SyncDiffType, isCleanRemoteDiff } from "@sync/LocalSyncWorker";
+import { isConflictingDiff, SyncDiffType, isCleanRemoteDiff, isCleanLocalDiff } from "@sync/LocalSyncWorker";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import cn from "classnames";
 import DownloadIcon from '@mui/icons-material/Download';
@@ -19,13 +19,14 @@ export function DiffTreeNode(props: DiffTreeNodeProps) {
   const d = props.diff;
 
   const containerClassName = cn({
-    [classes.accepted]: d && d.syncMetadata?.accepted === d.actual
+    [classes.accepted]: d && d.syncMetadata?.accepted === d.actual && !(d.syncMetadata?.accepted == null && d.actual == null)
   });
 
   const itemClassName = cn({
     [classes.new]: d && (d.diff === SyncDiffType.LocalCreate || d.diff === SyncDiffType.ConflictingCreate),
     [classes.updated]: d && (d.diff === SyncDiffType.LocalUpdate || d.diff === SyncDiffType.ConflictingUpdate || d.diff === SyncDiffType.ConflictingRemoteRemove),
-    [classes.removed]: d && (d.diff === SyncDiffType.LocalRemove || d.diff === SyncDiffType.ConflictingLocalRemove)
+    [classes.removed]: d && (d.diff === SyncDiffType.LocalRemove || d.diff === SyncDiffType.ConflictingLocalRemove),
+    [classes.missing]: d && d.actual == null && !(d.diff === SyncDiffType.LocalRemove || d.diff === SyncDiffType.ConflictingLocalRemove)
   });
 
   const isCleanRemote = d && isCleanRemoteDiff(d.diff);
@@ -74,6 +75,9 @@ const useStyles = makeStyles(theme => ({
   },
   removed: {
     color: "#ff6565"
+  },
+  missing: {
+    color: "gray"
   },
   accepted: {
     opacity: 0.5

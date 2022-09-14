@@ -1,4 +1,5 @@
 import { StoragePath } from "@storage/StoragePath";
+import { SyncDiffType } from "@sync/LocalSyncWorker";
 import { ContentIdentity } from "./ContentIdentity";
 
 
@@ -16,10 +17,14 @@ export interface EntrySyncMetadata {
    */
   accepted: ContentIdentity | undefined | false;
 
-  /**
-   * If `true`, `accepted` content identifies content stored on remote storage.
-   */
-  acceptedRemote: boolean;
+  action: DiffAction | undefined;
+
+  diff: SyncDiffType | undefined;
+}
+
+
+export enum DiffAction {
+  Accept = "accept"
 }
 
 

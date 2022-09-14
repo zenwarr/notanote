@@ -1,15 +1,14 @@
-import { ContentIdentity } from "@sync/ContentIdentity";
+import { FileSettingsProvider } from "@common/workspace/FileSettingsProvider";
+import { StorageEntryData } from "@common/workspace/StorageEntryData";
+import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
+import { StorageEntryType } from "@storage/StorageLayer";
+import { StoragePath } from "@storage/StoragePath";
+import { LocalSyncWorker } from "@sync/LocalSyncWorker";
+import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { SyncJobRunner } from "@sync/test/SyncJobRunner";
 import { makeObservable, observable } from "mobx";
-import { LocalSyncWorker } from "@sync/LocalSyncWorker";
-import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";
-import { StorageEntryData } from "@common/workspace/StorageEntryData";
 import { RecentDocStorage } from "./RecentDocStorage";
-import { StoragePath } from "@storage/StoragePath";
-import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
-import { StorageEntryType } from "@storage/StorageLayer";
-import { FileSettingsProvider } from "@common/workspace/FileSettingsProvider";
 import { BrowserSyncMetadataStorage } from "./storage/BrowserSyncMetadataStorage";
 
 
@@ -115,8 +114,8 @@ export class ClientWorkspace {
   }
 
 
-  async acceptChanges(path: StoragePath, diff: SyncDiffEntry[], acceptRemote: boolean) {
-    await this.syncWorker.acceptMulti(getIdentityMapFromDiff(path, diff, acceptRemote), acceptRemote);
+  async acceptChanges(path: StoragePath, diff: SyncDiffEntry[]) {
+    await this.syncWorker.acceptMulti(diff.filter(e => e.path.inside(path, true)));
     await this.syncJobRunner.run();
   }
 
@@ -166,17 +165,4 @@ export class ClientWorkspace {
   static init(storage: MemoryCachedStorage, syncAdapter: RemoteSyncProvider, wsId: string) {
     this._instance = new ClientWorkspace(storage, syncAdapter, wsId);
   }
-}
-
-
-function getIdentityMapFromDiff(path: StoragePath, diff: SyncDiffEntry[], acceptRemote: boolean) {
-  let map: { [path: string]: ContentIdentity | undefined } = {};
-
-  for (const d of diff) {
-    if (d.path.inside(path, true)) {
-      map[d.path.normalized] = acceptRemote ? d.remote : d.actual;
-    }
-  }
-
-  return map;
 }

@@ -16,22 +16,18 @@ export function DiffTreePanel(props: DiffTreePanelProps) {
   const d = props.diff.find(diff => diff.path.normalized === props.selected);
   const showDiff = d && isConflictingDiff(d.diff);
 
-  async function accept(remote: boolean) {
+  async function accept() {
     if (!props.selected) {
       return;
     }
 
     let path = new StoragePath(props.selected);
-    await ClientWorkspace.instance.acceptChanges(path, props.diff, remote);
+    await ClientWorkspace.instance.acceptChanges(path, props.diff);
   }
 
   return <Stack spacing={ 2 } direction={ "row" }>
-    <Button variant={ "contained" } disabled={ isDisabled } onClick={ () => accept(false) }>
-      Accept local
-    </Button>
-
-    <Button variant={ "contained" } disabled={ isDisabled } onClick={ () => accept(true) }>
-      Accept remote
+    <Button variant={ "contained" } disabled={ isDisabled } onClick={ () => accept() }>
+      Accept
     </Button>
 
     {

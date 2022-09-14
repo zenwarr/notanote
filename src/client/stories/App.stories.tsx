@@ -2,6 +2,7 @@ import { Stack } from "@mui/material";
 import { StoragePath } from "@storage/StoragePath";
 import { SyncDiffType } from "@sync/LocalSyncWorker";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
+import { DiffAction } from "@sync/SyncMetadataStorage";
 import { App } from "../App";
 import { AudioRecord } from "../audio/AudioRecord";
 import { DeviceConfigEditor } from "../device/DeviceConfigEditor";
@@ -32,7 +33,8 @@ function createDiff(diff: SyncDiffType, accepted = false): SyncDiffEntry {
     syncMetadata: {
       synced: "synced",
       accepted: accepted ? "actual" : "accepted",
-      acceptedRemote: true
+      action: accepted ? DiffAction.Accept : undefined,
+      diff
     }
   };
 }
