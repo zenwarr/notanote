@@ -63,7 +63,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const classes = useStyles();
 
   function onSelect(path: StoragePath) {
-    navigate(`/f/${ path.normalized }`);
+    navigate(`/f/${ encodeURIComponent(path.normalized) }`);
     props.onFileSelected?.(path);
   }
 

@@ -36,7 +36,7 @@ export function PaletteProvider(props: React.PropsWithChildren<{}>) {
 
   function onSelect(value: string) {
     if (mode === PaletteMode.File) {
-      navigate(`/f/${ new StoragePath(value).normalized }`);
+      navigate(`/f/${ encodeURIComponent(new StoragePath(value).normalized) }`);
     } else if (mode === PaletteMode.Command) {
       CommandManager.instance.run(value);
     }
