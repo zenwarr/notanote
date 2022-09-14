@@ -87,6 +87,7 @@ export class LocalSyncWorker {
     mobx.makeObservable(this, {
       actualDiff: mobx.observable,
       mergeDiff: mobx.action,
+      updatingDiff: mobx.observable
     } as any);
   }
 
@@ -97,6 +98,7 @@ export class LocalSyncWorker {
   private readonly syncMetadata: SyncMetadataStorage;
   diffHandleRules: DiffHandleRule[] | undefined;
   actualDiff: SyncDiffEntry[] = [];
+  updatingDiff = false;
 
 
   /**
@@ -200,9 +202,19 @@ export class LocalSyncWorker {
 
 
   async updateDiff(start: StoragePath): Promise<void> {
-    const diff = await this.getDiff(start);
-    this.mergeDiff(diff);
-    await this.handleDiff(diff);
+    // todo: wait for update to finish
+    if (this.updatingDiff) {
+      throw new Error("Another diff update is running now");
+    }
+
+    try {
+      this.updatingDiff = true;
+      const diff = await this.getDiff(start);
+      this.mergeDiff(diff);
+      await this.handleDiff(diff);
+    } finally {
+      this.updatingDiff = false;
+    }
   }
 
 
