@@ -1,6 +1,5 @@
-import { makeStyles } from "@mui/styles";
 import { useState } from "react";
-import { Button } from "@mui/material"
+import "./ErrorDisplay.css";
 
 
 export type ErrorDisplayProps = {
@@ -14,10 +13,9 @@ export type ErrorDisplayProps = {
  */
 export function ErrorDisplay(props: ErrorDisplayProps) {
   const info = getErrorInfo(props.error);
-  const classes = useStyles();
   const [ opened, setOpened ] = useState(false);
 
-  return <div className={ classes.root }>
+  return <div className={ "error-display" }>
     {
       props.title != null && <>
         { props.title }
@@ -30,13 +28,13 @@ export function ErrorDisplay(props: ErrorDisplayProps) {
 
     {
       info.stack && <div>
-        <Button variant={ "contained" } onClick={ () => setOpened(!opened) }>
+        <button onClick={ () => setOpened(!opened) }>
           { opened ? "-" : "+" } Technical details
-        </Button>
+        </button>
 
         {
           opened && <div>
-            <pre>
+            <pre className={ "error-display__stack" }>
               { info.stack }
             </pre>
           </div>
@@ -45,21 +43,6 @@ export function ErrorDisplay(props: ErrorDisplayProps) {
     }
   </div>;
 }
-
-
-const useStyles = makeStyles(theme => ({
-  root: {
-    padding: theme.spacing(2),
-    backgroundColor: theme.palette.error.main,
-    fontFamily: "monospace",
-    color: theme.palette.text.primary,
-    margin: theme.spacing(2)
-  },
-
-  details: {
-    marginTop: theme.spacing(2)
-  }
-}));
 
 
 function getErrorInfo(err: any): { message: string, stack: string | undefined } {

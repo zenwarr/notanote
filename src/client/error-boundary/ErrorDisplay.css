@@ -1,0 +1,11 @@
+.error-display {
+  padding: 20px;
+  background-color: #811919;
+  font-family: monospace;
+  color: white;
+  margin: 20px;
+}
+
+.error-display__stack {
+  overflow: auto;
+}

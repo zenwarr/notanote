@@ -1,11 +1,8 @@
-import { StoragePath } from "@storage/StoragePath";
-import { getContentIdentityForData } from "@sync/ContentIdentity";
-import { DiffType } from "@sync/DiffType";
 import { App } from "../App";
 import { AudioRecord } from "../audio/AudioRecord";
 import { DeviceConfigEditor } from "../device/DeviceConfigEditor";
+import { ErrorDisplay } from "../error-boundary/ErrorDisplay";
 import { Palette } from "../Palette";
-import { SyncStatusIcon } from "../sync/SyncStatusIcon";
 import { demoCompleter } from "./demo";
 
 
@@ -18,3 +15,5 @@ export const palette = () => <Palette open completer={ demoCompleter } onSelect=
 export const audio = () => <AudioRecord/>;
 
 export const device = () => <DeviceConfigEditor/>;
+
+export const error = () => <ErrorDisplay error={new Error("Something bad")} />
