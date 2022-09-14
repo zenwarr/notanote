@@ -1,5 +1,5 @@
 import { MemorySyncMetadataStorage } from "@sync/MemorySyncMetadataStorage";
-import * as _ from "lodash"
+import * as _ from "lodash";
 import { KVStorageLayer } from "@storage/KVStorageLayer";
 import { MapKV } from "@storage/MapKV";
 import { StorageLayer } from "@storage/StorageLayer";
@@ -30,23 +30,11 @@ async function write(storage: StorageLayer, path: string, data: string) {
 }
 
 
-async function acceptLocal(storage: StorageLayer, sync: LocalSyncWorker, path: string) {
-  let sp = new StoragePath(path);
-  await sync.accept(sp, getContentIdentityForData(await storage.read(sp)), false);
-}
-
-
-async function acceptRemote(storage: StorageLayer, sync: LocalSyncWorker, path: string) {
-  let sp = new StoragePath(path);
-  await sync.accept(sp, getContentIdentityForData(await storage.read(sp)), true);
-}
-
-
 it("diff between equal files", async () => {
   const d = prepare();
   await write(d.local, "/file.txt", "hello world");
   await write(d.remote, "/file.txt", "hello world");
-  await acceptLocal(d.local, d.localSync, "/file.txt");
+  await d.localSync.acceptMulti(await d.localSync.getDiff(StoragePath.root));
 
   const diff = await d.localSync.getDiff(new StoragePath("/"));
   expect(diff).toHaveLength(0);
@@ -56,7 +44,7 @@ it("diff between equal files", async () => {
 it("local file changed", async () => {
   const d = prepare();
   await write(d.local, "/file.txt", "hello, world!");
-  await acceptLocal(d.local, d.localSync, "/file.txt");
+  await d.localSync.acceptMulti(await d.localSync.getDiff(StoragePath.root));
   await write(d.local, "/file.txt", "hello, world! updated");
   await write(d.remote, "/file.txt", "hello world");
 
@@ -75,8 +63,7 @@ it("initializing from remote storage", async () => {
   expect(diff).toHaveLength(1);
   expect(diff[0]!.diff).toEqual(SyncDiffType.RemoteCreate);
 
-  const accept = _.keyBy(diff, x => x.path.normalized);
-  await d.localSync.acceptMulti(_.mapValues(accept, x => x.remote), true);
+  await d.localSync.acceptMulti(await d.localSync.getDiff(StoragePath.root))
   const jobs = await d.localSync.getJobs(Infinity);
   for (const job of jobs) {
     await d.localSync.doJob(job);
@@ -93,7 +80,7 @@ it("initializing from remote storage", async () => {
 it("jobs", async () => {
   const d = prepare();
   await write(d.local, "/file.txt", "hello, world!");
-  await acceptLocal(d.local, d.localSync, "/file.txt");
+  await d.localSync.acceptMulti(await d.localSync.getDiff(StoragePath.root))
 
   const jobs = await d.localSync.getJobs(3);
   expect(jobs).toHaveLength(1);
