@@ -35,6 +35,7 @@ export function DiffCompare(props: DiffCompareProps) {
         Accept
       </Button>
     </span>;
+    originalIsLocal = false;
   } else if (props.diffType && isCleanLocalDiff(props.diffType)) {
     originalTitle = "Original (remote)";
     modifiedTitle = "Modified (local)";
