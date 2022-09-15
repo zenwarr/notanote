@@ -1,5 +1,6 @@
 import CloseIcon from "@mui/icons-material/Close";
 import { AppBar, Box, Dialog, IconButton, Toolbar, Typography } from "@mui/material";
+import { makeStyles } from "@mui/styles";
 
 
 export type FullScreenDialogProps = {
@@ -11,6 +12,8 @@ export type FullScreenDialogProps = {
 
 
 export function FullScreenDialog(props: FullScreenDialogProps) {
+  const classes = useStyles();
+
   return <Dialog fullScreen open={ props.open } onClose={ props.onClose }>
     <AppBar sx={ { position: "relative" } }>
       <Toolbar>
@@ -28,8 +31,18 @@ export function FullScreenDialog(props: FullScreenDialogProps) {
       </Toolbar>
     </AppBar>
 
-    <Box p={ 2 }>
+    <div className={ classes.container }>
       { props.children }
-    </Box>
+    </div>
   </Dialog>;
 }
+
+
+const useStyles = makeStyles(theme => ({
+  container: {
+    padding: theme.spacing(2),
+    display: "flex",
+    flexDirection: "column",
+    height: "100%"
+  }
+}));

@@ -6,7 +6,7 @@ import { LoadState } from "../useLoad";
 
 export type LoadGuardProps<T> = {
   loadState: LoadState<T>;
-  data: (data: T) => React.ReactNode;
+  render: (data: T) => React.ReactNode;
   errorFormat?: (err: string) => React.ReactNode;
 }
 
@@ -29,7 +29,7 @@ export function LoadGuard<T>(props: LoadGuardProps<T>) {
   }
 
   return <>
-    { props.data(props.loadState.data) }
+    { props.render(props.loadState.data) }
   </>;
 }
 

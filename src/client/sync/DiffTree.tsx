@@ -32,12 +32,14 @@ export const DiffTree = mobx.observer((props: DiffTreeProps) => {
     onSelect: setSelected
   }), [ selected ]);
 
+  const selectedPath = useMemo(() => selected ? new StoragePath(selected) : undefined, [ selected ]);
+
   // touch the entire tree deeply
   const _ = m.toJS(props.diff);
 
   return <>
     <Box mb={ 2 }>
-      <DiffTreePanel selected={ selected } diff={ props.diff }/>
+      <DiffTreePanel selectedPath={ selectedPath } allDiffs={ props.diff }/>
     </Box>
 
     <ContainerWithSizeDetection className={ classes.container }>

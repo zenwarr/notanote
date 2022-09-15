@@ -1,4 +1,4 @@
-import { StorageLayer } from "@storage/StorageLayer";
+import { StorageError, StorageErrorCode, StorageLayer } from "@storage/StorageLayer";
 import { StoragePath } from "@storage/StoragePath";
 import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";
 import { RemoteSyncWorker } from "@sync/RemoteSyncWorker";
@@ -7,6 +7,7 @@ import { SyncOutlineEntry } from "@sync/SyncEntry";
 import { walkEntriesDownToTop } from "@sync/WalkEntriesDownToTop";
 import * as mobx from "mobx";
 import { ContentIdentity, DirContentIdentity, getContentIdentity, getContentIdentityForData } from "./ContentIdentity";
+import { EntryCompareData } from "./EntryCompareData";
 import { DiffAction, EntrySyncMetadata, SyncMetadataMap, SyncMetadataStorage, walkSyncMetadataTopDown } from "./SyncMetadataStorage";
 
 
@@ -191,6 +192,29 @@ export class LocalSyncWorker {
   }
 
 
+  async getCompareData(path: StoragePath): Promise<EntryCompareData> {
+    async function guardedLoad(cb: () => Promise<Buffer | undefined>) {
+      try {
+        return await cb();
+      } catch (err) {
+        if (err instanceof StorageError && (err.code === StorageErrorCode.NotExists || err.code === StorageErrorCode.NotFile)) {
+          return undefined;
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    let local = await guardedLoad(() => this.local.read(path));
+    let remote = await guardedLoad(() => this.remoteSyncProvider.read(path));
+
+    return {
+      local,
+      remote
+    };
+  }
+
+
   async updateDiff(start: StoragePath): Promise<void> {
     // todo: wait for update to finish
     if (this.updatingDiff) {
@@ -294,7 +318,7 @@ export class LocalSyncWorker {
       return updatedMeta;
     });
 
-    // updated actualDiff with new sync metadata
+    // update actualDiff with new sync metadata
     if (updatedMeta) {
       for (const diff of this.actualDiff) {
         if (diff.path.isEqual(job.path)) {
@@ -302,7 +326,7 @@ export class LocalSyncWorker {
         }
       }
 
-      this.actualDiff = this.actualDiff.filter(d => d.syncMetadata?.synced !== d.syncMetadata?.accepted);
+      this.actualDiff = this.actualDiff.filter(d => d.actual !== d.syncMetadata?.synced);
     }
   }
 

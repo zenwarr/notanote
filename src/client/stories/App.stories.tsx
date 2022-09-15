@@ -8,6 +8,7 @@ import { AudioRecord } from "../audio/AudioRecord";
 import { DeviceConfigEditor } from "../device/DeviceConfigEditor";
 import { ErrorDisplay } from "../error-boundary/ErrorDisplay";
 import { Palette } from "../palette/Palette";
+import { DiffCompare } from "../sync/DiffCompare";
 import { DiffTreeNode } from "../sync/DiffTreeNode";
 import { demoCompleter } from "./demo";
 
@@ -84,3 +85,8 @@ export const diff = () => <Stack direction={ "row" } spacing={ 2 }>
     <DiffTreeNode path={ new StoragePath("demo") } diff={ createDiff(SyncDiffType.ConflictingRemoteRemove, true) }/>
   </Stack>
 </Stack>;
+
+
+export const diffCompare = () => <DiffCompare
+    diffType={ SyncDiffType.RemoteUpdate }
+    data={ { local: Buffer.from("Hello, world"), remote: Buffer.from("Hello, world! remote") } }/>;
