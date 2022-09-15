@@ -23,7 +23,7 @@ export const SyncPanel = mobx.observer(() => {
         }
       </span>
 
-      <Button variant={ "contained" } onClick={ () => sw.updateDiff(StoragePath.root) } disabled={ sw.updatingDiff }>
+      <Button variant={ "outlined" } size={ "small" } onClick={ () => sw.updateDiff(StoragePath.root) } disabled={ sw.updatingDiff }>
         Update diff
       </Button>
     </Box>

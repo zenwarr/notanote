@@ -1,12 +1,11 @@
-import { MemorySyncMetadataStorage } from "@sync/MemorySyncMetadataStorage";
-import * as _ from "lodash";
 import { KVStorageLayer } from "@storage/KVStorageLayer";
 import { MapKV } from "@storage/MapKV";
 import { StorageLayer } from "@storage/StorageLayer";
 import { StoragePath } from "@storage/StoragePath";
-import { getContentIdentityForData } from "@sync/ContentIdentity";
 import { LocalSyncWorker, SyncDiffType } from "@sync/LocalSyncWorker";
+import { MemorySyncMetadataStorage } from "@sync/MemorySyncMetadataStorage";
 import { RemoteSyncWorker } from "@sync/RemoteSyncWorker";
+import { DiffAction } from "@sync/SyncMetadataStorage";
 import { SyncJobRunner } from "@sync/test/SyncJobRunner";
 
 
@@ -34,42 +33,45 @@ it("diff between equal files", async () => {
   const d = prepare();
   await write(d.local, "/file.txt", "hello world");
   await write(d.remote, "/file.txt", "hello world");
-  await d.localSync.acceptMulti(await d.localSync.getDiff(StoragePath.root));
 
-  const diff = await d.localSync.getDiff(new StoragePath("/"));
-  expect(diff).toHaveLength(0);
+  await d.localSync.updateDiff();
+  await d.localSync.acceptMulti(d.localSync.actualDiff);
+  expect(d.localSync.actualDiff).toHaveLength(0);
+
+  await d.localSync.updateDiff();
+  expect(d.localSync.actualDiff).toHaveLength(0);
 });
 
 
 it("local file changed", async () => {
   const d = prepare();
   await write(d.local, "/file.txt", "hello, world!");
-  await d.localSync.acceptMulti(await d.localSync.getDiff(StoragePath.root));
+
+  await d.localSync.updateDiff();
+  await d.localSync.acceptMulti(d.localSync.actualDiff);
+
   await write(d.local, "/file.txt", "hello, world! updated");
   await write(d.remote, "/file.txt", "hello world");
 
-  const diff = await d.localSync.getDiff(new StoragePath("/"));
-  expect(diff).toHaveLength(1);
-  expect(diff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
+  await d.localSync.updateDiff();
+  expect(d.localSync.actualDiff).toHaveLength(1);
+  expect(d.localSync.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
 });
 
 
 it("initializing from remote storage", async () => {
   const d = prepare();
   await write(d.remote, "/file.txt", "hello world");
+  await d.localSync.updateDiff();
 
-  await d.localSync.updateDiff(new StoragePath("/"));
-  const diff = d.localSync.actualDiff;
-  expect(diff).toHaveLength(1);
-  expect(diff[0]!.diff).toEqual(SyncDiffType.RemoteCreate);
+  expect(d.localSync.actualDiff).toHaveLength(1);
+  expect(d.localSync.actualDiff[0]!.diff).toEqual(SyncDiffType.RemoteCreate);
 
-  await d.localSync.acceptMulti(await d.localSync.getDiff(StoragePath.root))
+  await d.localSync.acceptMulti(d.localSync.actualDiff);
   const jobs = await d.localSync.getJobs(Infinity);
-  for (const job of jobs) {
-    await d.localSync.doJob(job);
-  }
+  for (const job of jobs) await d.localSync.doJob(job);
 
-  await d.localSync.updateDiff(StoragePath.root);
+  await d.localSync.updateDiff();
   expect(d.localSync.actualDiff.length).toEqual(0);
 
   const localRead = await d.local.read(new StoragePath("/file.txt"));
@@ -77,11 +79,49 @@ it("initializing from remote storage", async () => {
 });
 
 
-it("jobs", async () => {
+it("resolving conflict by accepting local changes", async () => {
   const d = prepare();
-  await write(d.local, "/file.txt", "hello, world!");
-  await d.localSync.acceptMulti(await d.localSync.getDiff(StoragePath.root))
+  await write(d.local, "file.txt", "local");
+  await write(d.remote, "file.txt", "remote");
+  await d.localSync.updateDiff();
 
-  const jobs = await d.localSync.getJobs(3);
-  expect(jobs).toHaveLength(1);
+  expect(d.localSync.actualDiff).toHaveLength(1);
+  expect(d.localSync.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
+
+  await d.localSync.accept(d.localSync.actualDiff[0]!, DiffAction.AcceptLocal);
+  const jobs = await d.localSync.getJobs(Infinity);
+  for (const job of jobs) await d.localSync.doJob(job);
+
+  await d.localSync.updateDiff();
+  expect(d.localSync.actualDiff.length).toEqual(0);
+
+  const localRead = await d.local.read(new StoragePath("/file.txt"));
+  expect(localRead.toString()).toEqual("local");
+
+  const remoteRead = await d.remote.read(new StoragePath("/file.txt"));
+  expect(remoteRead.toString()).toEqual("local");
+});
+
+
+it("resolving conflict by accepting remote changes", async () => {
+  const d = prepare();
+  await write(d.local, "file.txt", "local");
+  await write(d.remote, "file.txt", "remote");
+  await d.localSync.updateDiff();
+
+  expect(d.localSync.actualDiff).toHaveLength(1);
+  expect(d.localSync.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
+
+  await d.localSync.accept(d.localSync.actualDiff[0]!, DiffAction.AcceptRemote);
+  const jobs = await d.localSync.getJobs(Infinity);
+  for (const job of jobs) await d.localSync.doJob(job);
+
+  await d.localSync.updateDiff();
+  expect(d.localSync.actualDiff.length).toEqual(0);
+
+  const localRead = await d.local.read(new StoragePath("/file.txt"));
+  expect(localRead.toString()).toEqual("remote");
+
+  const remoteRead = await d.remote.read(new StoragePath("/file.txt"));
+  expect(remoteRead.toString()).toEqual("remote");
 });

@@ -134,14 +134,20 @@ export class LocalSyncWorker {
   }
 
 
-  async accept(diff: Omit<SyncDiffEntry, "syncMetadata">) {
+  async accept(diff: Omit<SyncDiffEntry, "syncMetadata">, action: DiffAction) {
     let updatedMeta: EntrySyncMetadata | undefined;
+
+    if (action === DiffAction.AcceptAuto && isConflictingDiff(diff.diff)) {
+      throw new Error("Cannot resolve conflicting diff with DiffAction.AcceptAuto");
+    } else if (!isConflictingDiff(diff.diff) && (action === DiffAction.AcceptLocal || action === DiffAction.AcceptRemote)) {
+      throw new Error("Cannot resolve clean diff with DiffAction.AcceptLocal or DiffAction.AcceptRemote");
+    }
 
     await this.syncMetadata.update(diff.path, meta => {
       updatedMeta = {
         synced: meta?.synced,
-        accepted: getAcceptedContentIdentity(diff),
-        action: DiffAction.Accept,
+        accepted: getAcceptedContentIdentity(diff, action),
+        action: action,
         diff: diff.diff
       };
       return updatedMeta;
@@ -165,14 +171,14 @@ export class LocalSyncWorker {
     for (const entryDiff of entries) {
       let entryMeta = meta[entryDiff.path.normalized];
       if (entryMeta) {
-        entryMeta.accepted = getAcceptedContentIdentity(entryDiff);
-        entryMeta.action = DiffAction.Accept;
+        entryMeta.accepted = getAcceptedContentIdentity(entryDiff, DiffAction.AcceptAuto);
+        entryMeta.action = DiffAction.AcceptAuto;
         entryMeta.diff = entryDiff.diff;
       } else {
         entryMeta = {
-          accepted: getAcceptedContentIdentity(entryDiff),
+          accepted: getAcceptedContentIdentity(entryDiff, DiffAction.AcceptAuto),
           synced: undefined,
-          action: DiffAction.Accept,
+          action: DiffAction.AcceptAuto,
           diff: entryDiff.diff
         };
       }
@@ -215,7 +221,7 @@ export class LocalSyncWorker {
   }
 
 
-  async updateDiff(start: StoragePath): Promise<void> {
+  async updateDiff(start: StoragePath = StoragePath.root): Promise<void> {
     // todo: wait for update to finish
     if (this.updatingDiff) {
       throw new Error("Another diff update is running now");
@@ -243,8 +249,8 @@ export class LocalSyncWorker {
   private async handleDiff(diffs: SyncDiffEntry[]): Promise<void> {
     for (const diff of diffs) {
       const rule = this.findDiffHandleRule(diff);
-      if (rule && rule.action === DiffAction.Accept) {
-        await this.accept(diff);
+      if (rule) {
+        await this.accept(diff, rule.action);
       }
     }
   }
@@ -280,12 +286,23 @@ export class LocalSyncWorker {
     let accepted = job.syncMetadata.accepted;
     let synced = job.syncMetadata.synced;
 
-    if (job.syncMetadata.action !== DiffAction.Accept || !job.syncMetadata.diff) {
-      throw new Error("Method not implemented"); // todo
+    if (!job.syncMetadata.diff) {
+      throw new Error("Invariant error: job without diff");
     }
 
-    const to = isCleanLocalDiff(job.syncMetadata.diff) ? this.remoteSyncProvider : this.localSyncProvider;
-    const from = isCleanLocalDiff(job.syncMetadata.diff) ? this.localSyncProvider : this.remoteSyncProvider;
+    const action = job.syncMetadata.action;
+
+    let to: RemoteSyncProvider, from: RemoteSyncProvider;
+    if (isConflictingDiff(job.syncMetadata.diff)) {
+      to = action === DiffAction.AcceptLocal ? this.remoteSyncProvider : this.localSyncProvider;
+      from = action === DiffAction.AcceptLocal ? this.localSyncProvider : this.remoteSyncProvider;
+    } else if (isCleanLocalDiff(job.syncMetadata.diff)) {
+      to = this.remoteSyncProvider;
+      from = this.localSyncProvider;
+    } else {
+      to = this.localSyncProvider;
+      from = this.remoteSyncProvider;
+    }
 
     if (accepted) {
       if (accepted === DirContentIdentity) {
@@ -320,13 +337,7 @@ export class LocalSyncWorker {
 
     // update actualDiff with new sync metadata
     if (updatedMeta) {
-      for (const diff of this.actualDiff) {
-        if (diff.path.isEqual(job.path)) {
-          diff.syncMetadata = updatedMeta;
-        }
-      }
-
-      this.actualDiff = this.actualDiff.filter(d => d.actual !== d.syncMetadata?.synced);
+      this.actualDiff = this.actualDiff.filter(d => !d.path.isEqual(job.path));
     }
   }
 
@@ -422,12 +433,12 @@ function* walkOutlineEntries(outline: SyncOutlineEntry, startPath: StoragePath):
 }
 
 
-function getAcceptedContentIdentity(diff: Omit<SyncDiffEntry, "syncMetadata">): ContentIdentity | undefined {
-  if (isCleanRemoteDiff(diff.diff)) {
+function getAcceptedContentIdentity(diff: Omit<SyncDiffEntry, "syncMetadata">, action: DiffAction): ContentIdentity | undefined {
+  if ((action === DiffAction.AcceptAuto && isCleanRemoteDiff(diff.diff)) || action === DiffAction.AcceptRemote) {
     return diff.remote;
-  } else if (isCleanLocalDiff(diff.diff)) {
+  } else if ((action === DiffAction.AcceptAuto && isCleanLocalDiff(diff.diff)) || action == DiffAction.AcceptLocal) {
     return diff.actual;
   } else {
-    throw new Error("Cannot accept conflicting diff");
+    throw new Error("Invariant error: getAcceptedContentIdentity called with invalid action");
   }
 }

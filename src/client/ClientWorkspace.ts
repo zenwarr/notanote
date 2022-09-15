@@ -6,6 +6,7 @@ import { StoragePath } from "@storage/StoragePath";
 import { LocalSyncWorker } from "@sync/LocalSyncWorker";
 import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
+import { DiffAction } from "@sync/SyncMetadataStorage";
 import { SyncJobRunner } from "@sync/test/SyncJobRunner";
 import { makeObservable, observable } from "mobx";
 import { RecentDocStorage } from "./RecentDocStorage";
@@ -114,8 +115,14 @@ export class ClientWorkspace {
   }
 
 
-  async acceptChanges(path: StoragePath, diff: SyncDiffEntry[]) {
+  async acceptChangesTree(path: StoragePath, diff: SyncDiffEntry[]) {
     await this.syncWorker.acceptMulti(diff.filter(e => e.path.inside(path, true)));
+    await this.syncJobRunner.run();
+  }
+
+
+  async acceptChanges(diff: SyncDiffEntry, action: DiffAction) {
+    await this.syncWorker.accept(diff, action);
     await this.syncJobRunner.run();
   }
 

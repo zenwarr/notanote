@@ -34,7 +34,7 @@ function createDiff(diff: SyncDiffType, accepted = false): SyncDiffEntry {
     syncMetadata: {
       synced: "synced",
       accepted: accepted ? "actual" : "accepted",
-      action: accepted ? DiffAction.Accept : undefined,
+      action: accepted ? DiffAction.AcceptAuto : undefined,
       diff
     }
   };
@@ -88,5 +88,5 @@ export const diff = () => <Stack direction={ "row" } spacing={ 2 }>
 
 
 export const diffCompare = () => <DiffCompare
-    diffType={ SyncDiffType.RemoteUpdate }
+    diffType={ SyncDiffType.ConflictingUpdate }
     data={ { local: Buffer.from("Hello, world"), remote: Buffer.from("Hello, world! remote") } }/>;

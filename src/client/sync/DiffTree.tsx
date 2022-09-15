@@ -5,7 +5,7 @@ import { makeStyles } from "@mui/styles";
 import { StoragePath } from "@storage/StoragePath";
 import { DirContentIdentity } from "@sync/ContentIdentity";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FixedSizeTree } from "react-vtree";
 import { TreeContext, TreeCtxData } from "tree/TreeContext";
 import { TreeNode } from "../tree/TreeNode";
@@ -33,6 +33,12 @@ export const DiffTree = mobx.observer((props: DiffTreeProps) => {
   }), [ selected ]);
 
   const selectedPath = useMemo(() => selected ? new StoragePath(selected) : undefined, [ selected ]);
+
+  useEffect(() => {
+    if (!props.diff.some(d => d.path.normalized === selected)) {
+      setSelected(undefined);
+    }
+  });
 
   // touch the entire tree deeply
   const _ = m.toJS(props.diff);

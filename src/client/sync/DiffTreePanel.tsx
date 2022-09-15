@@ -1,6 +1,8 @@
 import { Button, Stack } from "@mui/material";
 import { StoragePath } from "@storage/StoragePath";
+import { isConflictingDiff } from "@sync/LocalSyncWorker";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
+import { DiffAction } from "@sync/SyncMetadataStorage";
 import { useState } from "react";
 import { ClientWorkspace } from "../ClientWorkspace";
 import { FullScreenDialog } from "../utils/FullScreenDialog";
@@ -17,29 +19,55 @@ export function DiffTreePanel(props: DiffTreePanelProps) {
   const isDisabled = props.selectedPath == null;
   const [ diffModalActive, setDiffModalActive ] = useState(false);
   const d = props.allDiffs.find(d => props.selectedPath && d.path.isEqual(props.selectedPath));
+  const isConflict = d != null && isConflictingDiff(d.diff);
 
   async function accept() {
     if (!props.selectedPath) {
       return;
     }
 
-    await ClientWorkspace.instance.acceptChanges(props.selectedPath, props.allDiffs);
+    await ClientWorkspace.instance.acceptChangesTree(props.selectedPath, props.allDiffs);
+  }
+
+  async function resolve(action: DiffAction) {
+    if (!props.selectedPath || !d) {
+      return;
+    }
+
+    setDiffModalActive(false);
+    await ClientWorkspace.instance.acceptChanges(d, action);
   }
 
   return <>
     <Stack spacing={ 2 } direction={ "row" }>
-      <Button variant={ "contained" } disabled={ isDisabled } onClick={ () => accept() }>
-        Accept
-      </Button>
+      {
+          !isConflict && <Button variant={ "outlined" } size={ "small" } disabled={ isDisabled } onClick={ () => accept() }>
+          Accept
+        </Button>
+      }
 
-      <Button variant={ "contained" } disabled={ isDisabled } onClick={ () => setDiffModalActive(true) }>
+      {
+          isConflict && <>
+          <Button variant={ "outlined" } size={ "small" } disabled={ isDisabled } onClick={ () => resolve(DiffAction.AcceptLocal) }>
+            Accept local
+          </Button>
+
+          <Button variant={ "outlined" } size={ "small" } disabled={ isDisabled } onClick={ () => resolve(DiffAction.AcceptRemote) }>
+            Accept remote
+          </Button>
+        </>
+      }
+
+      <Button variant={ "outlined" } size={ "small" } disabled={ isDisabled } onClick={ () => setDiffModalActive(true) }>
         Show diff
       </Button>
     </Stack>
 
     <FullScreenDialog title={ `Diff: ${ props.selectedPath?.normalized }` } open={ diffModalActive }
                       onClose={ () => setDiffModalActive(false) }>
-      <DiffCompareLoader path={ props.selectedPath } diffType={ d?.diff }/>
+      <DiffCompareLoader path={ props.selectedPath } diffType={ d?.diff }
+                         onAcceptLocal={ () => resolve(DiffAction.AcceptLocal) }
+                         onAcceptRemote={ () => resolve(DiffAction.AcceptRemote) }/>
     </FullScreenDialog>
   </>;
 }

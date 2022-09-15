@@ -1,7 +1,8 @@
+import { Button } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { EntryCompareData } from "@sync/EntryCompareData";
 import { isCleanLocalDiff, isCleanRemoteDiff, isConflictingDiff, SyncDiffType } from "@sync/LocalSyncWorker";
-import { useCallback } from "react";
+import { ReactNode, useCallback } from "react";
 import { useLoad } from "../useLoad";
 import { LoadGuard } from "../utils/LoadGuard";
 
@@ -9,6 +10,8 @@ import { LoadGuard } from "../utils/LoadGuard";
 export type DiffCompareProps = {
   diffType: SyncDiffType | undefined;
   data: EntryCompareData;
+  onAcceptLocal?: () => void;
+  onAcceptRemote?: () => void;
 }
 
 
@@ -18,10 +21,20 @@ export function DiffCompare(props: DiffCompareProps) {
   const remote = getText(props.data.remote);
 
   let originalIsLocal = true;
-  let originalTitle = "", modifiedTitle = "";
+  let originalTitle: ReactNode = "", modifiedTitle: ReactNode = "";
   if (!props.diffType || isConflictingDiff(props.diffType)) {
-    originalTitle = "Local";
-    modifiedTitle = "Remote";
+    originalTitle = <span>
+      Local &nbsp;
+      <Button variant={ "outlined" } size={ "small" } onClick={ props.onAcceptLocal }>
+        Accept
+      </Button>
+    </span>;
+    modifiedTitle = <span>
+      Remote &nbsp;
+      <Button variant={ "outlined" } size={ "small" } onClick={ props.onAcceptRemote }>
+        Accept
+      </Button>
+    </span>;
   } else if (props.diffType && isCleanLocalDiff(props.diffType)) {
     originalTitle = "Original (remote)";
     modifiedTitle = "Modified (local)";

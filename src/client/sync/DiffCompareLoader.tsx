@@ -10,6 +10,8 @@ import { DiffCompare } from "./DiffCompare";
 export type DiffCompareLoaderProps = {
   path: StoragePath | undefined;
   diffType: SyncDiffType | undefined;
+  onAcceptLocal?: () => void;
+  onAcceptRemote?: () => void;
 }
 
 
@@ -22,5 +24,9 @@ export function DiffCompareLoader(props: DiffCompareLoaderProps) {
     return ClientWorkspace.instance.syncWorker.getCompareData(props.path);
   }, [ props.path ]));
 
-  return <LoadGuard loadState={ data } render={ data => data ? <DiffCompare diffType={ props.diffType } data={ data }/> : null }/>;
+  return <LoadGuard loadState={ data }
+                    render={ data => data ? <DiffCompare diffType={ props.diffType }
+                                                         onAcceptLocal={ props.onAcceptLocal }
+                                                         onAcceptRemote={ props.onAcceptRemote }
+                                                         data={ data }/> : null }/>;
 }

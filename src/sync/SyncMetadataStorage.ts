@@ -24,7 +24,9 @@ export interface EntrySyncMetadata {
 
 
 export enum DiffAction {
-  Accept = "accept"
+  AcceptAuto = "accept_auto",
+  AcceptLocal = "accept_local",
+  AcceptRemote = "accept_remote",
 }
 
 
