@@ -42,7 +42,7 @@ export function DiffTreePanel(props: DiffTreePanelProps) {
     <Stack spacing={ 2 } direction={ "row" }>
       {
         !isConflict && <Button variant={ "outlined" } size={ "small" } disabled={ isDisabled } onClick={ () => accept() }>
-          Accept
+          Accept non-conflicting
         </Button>
       }
 

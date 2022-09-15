@@ -3,7 +3,7 @@ import { StorageEntryData } from "@common/workspace/StorageEntryData";
 import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
 import { StorageEntryType } from "@storage/StorageLayer";
 import { StoragePath } from "@storage/StoragePath";
-import { LocalSyncWorker } from "@sync/LocalSyncWorker";
+import { isConflictingDiff, LocalSyncWorker } from "@sync/LocalSyncWorker";
 import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { DiffAction } from "@sync/SyncMetadataStorage";
@@ -116,7 +116,7 @@ export class ClientWorkspace {
 
 
   async acceptChangeTree(path: StoragePath, diff: SyncDiffEntry[]) {
-    await this.syncWorker.acceptMulti(diff.filter(e => e.path.inside(path, true)));
+    await this.syncWorker.acceptMulti(diff.filter(e => e.path.inside(path, true) && !isConflictingDiff(e.diff)));
     await this.syncJobRunner.run();
   }
 
