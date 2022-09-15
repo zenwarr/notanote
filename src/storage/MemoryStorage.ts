@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import * as mobx from "mobx";
 import * as p from "path";
-import { StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "@storage/StorageLayer";
+import { StorageEntryPointer, StorageError, StorageErrorCode, EntryStorage } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
 import { StorageEntryData } from "@common/workspace/StorageEntryData";
 
@@ -10,7 +10,7 @@ import { StorageEntryData } from "@common/workspace/StorageEntryData";
  * Memory storage is used to keep all storage data inside memory.
  * This storage is mostly used for storing cached data of another storage and testing.
  */
-export class MemoryStorage extends StorageLayer {
+export class MemoryStorage extends EntryStorage {
   /**
    * Data for the entire memory storage can be restored from a serializable object `initial`.
    */
@@ -35,11 +35,6 @@ export class MemoryStorage extends StorageLayer {
         updateTs: undefined
       }
     };
-  }
-
-
-  override get(path: StoragePath): StorageEntryPointer {
-    return new StorageEntryPointer(path, this);
   }
 
 

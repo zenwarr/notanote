@@ -1,4 +1,4 @@
-import { StorageEntryPointer, StorageEntryStats, StorageLayer, StorageError, StorageErrorCode } from "./StorageLayer";
+import { StorageEntryPointer, StorageEntryStats, EntryStorage, StorageError, StorageErrorCode } from "./EntryStorage";
 import { StoragePath } from "./StoragePath";
 import { MemoryStorage } from "./MemoryStorage";
 
@@ -6,8 +6,8 @@ import { MemoryStorage } from "./MemoryStorage";
 /**
  * Proxies access to another storage and caches its data.
  */
-export class MemoryCachedStorage extends StorageLayer {
-  constructor(remoteStorage: StorageLayer) {
+export class MemoryCachedStorage extends EntryStorage {
+  constructor(remoteStorage: EntryStorage) {
     super();
     this.remote = remoteStorage;
   }
@@ -23,7 +23,7 @@ export class MemoryCachedStorage extends StorageLayer {
   }
 
 
-  readonly remote: StorageLayer;
+  readonly remote: EntryStorage;
   readonly memory = new MemoryStorage();
 
 
@@ -35,11 +35,6 @@ export class MemoryCachedStorage extends StorageLayer {
   override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
     await this.remote.createDir(path);
     await this.memory.createDir(path);
-    return new StorageEntryPointer(path, this);
-  }
-
-
-  override get(path: StoragePath): StorageEntryPointer {
     return new StorageEntryPointer(path, this);
   }
 

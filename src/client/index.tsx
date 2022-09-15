@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { KVStorageLayer } from "@storage/KVStorageLayer";
+import { KVEntryStorage } from "@storage/KVEntryStorage";
 import { App } from "./App";
 import { configure } from "mobx";
 import { ClientWorkspace } from "./ClientWorkspace";
@@ -34,7 +34,7 @@ const DEFAULT_WORKSPACE_ID = "default";
 
 const syncAdapter = new HttpSyncProvider(DEFAULT_WORKSPACE_ID);
 
-const local = new MemoryCachedStorage(new KVStorageLayer(new IdbKvStorage()));
+const local = new MemoryCachedStorage(new KVEntryStorage(new IdbKvStorage()));
 
 ClientWorkspace.init(local, syncAdapter, DEFAULT_WORKSPACE_ID);
 ProfileManager.instance.userName = params.userName;

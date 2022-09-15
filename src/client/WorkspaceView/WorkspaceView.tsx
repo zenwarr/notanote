@@ -1,7 +1,7 @@
 import { CreateNewFolderOutlined, DeleteForever, PostAddOutlined } from "@mui/icons-material";
 import { Box, IconButton } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
-import { StorageEntryType } from "@storage/StorageLayer";
+import { StorageEntryType } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
 import cn from "classnames";
 import { observer } from "mobx-react-lite";

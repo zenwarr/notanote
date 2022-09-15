@@ -1,5 +1,5 @@
 import { walkStorageEntryData } from "@common/workspace/StorageEntryData";
-import { StorageEntryStats, StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "./StorageLayer";
+import { StorageEntryStats, StorageEntryPointer, StorageError, StorageErrorCode, EntryStorage } from "./EntryStorage";
 import { StoragePath } from "./StoragePath";
 
 
@@ -13,17 +13,17 @@ export abstract class MountedFile {
 
 
 /**
- * Enriches a storage layer with a set of mounted files.
+ * Enriches a storage with a set of mounted files.
  * We support mounting files only, not directories.
  */
-export class StorageWithMounts extends StorageLayer {
-  constructor(base: StorageLayer) {
+export class StorageWithMounts extends EntryStorage {
+  constructor(base: EntryStorage) {
     super();
     this.base = base;
   }
 
 
-  private readonly base: StorageLayer;
+  private readonly base: EntryStorage;
   private mounts = new Map<string, MountedFile>();
 
 
@@ -33,11 +33,6 @@ export class StorageWithMounts extends StorageLayer {
     }
 
     await this.base.createDir(path);
-    return new StorageEntryPointer(path, this);
-  }
-
-
-  override get(path: StoragePath): StorageEntryPointer {
     return new StorageEntryPointer(path, this);
   }
 

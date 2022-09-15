@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ClientWorkspace } from "./ClientWorkspace";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
 import { StoragePath } from "@storage/StoragePath";
-import { StorageEntryType } from "@storage/StorageLayer";
+import { StorageEntryType } from "@storage/EntryStorage";
 
 
 export type CreateEntryDialogProps = {

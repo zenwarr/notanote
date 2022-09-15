@@ -1,4 +1,4 @@
-import { StorageError, StorageErrorCode, StorageLayer } from "@storage/StorageLayer";
+import { StorageError, StorageErrorCode, EntryStorage } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
 import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";
 import { RemoteSyncWorker } from "@sync/RemoteSyncWorker";
@@ -72,7 +72,7 @@ export interface DiffHandleRule {
 
 
 export class LocalSyncWorker {
-  constructor(local: StorageLayer, syncProvider: RemoteSyncProvider, syncMetadata: SyncMetadataStorage) {
+  constructor(local: EntryStorage, syncProvider: RemoteSyncProvider, syncMetadata: SyncMetadataStorage) {
     this.local = local;
     this.remoteSyncProvider = syncProvider;
     this.syncMetadata = syncMetadata;
@@ -87,7 +87,7 @@ export class LocalSyncWorker {
   }
 
 
-  private readonly local: StorageLayer;
+  private readonly local: EntryStorage;
   private readonly remoteSyncProvider: RemoteSyncProvider;
   private readonly localSyncProvider: RemoteSyncProvider;
   private readonly syncMetadata: SyncMetadataStorage;

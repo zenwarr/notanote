@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import { FileSettings } from "@common/Settings";
 import { ClientWorkspace } from "./ClientWorkspace";
-import { StorageEntryPointer } from "@storage/StorageLayer";
+import { StorageEntryPointer } from "@storage/EntryStorage";
 
 
 export interface DocumentEditorStateAdapter {

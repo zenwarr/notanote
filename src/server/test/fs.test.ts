@@ -1,7 +1,7 @@
 import { FsStorage } from "../storage/FsStorage";
 import * as path from "path";
 import { StoragePath } from "@storage/StoragePath";
-import { StorageErrorCode } from "@storage/StorageLayer";
+import { StorageErrorCode } from "@storage/EntryStorage";
 import { MemoryStorage } from "@storage/MemoryStorage";
 
 

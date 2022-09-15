@@ -1,4 +1,4 @@
-import { StorageEntryStats } from "@storage/StorageLayer";
+import { StorageEntryStats } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
 
 

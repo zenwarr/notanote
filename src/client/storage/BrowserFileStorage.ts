@@ -1,10 +1,17 @@
-import * as mobx from "mobx";
-import { StorageEntryStats, StorageEntryPointer, StorageError, StorageErrorCode, StorageLayer } from "@storage/StorageLayer";
+import {
+  StorageChangeEvent,
+  StorageEntryPointer,
+  StorageEntryStats,
+  StorageError,
+  StorageErrorCode,
+  EntryStorage
+} from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
+import * as mobx from "mobx";
 import { ClientKeyValueStore } from "./ClientKeyValueStore";
 
 
-export class BrowserFileStorageLayer extends StorageLayer {
+export class BrowserFileStorage extends EntryStorage {
   constructor(root: FileSystemDirectoryHandle, isLocked = false) {
     super();
     this.root = root;
@@ -45,11 +52,6 @@ export class BrowserFileStorageLayer extends StorageLayer {
       throw new Error("Failed to create directory");
     }
 
-    return new StorageEntryPointer(path, this);
-  }
-
-
-  override get(path: StoragePath): StorageEntryPointer {
     return new StorageEntryPointer(path, this);
   }
 
@@ -108,6 +110,7 @@ export class BrowserFileStorageLayer extends StorageLayer {
     }
 
     try {
+      // todo: check if directory was really created
       const childHandle = await handles.child.getDirectoryHandle(path.basename, { create });
       return {
         parent: handles.child,
@@ -119,22 +122,22 @@ export class BrowserFileStorageLayer extends StorageLayer {
   }
 
 
-  static async requestFromUser(): Promise<BrowserFileStorageLayer | undefined> {
+  static async requestFromUser(): Promise<BrowserFileStorage | undefined> {
     try {
-      return new BrowserFileStorageLayer(await showDirectoryPicker());
+      return new BrowserFileStorage(await showDirectoryPicker());
     } catch (error) {
       return undefined;
     }
   }
 
 
-  static async fromSavedHandle(key: string): Promise<BrowserFileStorageLayer | undefined> {
+  static async fromSavedHandle(key: string): Promise<BrowserFileStorage | undefined> {
     const value: FileSystemDirectoryHandle | undefined = await ClientKeyValueStore.defaultInstance.get(key);
     if (!value) {
       return undefined;
     } else {
       const isLocked = (await value.queryPermission({ mode: "readwrite" })) !== "granted";
-      return new BrowserFileStorageLayer(value, isLocked);
+      return new BrowserFileStorage(value, isLocked);
     }
   }
 

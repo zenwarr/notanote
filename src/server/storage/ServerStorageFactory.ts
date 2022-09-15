@@ -1,4 +1,4 @@
-import { StorageLayer } from "@storage/StorageLayer";
+import { EntryStorage } from "@storage/EntryStorage";
 import { ErrorCode, LogicError } from "@common/errors";
 import { joinNestedPathSecure, StoragePath } from "@storage/StoragePath";
 import path from "path";
@@ -12,7 +12,7 @@ export const DEFAULT_STORAGE_ID = "default";
 
 
 export class ServerStorageFactory {
-  async getOrCreateForId(userId: string, storageId: string): Promise<{ storage: StorageLayer, realRoot: string }> {
+  async getOrCreateForId(userId: string, storageId: string): Promise<{ storage: EntryStorage, realRoot: string }> {
     const root = getStorageRoot(userId, storageId);
     if (!root) {
       throw new LogicError(ErrorCode.NotFound, "storage root not found");
@@ -42,7 +42,7 @@ function getStorageRoot(userId: string, workspaceId: string) {
 }
 
 
-async function exists(storage: StorageLayer, path: StoragePath): Promise<boolean> {
+async function exists(storage: EntryStorage, path: StoragePath): Promise<boolean> {
   const rootEntry = await storage.get(path);
   if (!rootEntry) {
     return false;

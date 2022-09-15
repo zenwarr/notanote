@@ -1,6 +1,6 @@
 import { Button, Grid } from "@mui/material";
 import { useCallback, useState } from "react";
-import { BrowserFileStorageLayer } from "../storage/BrowserFileStorage";
+import { BrowserFileStorage } from "../storage/BrowserFileStorage";
 import { useLoad } from "../useLoad";
 import { observer } from "mobx-react-lite";
 
@@ -9,17 +9,17 @@ const SAVED_BROWSER_FS_ROOT = "saved-browser-fs-root";
 
 
 export const DeviceConfigEditor = observer(() => {
-  const [ browserStorage, setBrowserStorage ] = useState<BrowserFileStorageLayer | undefined>();
+  const [ browserStorage, setBrowserStorage ] = useState<BrowserFileStorage | undefined>();
 
   const savedStorage = useLoad(
       useCallback(
-          async () => BrowserFileStorageLayer.fromSavedHandle(SAVED_BROWSER_FS_ROOT),
+          async () => BrowserFileStorage.fromSavedHandle(SAVED_BROWSER_FS_ROOT),
           []
       )
   );
 
   async function onRequestFileAccess() {
-    const storage = await BrowserFileStorageLayer.requestFromUser();
+    const storage = await BrowserFileStorage.requestFromUser();
     if (storage) {
       setBrowserStorage(storage);
       await storage.saveHandle(SAVED_BROWSER_FS_ROOT);

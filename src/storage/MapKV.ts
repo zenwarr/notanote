@@ -1,4 +1,4 @@
-import { KVStorage, KVStorageEntry } from "./KVStorageLayer";
+import { KVStorage, KVStorageEntry } from "./KVEntryStorage";
 
 
 export class MapKV implements KVStorage {

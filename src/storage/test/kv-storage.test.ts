@@ -1,26 +1,26 @@
-import { KVStorageLayer } from "../KVStorageLayer";
+import { KVEntryStorage } from "../KVEntryStorage";
 import { StoragePath } from "../StoragePath";
 import { MapKV } from "../MapKV";
 
 
-const storage = new MapKV(new Map());
+const stor = new MapKV(new Map());
 
 
 it("works", async () => {
-  const layer = new KVStorageLayer(storage);
-  const root = layer.get(StoragePath.root);
+  const storage = new KVEntryStorage(stor);
+  const root = storage.get(StoragePath.root);
   expect(root).toBeDefined();
 
-  await layer.createDir(new StoragePath("/foo"));
-  expect(layer.get(new StoragePath("/foo"))).toBeDefined();
+  await storage.createDir(new StoragePath("/foo"));
+  expect(storage.get(new StoragePath("/foo"))).toBeDefined();
   const children = await root.children();
   expect(children.length).toBe(1);
   expect(children[0]?.path.normalized).toBe("/foo");
 
-  const nested = await layer.createDir(new StoragePath("/foo/bar/nested"));
+  const nested = await storage.createDir(new StoragePath("/foo/bar/nested"));
   expect(nested).toBeDefined();
 
-  const file = await layer.get(new StoragePath("/foo/bar/nested/file"));
+  const file = await storage.get(new StoragePath("/foo/bar/nested/file"));
   expect(file).toBeDefined();
   expect(await file.exists()).toBe(false);
 

@@ -1,5 +1,5 @@
 import * as crypto from "crypto";
-import { StorageEntryPointer, StorageError, StorageErrorCode } from "@storage/StorageLayer";
+import { StorageEntryPointer, StorageError, StorageErrorCode } from "@storage/EntryStorage";
 
 
 export type ContentIdentity = string;

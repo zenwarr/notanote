@@ -1,7 +1,7 @@
 import { FileSettingsProvider } from "@common/workspace/FileSettingsProvider";
 import { StorageEntryData } from "@common/workspace/StorageEntryData";
 import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
-import { StorageEntryType } from "@storage/StorageLayer";
+import { StorageEntryType } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
 import { isConflictingDiff, LocalSyncWorker } from "@sync/LocalSyncWorker";
 import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";

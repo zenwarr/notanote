@@ -6,7 +6,7 @@ import { PluginManager } from '../client/plugin/PluginManager';
 import { MemoryCachedStorage } from '../storage/MemoryCachedStorage';
 import { ClientWorkspace } from '../client/ClientWorkspace';
 import { FileSettingsProvider } from '../common/workspace/FileSettingsProvider';
-import { KVStorageLayer } from '../storage/KVStorageLayer';
+import { KVEntryStorage } from '../storage/KVEntryStorage';
 import { IdbKvStorage } from '../client/storage/IdbKvStorage';
 import { RemoteSyncWorker } from '../sync/RemoteSyncWorker';
 
@@ -26,8 +26,8 @@ export const decorators = [
       registerPlugins();
     }
 
-    const remote = new KVStorageLayer(new IdbKvStorage("remote-fs-storage"));
-    const local = new KVStorageLayer(new IdbKvStorage("local-fs-storage"));
+    const remote = new KVEntryStorage(new IdbKvStorage("remote-fs-storage"));
+    const local = new KVEntryStorage(new IdbKvStorage("local-fs-storage"));
 
     const remoteSyncWorker = new RemoteSyncWorker(remote);
     const memCached = new MemoryCachedStorage(local);

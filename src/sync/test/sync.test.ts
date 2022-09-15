@@ -1,6 +1,6 @@
-import { KVStorageLayer } from "@storage/KVStorageLayer";
+import { KVEntryStorage } from "@storage/KVEntryStorage";
 import { MapKV } from "@storage/MapKV";
-import { StorageLayer } from "@storage/StorageLayer";
+import { EntryStorage } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
 import { LocalSyncWorker, SyncDiffType } from "@sync/LocalSyncWorker";
 import { MemorySyncMetadataStorage } from "@sync/MemorySyncMetadataStorage";
@@ -10,9 +10,9 @@ import { SyncJobRunner } from "@sync/test/SyncJobRunner";
 
 
 function prepare() {
-  const local = new KVStorageLayer(new MapKV());
+  const local = new KVEntryStorage(new MapKV());
 
-  const remote = new KVStorageLayer(new MapKV());
+  const remote = new KVEntryStorage(new MapKV());
   const remoteSync = new RemoteSyncWorker(remote);
 
   const metadata = new MemorySyncMetadataStorage();
@@ -24,7 +24,7 @@ function prepare() {
 }
 
 
-async function write(storage: StorageLayer, path: string, data: string) {
+async function write(storage: EntryStorage, path: string, data: string) {
   await storage.writeOrCreate(new StoragePath(path), Buffer.from(data));
 }
 

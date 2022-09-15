@@ -1,4 +1,4 @@
-import { StorageEntryPointer, StorageEntryStats } from "@storage/StorageLayer";
+import { StorageEntryPointer, StorageEntryStats } from "@storage/EntryStorage";
 
 
 export async function getSafeStats(sp: StorageEntryPointer): Promise<StorageEntryStats | undefined> {

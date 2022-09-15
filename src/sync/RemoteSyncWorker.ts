@@ -1,4 +1,4 @@
-import { StorageEntryStats, StorageError, StorageErrorCode, StorageLayer } from "@storage/StorageLayer";
+import { StorageEntryStats, StorageError, StorageErrorCode, EntryStorage } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
 import { ContentIdentity, DirContentIdentity, getContentIdentity } from "@sync/ContentIdentity";
 import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";
@@ -6,12 +6,12 @@ import { SyncOutlineEntry } from "@sync/SyncEntry";
 
 
 export class RemoteSyncWorker implements RemoteSyncProvider {
-  constructor(storage: StorageLayer) {
+  constructor(storage: EntryStorage) {
     this.remote = storage;
   }
 
 
-  private remote!: StorageLayer;
+  private remote!: EntryStorage;
 
 
   async getOutline(start: StoragePath): Promise<SyncOutlineEntry | undefined> {

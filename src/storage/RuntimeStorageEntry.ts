@@ -1,4 +1,4 @@
-import { StorageError, StorageErrorCode } from "./StorageLayer";
+import { StorageError, StorageErrorCode } from "./EntryStorage";
 import { StoragePath } from "./StoragePath";
 import { MountedFile } from "./StorageWithMounts";
 

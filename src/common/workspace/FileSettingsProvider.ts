@@ -1,4 +1,4 @@
-import { StorageLayer, StorageErrorCode } from "@storage/StorageLayer";
+import { EntryStorage, StorageErrorCode } from "@storage/EntryStorage";
 import { tryParseJson } from "../utils/tryParse";
 import { SpecialWorkspaceEntry } from "./Workspace";
 import { FileSettings } from "../Settings";
@@ -15,7 +15,7 @@ interface WorkspaceSettings {
 
 
 export class FileSettingsProvider {
-  constructor(fs: StorageLayer) {
+  constructor(fs: EntryStorage) {
     this.fs = fs;
   }
 
@@ -89,7 +89,7 @@ export class FileSettingsProvider {
   }
 
 
-  static init(fs: StorageLayer): void {
+  static init(fs: EntryStorage): void {
     if (FileSettingsProvider._instance) {
       console.error("FileSettingsProvider is already initialized");
       return;
@@ -99,7 +99,7 @@ export class FileSettingsProvider {
 
 
   private settings: WorkspaceSettings | undefined;
-  private readonly fs: StorageLayer;
+  private readonly fs: EntryStorage;
 }
 
 

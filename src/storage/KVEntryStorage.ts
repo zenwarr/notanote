@@ -1,4 +1,4 @@
-import { StorageEntryStats, StorageEntryPointer, StorageEntryType, StorageError, StorageErrorCode, StorageLayer } from "./StorageLayer";
+import { StorageEntryStats, StorageEntryPointer, StorageEntryType, StorageError, StorageErrorCode, EntryStorage } from "./EntryStorage";
 import { StoragePath } from "./StoragePath";
 
 
@@ -21,7 +21,7 @@ export interface KVStorage {
 }
 
 
-export class KVStorageLayer extends StorageLayer {
+export class KVEntryStorage extends EntryStorage {
   constructor(kv: KVStorage) {
     super();
     this._kv = kv;
@@ -60,11 +60,6 @@ export class KVStorageLayer extends StorageLayer {
     }
 
     return new StorageEntryPointer(curPath, this);
-  }
-
-
-  override get(path: StoragePath): StorageEntryPointer {
-    return new StorageEntryPointer(path, this);
   }
 
 
