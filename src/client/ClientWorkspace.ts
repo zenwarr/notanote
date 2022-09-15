@@ -115,7 +115,7 @@ export class ClientWorkspace {
   }
 
 
-  async acceptChangesTree(path: StoragePath, diff: SyncDiffEntry[]) {
+  async acceptChangeTree(path: StoragePath, diff: SyncDiffEntry[]) {
     await this.syncWorker.acceptMulti(diff.filter(e => e.path.inside(path, true)));
     await this.syncJobRunner.run();
   }

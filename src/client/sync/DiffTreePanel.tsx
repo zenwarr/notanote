@@ -26,7 +26,7 @@ export function DiffTreePanel(props: DiffTreePanelProps) {
       return;
     }
 
-    await ClientWorkspace.instance.acceptChangesTree(props.selectedPath, props.allDiffs);
+    await ClientWorkspace.instance.acceptChangeTree(props.selectedPath, props.allDiffs);
   }
 
   async function resolve(action: DiffAction) {
@@ -41,7 +41,7 @@ export function DiffTreePanel(props: DiffTreePanelProps) {
   return <>
     <Stack spacing={ 2 } direction={ "row" }>
       {
-          !isConflict && <Button variant={ "outlined" } size={ "small" } disabled={ isDisabled } onClick={ () => accept() }>
+        !isConflict && <Button variant={ "outlined" } size={ "small" } disabled={ isDisabled } onClick={ () => accept() }>
           Accept
         </Button>
       }

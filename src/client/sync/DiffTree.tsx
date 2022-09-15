@@ -35,7 +35,7 @@ export const DiffTree = mobx.observer((props: DiffTreeProps) => {
   const selectedPath = useMemo(() => selected ? new StoragePath(selected) : undefined, [ selected ]);
 
   useEffect(() => {
-    if (!props.diff.some(d => d.path.normalized === selected)) {
+    if (!props.diff.some(d => d.path.normalized === selected || (selectedPath && d.path.inside(selectedPath)))) {
       setSelected(undefined);
     }
   });
