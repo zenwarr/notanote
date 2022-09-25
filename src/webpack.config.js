@@ -100,5 +100,38 @@ module.exports = (env) => [
         }
       ]
     }
+  },
+  {
+    entry: "./client/background-worker.ts",
+    output: {
+      filename: "background-worker.js",
+      path: path.join(__dirname, "static"),
+      publicPath: "/static/",
+      chunkFilename: "[name]-[contenthash].js"
+    },
+    target: "web",
+    mode: env.prod === "true" ? "production" : "development",
+    devtool: env.prod === "true" ? undefined : "inline-source-map",
+    resolve: {
+      extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
+      fallback: {
+        path: require.resolve("path-browserify")
+      },
+      plugins: [
+        new TsconfigPathsPlugin({ configFile: "./client/tsconfig.json" })
+      ]
+    },
+
+    module: {
+      rules: [
+        {
+          test: /\.tsx?$/,
+          loader: "ts-loader",
+          options: {
+            allowTsInNodeModules: true
+          }
+        }
+      ]
+    }
   }
 ]

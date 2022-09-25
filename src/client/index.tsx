@@ -21,6 +21,13 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+if ("Worker" in window) {
+  const bgWorker = new Worker("/static/background-worker.js");
+  bgWorker.onmessage = e => {
+    console.log("worker message received: ", e);
+  }
+}
+
 
 configure({
   enforceActions: "never"

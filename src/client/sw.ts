@@ -4,7 +4,6 @@ import {
   StaleWhileRevalidate,
   CacheFirst,
 } from "workbox-strategies";
-
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
 import { ExpirationPlugin } from "workbox-expiration";
 
@@ -51,3 +50,4 @@ registerRoute(
       ],
     }),
 );
+

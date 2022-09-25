@@ -1,0 +1,39 @@
+name: Release electron binary
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build-electron:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.5.0
+
+      - run: yarn install --frozen-lockfile --production=false
+        working-directory: src
+
+      - run: yarn build-client
+        working-directory: src
+
+      - run: yarn cap copy electron
+        working-directory: src
+
+      - run: yarn install --frozen-lockfile --production=false
+        working-directory: src/electron
+
+      - uses: samuelmeuli/action-electron-builder@v1
+        with:
+          package_root: src/electron
+          github_token: ${{ secrets.github_token }}
+          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
