@@ -32,8 +32,7 @@ jobs:
       - run: yarn install --frozen-lockfile --production=false
         working-directory: src/electron
 
-      - uses: samuelmeuli/action-electron-builder@v1
-        with:
-          package_root: src/electron
-          github_token: ${{ secrets.github_token }}
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      - run: yarn electron:make
+        working-directory: src/electron
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
