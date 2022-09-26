@@ -1,4 +1,4 @@
-name: Release electron binary
+name: Release electron binaries
 
 on:
   push:

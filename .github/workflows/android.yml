@@ -45,9 +45,12 @@ jobs:
           keyStorePassword: ${{ secrets.APK_KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.APK_KEY_PASSWORD }}
 
+      - run: mv ${{steps.sign_apk.outputs.signedReleaseFile}} nuclear-notes.apk
+
       - name: Release apk on github releases
         uses: softprops/action-gh-release@v1
         with:
-          files: ${{steps.sign_apk.outputs.signedReleaseFile}}
-          tag_name: ${{ github.ref }}
+          files: nuclear-notes.apk
+          tag_name: ${{ github.ref_name }}
+          draft: true
           token: ${{ secrets.GITHUB_TOKEN }}
