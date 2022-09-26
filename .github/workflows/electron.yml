@@ -26,7 +26,7 @@ jobs:
       - run: yarn build-client
         working-directory: src
 
-      - run: yarn cap copy electron
+      - run: yarn cap sync electron
         working-directory: src
 
       - run: yarn install --frozen-lockfile --production=false

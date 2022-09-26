@@ -24,5 +24,14 @@ jobs:
 
       - uses: android-actions/setup-android@v2
 
+      - run: yarn install --frozen-lockfile --production=false
+        working-directory: src
+
+      - run: yarn build-client
+        working-directory: src
+
+      - run: yarn cap sync android
+        working-directory: src
+
       - run: ./gradlew assembleRelease
         working-directory: src/android
