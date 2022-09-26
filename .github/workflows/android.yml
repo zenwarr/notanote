@@ -35,3 +35,19 @@ jobs:
 
       - run: ./gradlew assembleRelease
         working-directory: src/android
+
+      - uses: r0adkll/sign-android-release@v1
+        id: sign_apk
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.APK_SIGNING_KEY }}
+          alias: ${{ secrets.APK_ALIAS }}
+          keyStorePassword: ${{ secrets.APK_KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.APK_KEY_PASSWORD }}
+
+      - name: Release apk on github releases
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{steps.sign_apk.outputs.signedReleaseFile}}
+          tag_name: ${{ github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
