@@ -7,3 +7,4 @@ build
 dist
 logs
 !live-runner.js
+!set-version.js
