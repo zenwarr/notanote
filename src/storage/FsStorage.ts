@@ -1,6 +1,8 @@
+import { uint8ArrayToBuffer } from "@common/utils/uint8ArrayToBuffer";
 import { EntryStorage, StorageEntryPointer, StorageEntryStats, StorageError, StorageErrorCode } from "@storage/EntryStorage";
 import { joinNestedPathSecure, StoragePath } from "@storage/StoragePath";
 import * as fs from "fs";
+import { getPlatform, Platform } from "../client/platform/getPlatform";
 
 
 const IGNORED_FILES = [ ".git" ];
@@ -62,7 +64,12 @@ export class FsStorage extends EntryStorage {
 
   override async read(path: StoragePath): Promise<Buffer> {
     try {
-      return await fs.promises.readFile(this.toAbsolutePath(path));
+      const data = await fs.promises.readFile(this.toAbsolutePath(path));
+      if (getPlatform() === Platform.Electron) {
+        return uint8ArrayToBuffer(data);
+      } else {
+        return data;
+      }
     } catch (err: any) {
       if (err.code === "EISDIR") {
         throw new StorageError(StorageErrorCode.NotFile, path, "Cannot read a directory");
@@ -142,6 +149,7 @@ async function asyncExists(file: string) {
 }
 
 
+// when working in browser, proxified electron fs has no methods on stats object
 function isDir(stats: fs.Stats) {
   return (BigInt(stats.mode) & BigInt(fs.constants.S_IFMT)) === BigInt(fs.constants.S_IFDIR)
 }
