@@ -14,6 +14,10 @@ export const SyncStatus = observer((props: SyncStatusProps) => {
   const sync = ClientWorkspace.instance.syncWorker;
   const jobs = ClientWorkspace.instance.syncJobRunner;
 
+  if (!sync || !jobs) {
+    return null;
+  }
+
   let color: SyncStatusIconColor = !jobs.errors.length ? "success" : "error";
   let syncDate = jobs.lastSuccessfulJobDone ? formatRelative(jobs.lastSuccessfulJobDone, new Date()) : "Unknown";
   const diffCount = sync.actualDiff.length;

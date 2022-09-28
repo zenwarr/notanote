@@ -1,13 +1,17 @@
-import { Stack } from "@mui/material";
+import { Stack, Box } from "@mui/material";
 import { StoragePath } from "@storage/StoragePath";
 import { SyncDiffType } from "@sync/LocalSyncWorker";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { DiffAction } from "@sync/SyncMetadataStorage";
+import { useState } from "react";
 import { App } from "../App";
 import { AudioRecord } from "../audio/AudioRecord";
-import { DeviceConfigEditor } from "../device/DeviceConfigEditor";
 import { ErrorDisplay } from "../error-boundary/ErrorDisplay";
 import { Palette } from "../palette/Palette";
+import { getPlatform } from "../platform/getPlatform";
+import { AppConfigurationGuard } from "../storage-config/AppConfigurationGuard";
+import { StorageConfigView } from "../storage-config/StorageConfigView";
+import { StorageConfig } from "../storage/StorageProvider";
 import { DiffCompare } from "../sync/DiffCompare";
 import { DiffTreeNode } from "../sync/DiffTreeNode";
 import { demoCompleter } from "./demo";
@@ -15,13 +19,11 @@ import { demoCompleter } from "./demo";
 
 export default { title: "App" };
 
-export const def = () => <App/>;
+export const def = () => <AppConfigurationGuard/>;
 
 export const palette = () => <Palette open completer={ demoCompleter } onSelect={ console.log }/>;
 
 export const audio = () => <AudioRecord/>;
-
-export const device = () => <DeviceConfigEditor/>;
 
 export const error = () => <ErrorDisplay error={ new Error("Something bad") }/>;
 
@@ -90,3 +92,16 @@ export const diff = () => <Stack direction={ "row" } spacing={ 2 }>
 export const diffCompare = () => <DiffCompare
     diffType={ SyncDiffType.ConflictingUpdate }
     data={ { local: Buffer.from("Hello, world"), remote: Buffer.from("Hello, world! remote") } }/>;
+
+
+export function StorageConfigTest() {
+  const [ config, setConfig ] = useState<StorageConfig | undefined>();
+
+  return <Box p={ 2 }>
+    <StorageConfigView initialConfig={ config } onApply={ config => {
+      alert(JSON.stringify(config));
+      setConfig(config);
+    }
+    }/>
+  </Box>;
+}

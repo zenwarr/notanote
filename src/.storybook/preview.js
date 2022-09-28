@@ -9,14 +9,13 @@ import { FileSettingsProvider } from '../common/workspace/FileSettingsProvider';
 import { KVEntryStorage } from '../storage/KVEntryStorage';
 import { IdbKvStorage } from '../client/storage/IdbKvStorage';
 import { RemoteSyncWorker } from '../sync/RemoteSyncWorker';
+import { StorageProviderManager } from '../client/storage/StorageProvider';
+import { registerStorageProviders } from '../client/storage/StorageRegistration';
 
 
 configure({
   enforceActions: "never"
 });
-
-
-const DEFAULT_WORKSPACE_ID = "default";
 
 
 export const decorators = [
@@ -26,13 +25,17 @@ export const decorators = [
       registerPlugins();
     }
 
+    if (StorageProviderManager.instance.getProviders().length === 0) {
+      registerStorageProviders();
+    }
+
     const remote = new KVEntryStorage(new IdbKvStorage("remote-fs-storage"));
     const local = new KVEntryStorage(new IdbKvStorage("local-fs-storage"));
 
     const remoteSyncWorker = new RemoteSyncWorker(remote);
     const memCached = new MemoryCachedStorage(local);
 
-    ClientWorkspace.init(memCached, remoteSyncWorker, DEFAULT_WORKSPACE_ID);
+    ClientWorkspace.init(memCached, remoteSyncWorker);
     FileSettingsProvider.init(memCached);
 
     return <AppThemeProvider>

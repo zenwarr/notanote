@@ -3,7 +3,7 @@ import { ErrorCode, LogicError } from "@common/errors";
 import { joinNestedPathSecure, StoragePath } from "@storage/StoragePath";
 import path from "path";
 import { createWorkspaceDefaults, SpecialWorkspaceEntry } from "@common/workspace/Workspace";
-import { FsStorage } from "./FsStorage";
+import { FsStorage } from "@storage/FsStorage";
 import { PluginConfigStorageEntry } from "../plugin/PluginConfigEntry";
 import { StorageWithMounts } from "@storage/StorageWithMounts";
 

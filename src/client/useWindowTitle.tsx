@@ -18,9 +18,13 @@ function getDocTitle(hasUnsyncedChanges: boolean, fileId: string | undefined) {
 
 export function useWindowTitle(fileId: string | undefined) {
   const syncWorker = ClientWorkspace.instance.syncWorker;
-  const [ hasUnsavedChanges, setHasUnsavedChanges ] = useState(syncWorker.actualDiff.length > 0);
+  const [ hasUnsavedChanges, setHasUnsavedChanges ] = useState(syncWorker ? syncWorker.actualDiff.length > 0 : false);
 
   autorun(() => {
+    if (!syncWorker) {
+      return;
+    }
+
     const newHasChanges = syncWorker.actualDiff.length > 0;
     if (newHasChanges !== hasUnsavedChanges) {
       setHasUnsavedChanges(newHasChanges);

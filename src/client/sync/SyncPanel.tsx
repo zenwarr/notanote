@@ -11,6 +11,10 @@ export const SyncPanel = mobx.observer(() => {
   const jobs = ClientWorkspace.instance.syncJobRunner;
   const sw = ClientWorkspace.instance.syncWorker;
 
+  if (!jobs || !sw) {
+    return null;
+  }
+
   const syncDate = jobs.lastSuccessfulJobDone ? formatRelative(jobs.lastSuccessfulJobDone, new Date()) : "Unknown";
 
   return <Box>

@@ -15,3 +15,4 @@ data/config
 !data/config/.gitkeep
 !src/jest.config.js
 src/server/test/fixture/**/*.*
+*.pem

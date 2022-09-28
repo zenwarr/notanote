@@ -6,17 +6,24 @@ import * as bson from "bson";
 import { SyncOutlineEntry } from "@sync/SyncEntry";
 
 
+const DEFAULT_STORAGE_NAME = "default";
+
+
 export class HttpSyncProvider implements RemoteSyncProvider {
-  constructor(storageId: string) {
-    this.storageId = storageId;
+  constructor(server: string, storageName = DEFAULT_STORAGE_NAME) {
+    this.server = server;
+    this.storageName = storageName;
   }
 
 
-  private readonly storageId: string;
+  private readonly storageName: string;
+  private readonly server: string | undefined;
 
 
   async getOutline(path: StoragePath): Promise<SyncOutlineEntry | undefined> {
-    const data = await ky.get(`/api/storages/${ this.storageId }/sync/outline`, {
+    const data = await ky.get(`api/storages/${ this.storageName }/sync/outline`, {
+      prefixUrl: this.server,
+      credentials: "include",
       searchParams: {
         path: path.normalized
       }
@@ -32,7 +39,9 @@ export class HttpSyncProvider implements RemoteSyncProvider {
 
   async update(path: StoragePath, data: Buffer, remoteIdentity: ContentIdentity | undefined): Promise<void> {
     // todo: check errors
-    await ky.post(`/api/storages/${ this.storageId }/sync/update`, {
+    await ky.post(`api/storages/${ this.storageName }/sync/update`, {
+      prefixUrl: this.server,
+      credentials: "include",
       headers: {
         "content-type": "application/bson"
       },
@@ -47,7 +56,9 @@ export class HttpSyncProvider implements RemoteSyncProvider {
 
   async createDir(path: StoragePath, remoteIdentity: ContentIdentity | undefined): Promise<void> {
     // todo: check errors
-    await ky.post(`/api/storages/${ this.storageId }/sync/create-dir`, {
+    await ky.post(`api/storages/${ this.storageName }/sync/create-dir`, {
+      prefixUrl: this.server,
+      credentials: "include",
       headers: {
         "content-type": "application/bson"
       },
@@ -61,7 +72,9 @@ export class HttpSyncProvider implements RemoteSyncProvider {
 
   async remove(path: StoragePath, remoteIdentity: ContentIdentity): Promise<void> {
     // todo: check errors
-    await ky.post(`/api/storages/${ this.storageId }/sync/remove`, {
+    await ky.post(`api/storages/${ this.storageName }/sync/remove`, {
+      prefixUrl: this.server,
+      credentials: "include",
       headers: {
         "content-type": "application/bson"
       },
@@ -75,7 +88,9 @@ export class HttpSyncProvider implements RemoteSyncProvider {
 
   async read(path: StoragePath): Promise<Buffer> {
     // todo: check errors
-    const ab = await ky.get(`/api/storages/${ this.storageId }/sync/read`, {
+    const ab = await ky.get(`api/storages/${ this.storageName }/sync/read`, {
+      prefixUrl: this.server,
+      credentials: "include",
       searchParams: {
         path: path.normalized
       }

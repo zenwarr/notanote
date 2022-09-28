@@ -1,12 +1,14 @@
+import { ErrorCode, LogicError } from "@common/errors";
 import fastifyPassport from "@fastify/passport";
 import fastifySecureSession from "@fastify/secure-session";
-import { Strategy as LocalStrategy } from "passport-local";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import * as childProcess from "child_process";
 import { FastifyInstance, FastifyRequest } from "fastify";
 import * as fs from "fs";
-import * as path from "path";
-import * as childProcess from "child_process";
 import * as luxon from "luxon";
+import { Strategy as LocalStrategy } from "passport-local";
+import * as path from "path";
+// import * as jwt from "jsonwebtoken";
+// import { ExtractJwt, Strategy as JwtStrategy } from "passport-jwt";
 
 
 export interface UserInfo {
@@ -15,39 +17,38 @@ export interface UserInfo {
 }
 
 
-const LOCAL_AUTH_PASSWORD = process.env["AUTH_PASSWORD"];
-const LOCAL_ADMIN_PROFILE_ID = "admin";
-const ALLOWED_GOOGLE_PROFILES = (process.env["ALLOWED_GOOGLE_PROFILES"] ?? "").split(",");
+const USERS: [ id: string, name: string, password: string | undefined ][] = [
+  [ "admin", "Admin", process.env["AUTH_PASSWORD"] ]
+];
 
 
-const OAUTH_ENABLED = process.env["OAUTH_CLIENT_ID"] != null;
+const SECRET = fs.readFileSync(getSecretFilePath());
 
 
 export async function configureAuth(app: FastifyInstance) {
-  if (OAUTH_ENABLED) {
-    fastifyPassport.use("google", new GoogleStrategy({
-      clientID: process.env["OAUTH_CLIENT_ID"]!,
-      clientSecret: process.env["OAUTH_SECRET"]!,
-      callbackURL: process.env["OAUTH_REDIRECT_URL"]
-    }, (accessToken: string, refreshToken: string, profile: any, cb: (err?: Error, user?: UserInfo) => void) => {
-      if (!ALLOWED_GOOGLE_PROFILES.includes(profile.id) && !ALLOWED_GOOGLE_PROFILES.includes("*")) {
-        cb(new Error("you are not allowed to use this application"));
-      } else {
-        cb(undefined, { id: profile.id, name: profile.displayName });
-      }
-    }));
-  }
-
   fastifyPassport.use("local", new LocalStrategy({
-    usernameField: "password",
+    usernameField: "name",
     passwordField: "password"
-  }, (password, _, done) => {
-    if (password === LOCAL_AUTH_PASSWORD) {
-      done(null, { id: LOCAL_ADMIN_PROFILE_ID, name: "Default user" });
+  }, (user, password, done) => {
+    const userRecord = USERS.find(u => u[0] === user);
+    if (userRecord && userRecord[2] != null && userRecord[2] === password) {
+      done(null, { id: userRecord[0], name: userRecord[0] });
     } else {
-      done(new Error("user not found"));
+      done(new Error("User not found or password is invalid"));
     }
   }));
+
+  // fastifyPassport.use("jwt", new JwtStrategy({
+  //   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  //   secretOrKey: SECRET,
+  // }, (payload, done) => {
+  //   const userRecord = USERS.find(u => u[0] === payload.id);
+  //   if (userRecord) {
+  //     done(null, { id: userRecord[0], name: userRecord[1] });
+  //   } else {
+  //     done(new Error("User not found"));
+  //   }
+  // }));
 
   fastifyPassport.registerUserSerializer(async user => user);
   fastifyPassport.registerUserDeserializer(async user => user);
@@ -55,10 +56,11 @@ export async function configureAuth(app: FastifyInstance) {
   await generateSessionSecret();
 
   app.register(fastifySecureSession, {
-    key: fs.readFileSync(getSecretFilePath()),
+    key: SECRET,
     cookie: {
       httpOnly: true,
-      secure: process.env["NODE_ENV"] !== "dev",
+      secure: true,
+      sameSite: "none",
       path: "/",
       maxAge: luxon.Duration.fromObject({ days: 30 }).as("seconds")
     },
@@ -87,7 +89,7 @@ async function generateSessionSecret() {
 function getSecretFilePath() {
   const configDir = process.env["CONFIG_DIR"];
   if (!configDir) {
-    throw new Error("failed to initialize session support: CONFIG_DIR env not set");
+    throw new Error("failed to initialize authorization secret: CONFIG_DIR env not set");
   }
 
   return path.join(configDir, "session_secret");
@@ -95,64 +97,50 @@ function getSecretFilePath() {
 
 
 export function requireAuthenticatedUser(app: FastifyInstance) {
-  app.addHook("preValidation", async (req, res) => {
-    if (!req.isAuthenticated || !req.isAuthenticated()) {
-      res.redirect("/auth");
+  // app.addHook("preValidation", fastifyPassport.authenticate([ "jwt" ], async (req, res, err, user) => {
+  //   if (!err && user) {
+  //     req.user = user as any;
+  //   }
+  // }));
+
+  app.addHook("preValidation", async req => {
+    if (!req.user) {
+      throw new LogicError(ErrorCode.NotAuthorized, "Unauthorized");
     }
   });
 }
 
 
 export function getProfile(req: FastifyRequest): UserInfo {
-  return req.session?.get("passport");
+  return req.user as UserInfo;
 }
 
 
 export default async function initAuth(app: FastifyInstance) {
-  app.get("/auth", (req, res) => {
-    res.view("auth", {
-      oauthEnabled: OAUTH_ENABLED
-    });
+  app.post("/auth/logout", async req => {
+    await req.logOut();
+    return {};
   });
 
   app.post(
-      "/auth/code",
+      "/auth/login",
       {
         preValidation: fastifyPassport.authenticate("local", {
           successMessage: "you are successfully logged in",
-          successRedirect: "/",
           failureMessage: "failed to authorize"
         })
       },
-      () => {
-        // do nothing
+      async req => {
+        const profile = getProfile(req);
+        // const token = jwt.sign({ id: profile.id, hst: req.hostname }, SECRET, {
+        //   expiresIn: luxon.Duration.fromObject({ days: 30 }).as("seconds"),
+        //   algorithm: "HS256"
+        // });
+
+        return {
+          name: profile.name,
+          // token
+        };
       }
   );
-
-  if (OAUTH_ENABLED) {
-    app.get(
-        "/auth/google",
-        {
-          preValidation: fastifyPassport.authenticate("google", {
-            scope: [ "profile" ]
-          })
-        },
-        () => {
-          // do nothing
-        }
-    );
-
-    app.get(
-        "/auth/oauth_callback",
-        {
-          preValidation: fastifyPassport.authenticate("google", {
-            successMessage: "you are successfully logged in",
-            successRedirect: "/"
-          })
-        },
-        () => {
-          // do nothing
-        }
-    );
-  }
 }

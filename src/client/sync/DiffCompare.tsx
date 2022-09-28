@@ -53,11 +53,13 @@ export function DiffCompare(props: DiffCompareProps) {
     </div>;
   }
 
-  return <LoadGuard loadState={ diffEditor } render={ diffEditor => <diffEditor.MonacoDiff className={ classes.editor }
-                                                                                           original={ originalIsLocal ? local : remote }
-                                                                                           modified={ originalIsLocal ? remote : local }
-                                                                                           originalTitle={ originalTitle }
-                                                                                           modifiedTitle={ modifiedTitle }/> }/>;
+  return <LoadGuard loadState={ diffEditor }>
+    { diffEditor => <diffEditor.MonacoDiff className={ classes.editor }
+                                           original={ originalIsLocal ? local : remote }
+                                           modified={ originalIsLocal ? remote : local }
+                                           originalTitle={ originalTitle }
+                                           modifiedTitle={ modifiedTitle }/> }
+  </LoadGuard>
 }
 
 

@@ -11,7 +11,7 @@ module.exports = (env) => [
     output: {
       filename: "index.js",
       path: path.join(__dirname, "static"),
-      publicPath: "/static/",
+      publicPath: "/",
       chunkFilename: "[name]-[contenthash].js"
     },
     cache: {
@@ -52,6 +52,10 @@ module.exports = (env) => [
       ]
     },
 
+    externals: {
+      "fs": "fs"
+    },
+
     plugins: [
       new cssExtract({
         filename: `index.css`,
@@ -64,7 +68,7 @@ module.exports = (env) => [
         Buffer: ['buffer', 'Buffer']
       }),
       new MonacoWebpackPlugin({
-        publicPath: "/static/"
+        publicPath: "/"
       })
     ]
   },
@@ -73,7 +77,7 @@ module.exports = (env) => [
     output: {
       filename: "sw.js",
       path: path.join(__dirname, "static"),
-      publicPath: "/static/",
+      publicPath: "/",
       chunkFilename: "[name]-[contenthash].js"
     },
     target: "web",
@@ -106,7 +110,7 @@ module.exports = (env) => [
     output: {
       filename: "background-worker.js",
       path: path.join(__dirname, "static"),
-      publicPath: "/static/",
+      publicPath: "/",
       chunkFilename: "[name]-[contenthash].js"
     },
     target: "web",

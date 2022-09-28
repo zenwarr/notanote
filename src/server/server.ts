@@ -1,12 +1,14 @@
+import { StorageError } from "@storage/EntryStorage";
 import fastify from "fastify";
 import path from "path";
 import fastifyFormBody from "@fastify/formbody";
 import fastifyView from "@fastify/view";
+import fastifyCors from "@fastify/cors";
 import hbs from "handlebars";
 import * as bson from "bson";
 import fastifyStatic from "@fastify/static";
 import { configureAuth } from "./auth";
-import { ErrorCode, getStatusCodeForError, LogicError } from "@common/errors";
+import { getStatusCodeForError, LogicError } from "@common/errors";
 
 
 export async function startApp() {
@@ -26,8 +28,12 @@ export async function startApp() {
     root: path.join(__dirname, "../views")
   });
   app.register(fastifyStatic, {
-    root: path.join(__dirname, "../static"),
-    prefix: "/static"
+    root: path.join(__dirname, "../static")
+  });
+  app.register(fastifyCors, {
+    origin: (origin, done) => done(null, true),
+    credentials: true,
+    allowedHeaders: [ "authorization", "content-type" ]
   });
 
   app.addContentTypeParser("application/bson", (_, payload, done) => {
@@ -61,17 +67,25 @@ export async function startApp() {
 
   await configureAuth(app);
 
-  app.setErrorHandler((error, req, res) => {
-    console.error("request error", error);
-    if (error instanceof LogicError) {
-      res.status(getStatusCodeForError(error.code)).send({
-        error: error.code,
-        text: error.text
+  app.setErrorHandler((err, req, res) => {
+    console.error("request error", err);
+    if (err instanceof LogicError) {
+      res.status(getStatusCodeForError(err.code)).send({
+        error: err.message,
+        code: err.code
+      });
+    } else if (err instanceof StorageError) {
+      res.status(500).send({
+        error: err.message,
+        code: err.code
+      });
+    } else if (err != null && typeof err === "object") {
+      res.status(500).send({
+        error: (err as any).error || (err as any).message || "internal server error"
       });
     } else {
       res.status(500).send({
-        error: ErrorCode.Internal,
-        text: "internal server error"
+        error: "internal server error"
       });
     }
   });

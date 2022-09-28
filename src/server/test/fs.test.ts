@@ -1,4 +1,4 @@
-import { FsStorage } from "../storage/FsStorage";
+import { FsStorage } from "@storage/FsStorage";
 import * as path from "path";
 import { StoragePath } from "@storage/StoragePath";
 import { StorageErrorCode } from "@storage/EntryStorage";

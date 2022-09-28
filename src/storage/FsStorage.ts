@@ -1,7 +1,6 @@
 import { EntryStorage, StorageEntryPointer, StorageEntryStats, StorageError, StorageErrorCode } from "@storage/EntryStorage";
 import { joinNestedPathSecure, StoragePath } from "@storage/StoragePath";
 import * as fs from "fs";
-import { asyncExists } from "../plugin/PluginManager";
 
 
 const IGNORED_FILES = [ ".git" ];
@@ -80,7 +79,7 @@ export class FsStorage extends EntryStorage {
     try {
       const absPath = this.toAbsolutePath(path);
       const stat = await fs.promises.stat(absPath);
-      if (stat.isDirectory()) {
+      if (isDir(stat)) {
         await fs.promises.rm(absPath, {
           recursive: true
         });
@@ -102,8 +101,8 @@ export class FsStorage extends EntryStorage {
     try {
       const stats = await fs.promises.stat(absPath);
       return {
-        isDirectory: stats.isDirectory(),
-        size: stats.isDirectory() ? undefined : stats.size,
+        isDirectory: isDir(stats),
+        size: isDir(stats) ? undefined : stats.size,
         createTs: Math.floor(stats.birthtimeMs),
         updateTs: Math.floor(stats.mtimeMs)
       };
@@ -130,4 +129,19 @@ export class FsStorage extends EntryStorage {
   override async exists(path: StoragePath): Promise<boolean> {
     return asyncExists(this.toAbsolutePath(path));
   }
+}
+
+
+async function asyncExists(file: string) {
+  try {
+    await fs.promises.access(file);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+
+function isDir(stats: fs.Stats) {
+  return (BigInt(stats.mode) & BigInt(fs.constants.S_IFMT)) === BigInt(fs.constants.S_IFDIR)
 }

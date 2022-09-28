@@ -1,17 +1,11 @@
 import { createRoot } from "react-dom/client";
-import { KVEntryStorage } from "@storage/KVEntryStorage";
-import { App } from "./App";
 import { configure } from "mobx";
-import { ClientWorkspace } from "./ClientWorkspace";
-import { ProfileManager } from "./ProfileManager";
 import { Workbox } from "workbox-window";
-import { HttpSyncProvider } from "./storage/HttpSyncProvider";
-import { IdbKvStorage } from "./storage/IdbKvStorage";
+import { getPlatform } from "./platform/getPlatform";
+import { registerStorageProviders } from "./storage/StorageRegistration";
 import { AppThemeProvider } from "./Theme";
-import { registerPlugins } from "./plugin/BuiltInPlugins";
 import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
-import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
-import { FileSettingsProvider } from "@common/workspace/FileSettingsProvider";
+import { AppConfigurationGuard } from "storage-config/AppConfigurationGuard";
 
 
 if ("serviceWorker" in navigator) {
@@ -22,7 +16,7 @@ if ("serviceWorker" in navigator) {
 }
 
 if ("Worker" in window) {
-  const bgWorker = new Worker("/static/background-worker.js");
+  const bgWorker = new Worker("/background-worker.js");
   bgWorker.onmessage = e => {
     console.log("worker message received: ", e);
   }
@@ -35,28 +29,12 @@ configure({
 
 
 const root = document.getElementById("root");
-const params = JSON.parse(root?.dataset.params ?? "{}");
-
-const DEFAULT_WORKSPACE_ID = "default";
-
-const syncAdapter = new HttpSyncProvider(DEFAULT_WORKSPACE_ID);
-
-const local = new MemoryCachedStorage(new KVEntryStorage(new IdbKvStorage()));
-
-ClientWorkspace.init(local, syncAdapter, DEFAULT_WORKSPACE_ID);
-ProfileManager.instance.userName = params.userName;
-FileSettingsProvider.init(local);
-
-try {
-  registerPlugins(params.plugins);
-} catch (error: any) {
-  alert("Failed to register plugins: " + error.message);
-}
+registerStorageProviders();
 
 createRoot(root!).render(<>
   <ErrorBoundary>
     <AppThemeProvider>
-      <App/>
+      <AppConfigurationGuard />
     </AppThemeProvider>
   </ErrorBoundary>
 </>);

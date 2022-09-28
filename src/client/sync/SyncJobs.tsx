@@ -13,6 +13,10 @@ export const SyncJobs = mobx.observer((props: SyncJobsProps) => {
   const runner = ClientWorkspace.instance.syncJobRunner;
   const [ openError, setOpenError ] = useState<SyncJobRunnerError | undefined>();
 
+  if (!runner) {
+    return null;
+  }
+
   return <>
     <ul>
       {

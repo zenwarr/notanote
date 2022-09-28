@@ -17,16 +17,17 @@ export type DiffCompareLoaderProps = {
 
 export function DiffCompareLoader(props: DiffCompareLoaderProps) {
   const data = useLoad(useCallback(async () => {
-    if (!props.path) {
+    if (!props.path || !ClientWorkspace.instance.syncWorker) {
       return undefined;
     }
 
     return ClientWorkspace.instance.syncWorker.getCompareData(props.path);
   }, [ props.path ]));
 
-  return <LoadGuard loadState={ data }
-                    render={ data => data ? <DiffCompare diffType={ props.diffType }
-                                                         onAcceptLocal={ props.onAcceptLocal }
-                                                         onAcceptRemote={ props.onAcceptRemote }
-                                                         data={ data }/> : null }/>;
+  return <LoadGuard loadState={ data }>
+    { data => data ? <DiffCompare diffType={ props.diffType }
+                                  onAcceptLocal={ props.onAcceptLocal }
+                                  onAcceptRemote={ props.onAcceptRemote }
+                                  data={ data }/> : null }
+  </LoadGuard>
 }

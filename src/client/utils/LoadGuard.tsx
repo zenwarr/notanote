@@ -6,8 +6,9 @@ import { LoadState } from "../useLoad";
 
 export type LoadGuardProps<T> = {
   loadState: LoadState<T>;
-  render: (data: T) => React.ReactNode;
+  children: (data: T) => React.ReactNode;
   errorFormat?: (err: string) => React.ReactNode;
+  size?: string | number;
 }
 
 
@@ -24,12 +25,12 @@ export function LoadGuard<T>(props: LoadGuardProps<T>) {
 
   if (!props.loadState.isLoaded) {
     return <div className={ classes.loader }>
-      <CircularProgress/>
+      <CircularProgress size={ props.size }/>
     </div>;
   }
 
   return <>
-    { props.render(props.loadState.data) }
+    { props.children(props.loadState.data) }
   </>;
 }
 

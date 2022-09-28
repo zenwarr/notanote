@@ -1,0 +1,22 @@
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+
+  file:
+    fileName: /etc/traefik/traefik.yml
+
+entryPoints:
+  http:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: https
+          scheme: https
+  https:
+    address: ":443"
+
+tls:
+  certificates:
+    - certFile: "/etc/certs/local-cert.pem"
+      keyFile: "/etc/certs/local-key.pem"

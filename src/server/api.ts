@@ -1,3 +1,4 @@
+import fastifyPassport from "@fastify/passport";
 import { StoragePath } from "@storage/StoragePath";
 import { ContentIdentity } from "@sync/ContentIdentity";
 import { RemoteSyncWorker } from "@sync/RemoteSyncWorker";
@@ -34,6 +35,13 @@ export default async function initApiRoutes(app: FastifyInstance) {
   app.get("/api/latest-version", async req => {
     return {
       version: require("../package.json").version
+    };
+  });
+
+  app.get("/api/profile", async (req, res) => {
+    const profile = getProfile(req);
+    return {
+      name: profile.name
     };
   });
 

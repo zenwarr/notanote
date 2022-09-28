@@ -22,16 +22,18 @@ services:
     labels:
       - "traefik.http.routers.notes.rule=Host(\"${PUBLIC_DOMAIN}\")"
       - "traefik.http.services.notes.loadbalancer.server.port=8080"
+      - "traefik.http.routers.notes.tls=true"
     init: true
 
   traefik:
     image: traefik:v2.6.1
-    command: --providers.docker
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/certs:/etc/certs:ro
 
 volumes:
   yarn_cache:
-  generated_certs:

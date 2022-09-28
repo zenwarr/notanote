@@ -2,7 +2,8 @@ export enum ErrorCode {
   InvalidRequestParams = "INVALID_REQUEST_PARAMS",
   NotFound = "NOT_FOUND",
   AlreadyExists = "ALREADY_EXISTS",
-  Internal = "INTERNAL"
+  Internal = "INTERNAL",
+  NotAuthorized = "NOT_AUTHORIZED"
 }
 
 
@@ -17,6 +18,9 @@ export function getStatusCodeForError(code: ErrorCode) {
 
     case ErrorCode.Internal:
       return 500;
+
+    case ErrorCode.NotAuthorized:
+      return 401
   }
 
   return 500;
