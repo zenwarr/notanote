@@ -1,10 +1,10 @@
 import { FileSettingsProvider } from "@common/workspace/FileSettingsProvider";
 import { Alert, Box, CircularProgress } from "@mui/material";
 import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
-import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";
+import { SyncTargetProvider } from "@sync/SyncTargetProvider";
 import { useEffect, useMemo, useState } from "react";
 import { App } from "../App";
-import { ClientWorkspace } from "../ClientWorkspace";
+import { Workspace } from "../Workspace";
 import { StorageConfig, StorageProviderManager } from "../storage/StorageProvider";
 import { StorageConfigView } from "./StorageConfigView";
 
@@ -42,14 +42,14 @@ export function AppConfigurationGuard() {
 
   return <>
     {
-      storageInitError && <Alert severity={ "error" }>Failed to initialize storage: { storageInitError }</Alert>
+      storageInitError && <Alert severity={ "error" }>{ storageInitError }</Alert>
     }
 
     {
       !ready && !storageInitError && <Alert severity={ "info" }>Please configure storages</Alert>
     }
 
-    <Box p={ 2 }>
+    <Box pl={ 2 } pr={ 2 }>
       <StorageConfigView initialConfig={ config } onApply={ applyConfig }/>
     </Box>
   </>;
@@ -68,14 +68,15 @@ async function initialize(config?: StorageConfig): Promise<boolean> {
     throw new Error("Local storage is not configured");
   }
 
-  let syncProvider: RemoteSyncProvider | undefined;
+  let syncProvider: SyncTargetProvider | undefined;
   if (config.remote) {
     const remoteStorageProvider = StorageProviderManager.instance.getProvider(config.remote.provider);
     if (!remoteStorageProvider || !remoteStorageProvider.syncFactory) {
       throw new Error("Remote storage is not configured or corresponding sync provider is not supported");
     }
 
-    const valError = await remoteStorageProvider.validateOptions(config.remote.options);
+    let val = remoteStorageProvider.validateStartupOptions || remoteStorageProvider.validateOptions;
+    const valError = await val(config.remote.options);
     if (valError) {
       throw new Error("Remote storage configuration is invalid: " + valError);
     }
@@ -88,7 +89,8 @@ async function initialize(config?: StorageConfig): Promise<boolean> {
     throw new Error("Local storage is not configured or corresponding storage provider is not supported");
   }
 
-  const valError = await localStorageProvider.validateOptions(config.local.options);
+  let val = localStorageProvider.validateStartupOptions || localStorageProvider.validateOptions;
+  const valError = await val(config.local.options);
   if (valError) {
     throw new Error("Local storage configuration is invalid: " + valError);
   }
@@ -97,7 +99,7 @@ async function initialize(config?: StorageConfig): Promise<boolean> {
   const localStorage = new MemoryCachedStorage(backedLocalStorage);
 
   StorageProviderManager.instance.setStorageConfig(config);
-  ClientWorkspace.init(localStorage, syncProvider);
+  Workspace.init(localStorage, syncProvider);
   FileSettingsProvider.init(localStorage);
 
   return true;

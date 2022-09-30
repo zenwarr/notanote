@@ -3,20 +3,20 @@ import { StorageEntryData } from "@common/workspace/StorageEntryData";
 import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
 import { StorageEntryType } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
-import { isConflictingDiff, LocalSyncWorker } from "@sync/LocalSyncWorker";
-import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";
+import { isConflictingDiff, Sync } from "@sync/Sync";
+import { SyncTargetProvider } from "@sync/SyncTargetProvider";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { DiffAction } from "@sync/SyncMetadataStorage";
 import { SyncJobRunner } from "@sync/test/SyncJobRunner";
 import { makeObservable, observable } from "mobx";
 import { RecentDocStorage } from "./RecentDocStorage";
-import { BrowserSyncMetadataStorage } from "./storage/BrowserSyncMetadataStorage";
 
 
-export class ClientWorkspace {
-  constructor(storage: MemoryCachedStorage, syncAdapter: RemoteSyncProvider | undefined, storageId: string) {
+export class Workspace {
+  constructor(storage: MemoryCachedStorage, syncTarget: SyncTargetProvider | undefined, storageName: string) {
     makeObservable(this, {
       loading: observable,
+      loadError: observable,
       _selectedEntry: observable,
       _selectedFile: observable
     } as any);
@@ -29,34 +29,44 @@ export class ClientWorkspace {
     }
 
     this.storage = storage;
-    this.remoteStorageId = storageId;
+    this.remoteStorageName = storageName;
 
-    if (syncAdapter) {
-      this.syncWorker = new LocalSyncWorker(
+    if (syncTarget) {
+      this.sync = new Sync(
           this.storage,
-          syncAdapter,
-          new BrowserSyncMetadataStorage()
+          syncTarget
       );
-      this.syncJobRunner = new SyncJobRunner(this.syncWorker);
+      this.syncJobRunner = new SyncJobRunner(this.sync);
     }
   }
 
 
   // todo: remove
-  readonly remoteStorageId: string;
+  readonly remoteStorageName: string;
   loading = true;
+  loadError: string | undefined;
 
 
   async init() {
-    // todo: failing on this step can lead to damaging data
-    await this.storage.initWithRemoteOutline();
+    try {
+      // todo: failing on this step can lead to damaging data
+      await this.storage.initWithRemoteOutline();
 
-    // todo: run in background
-    await this.syncWorker?.updateDiff(StoragePath.root);
+      // todo: run in background
+      try {
+        await this.sync?.updateDiff(StoragePath.root);
+      } catch (e: any) {
+        console.error("Failed to update diff: ", e);
+      }
 
-    await FileSettingsProvider.instance.load();
+      await FileSettingsProvider.instance.load();
 
-    this.loading = false;
+      this.loading = false;
+    } catch (error: any) {
+      console.error("Error initializing workspace", error);
+      this.loadError = error.message;
+      this.loading = false;
+    }
   }
 
 
@@ -91,7 +101,7 @@ export class ClientWorkspace {
       await entry.createDir();
     }
 
-    await this.syncWorker?.updateDiff(entry.path);
+    await this.sync?.updateDiff(entry.path);
     await this.syncJobRunner?.run();
 
     if (type === "file") {
@@ -113,19 +123,19 @@ export class ClientWorkspace {
     const pointer = await this.storage.get(path);
     await pointer.remove();
 
-    await this.syncWorker?.updateDiff(pointer.path);
+    await this.sync?.updateDiff(pointer.path);
     await this.syncJobRunner?.run();
   }
 
 
   async acceptChangeTree(path: StoragePath, diff: SyncDiffEntry[]) {
-    await this.syncWorker?.acceptMulti(diff.filter(e => e.path.inside(path, true) && !isConflictingDiff(e.diff)));
+    await this.sync?.acceptMulti(diff.filter(e => e.path.inside(path, true) && !isConflictingDiff(e.diff)));
     await this.syncJobRunner?.run();
   }
 
 
   async acceptChanges(diff: SyncDiffEntry, action: DiffAction) {
-    await this.syncWorker?.accept(diff, action);
+    await this.sync?.accept(diff, action);
     await this.syncJobRunner?.run();
   }
 
@@ -158,21 +168,21 @@ export class ClientWorkspace {
   private _selectedEntry: StoragePath | undefined = undefined;
   private _selectedFile: StoragePath | undefined = undefined;
   storage: MemoryCachedStorage;
-  private static _instance: ClientWorkspace | undefined;
-  syncWorker: LocalSyncWorker | undefined;
+  private static _instance: Workspace | undefined;
+  sync: Sync | undefined;
   syncJobRunner: SyncJobRunner | undefined;
 
 
   static get instance() {
     if (!this._instance) {
-      throw new Error("ClientWorkspace is not initialized");
+      throw new Error("Workspace is not initialized");
     }
 
     return this._instance;
   }
 
 
-  static init(storage: MemoryCachedStorage, syncAdapter: RemoteSyncProvider | undefined) {
-    this._instance = new ClientWorkspace(storage, syncAdapter, "default");
+  static init(storage: MemoryCachedStorage, syncTarget: SyncTargetProvider | undefined) {
+    this._instance = new Workspace(storage, syncTarget, "default");
   }
 }

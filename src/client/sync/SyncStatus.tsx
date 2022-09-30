@@ -1,6 +1,6 @@
 import { Box, Button, Tooltip } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import { ClientWorkspace } from "../ClientWorkspace";
+import { Workspace } from "../Workspace";
 import { SyncStatusIcon, SyncStatusIconColor } from "./SyncStatusIcon";
 import { formatRelative } from "date-fns";
 
@@ -11,8 +11,8 @@ export interface SyncStatusProps {
 
 
 export const SyncStatus = observer((props: SyncStatusProps) => {
-  const sync = ClientWorkspace.instance.syncWorker;
-  const jobs = ClientWorkspace.instance.syncJobRunner;
+  const sync = Workspace.instance.sync;
+  const jobs = Workspace.instance.syncJobRunner;
 
   if (!sync || !jobs) {
     return null;

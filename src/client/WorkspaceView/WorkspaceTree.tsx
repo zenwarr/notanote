@@ -3,7 +3,7 @@ import { StoragePath } from "@storage/StoragePath";
 import * as mobx from "mobx-react-lite";
 import { useMemo } from "react";
 import { FixedSizeNodeData, FixedSizeTree, FixedSizeTreeProps } from "react-vtree";
-import { ClientWorkspace } from "../ClientWorkspace";
+import { Workspace } from "../Workspace";
 import { TreeContext, TreeCtxData } from "../tree/TreeContext";
 import { TreeNode } from "../tree/TreeNode";
 import { TreeNodeDataBox } from "../tree/TreeNodeData";
@@ -18,7 +18,7 @@ export type WorkspaceTreeProps = Omit<FixedSizeTreeProps<FixedSizeNodeData>, "tr
 
 
 export const WorkspaceTree = mobx.observer((props: WorkspaceTreeProps) => {
-  const cw = ClientWorkspace.instance;
+  const cw = Workspace.instance;
   const root = cw.storage.getMemoryData(StoragePath.root);
 
   const expand = useExpandedPaths(cw.selectedEntry);

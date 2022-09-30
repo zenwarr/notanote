@@ -1,7 +1,7 @@
 import { Button } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { EntryCompareData } from "@sync/EntryCompareData";
-import { isCleanLocalDiff, isCleanRemoteDiff, isConflictingDiff, SyncDiffType } from "@sync/LocalSyncWorker";
+import { isCleanLocalDiff, isCleanRemoteDiff, isConflictingDiff, SyncDiffType } from "@sync/Sync";
 import { ReactNode, useCallback } from "react";
 import { useLoad } from "../useLoad";
 import { LoadGuard } from "../utils/LoadGuard";

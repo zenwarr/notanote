@@ -1,7 +1,7 @@
 import { StoragePath } from "@storage/StoragePath";
-import { SyncDiffType } from "@sync/LocalSyncWorker";
+import { SyncDiffType } from "@sync/Sync";
 import { useCallback } from "react";
-import { ClientWorkspace } from "../ClientWorkspace";
+import { Workspace } from "../Workspace";
 import { useLoad } from "../useLoad";
 import { LoadGuard } from "../utils/LoadGuard";
 import { DiffCompare } from "./DiffCompare";
@@ -17,11 +17,11 @@ export type DiffCompareLoaderProps = {
 
 export function DiffCompareLoader(props: DiffCompareLoaderProps) {
   const data = useLoad(useCallback(async () => {
-    if (!props.path || !ClientWorkspace.instance.syncWorker) {
+    if (!props.path || !Workspace.instance.sync) {
       return undefined;
     }
 
-    return ClientWorkspace.instance.syncWorker.getCompareData(props.path);
+    return Workspace.instance.sync.getCompareData(props.path);
   }, [ props.path ]));
 
   return <LoadGuard loadState={ data }>

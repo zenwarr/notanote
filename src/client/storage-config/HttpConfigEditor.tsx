@@ -53,17 +53,29 @@ export function registerHttpStorageProvider() {
     title: "HTTP",
     syncFactory: c => new HttpSyncProvider(c.server, c.storageName),
     configEditor: HttpConfigEditor,
-    validateOptions: async (options: any) => {
-      if (!options || typeof options != "object") {
-        return "Invalid options object";
-      }
+    validateOptions: async o => validateOptions(o, true),
+    validateStartupOptions: async o=> validateOptions(o, false)
+  });
+}
 
-      if (!options.server || typeof options.server !== "string") {
-        return "Server URL is required";
-      }
 
+async function validateOptions(options: any, checkAuth: boolean): Promise<string | undefined> {
+  if (!options || typeof options != "object") {
+    return "Invalid options object";
+  }
+
+  if (!options.server || typeof options.server !== "string") {
+    return "Server URL is required";
+  }
+
+  if (checkAuth) {
+    try {
       const profile = await requestUserProfile(options.server);
       return profile != null ? undefined : "User is not authorized";
+    } catch (e: any) {
+      throw new Error(`Error connecting to backend at ${ options.server }: ${ e.message }`);
     }
-  });
+  }
+
+  return undefined
 }

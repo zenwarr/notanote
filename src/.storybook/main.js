@@ -9,6 +9,9 @@ module.exports = {
   ],
 
   webpackFinal: (config) => {
+    config.externals = {
+      "fs": "fs"
+    };
     config.plugins.push(new webpack.ProvidePlugin({
       Buffer: ['buffer', 'Buffer']
     }));

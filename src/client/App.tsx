@@ -1,4 +1,4 @@
-import { Box, CircularProgress, Hidden, SwipeableDrawer } from "@mui/material";
+import { Box, Alert, CircularProgress, Hidden, SwipeableDrawer } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { WorkspaceView } from "./WorkspaceView/WorkspaceView";
 import { ConnectedFileView } from "./FileView";
@@ -7,7 +7,7 @@ import { usePreventClose } from "./usePreventClose";
 import { useEffect, useState } from "react";
 import { Route, Routes, useLocation } from "react-router";
 import { HashRouter } from "react-router-dom";
-import { ClientWorkspace } from "./ClientWorkspace";
+import { Workspace } from "./Workspace";
 import "./App.css";
 import { useShortcuts } from "./Shortcuts";
 import { PaletteProvider } from "./palette/PaletteProvider";
@@ -26,20 +26,26 @@ export const App = observer(() => {
   const appTheme = useAppThemeContext();
 
   useEffect(() => {
-    ClientWorkspace.instance.init().then(() => {}).catch(err => console.error(err));
+    Workspace.instance.init().then(() => {}).catch(err => console.error(err));
   }, []);
 
   function onMobileEntrySelected(path: StoragePath) {
-    const cached = ClientWorkspace.instance.storage.getMemoryData(path);
+    const cached = Workspace.instance.storage.getMemoryData(path);
     if (cached && !cached.stats.isDirectory) {
       setDrawerOpen(false);
     }
   }
 
-  if (ClientWorkspace.instance.loading) {
+  if (Workspace.instance.loading) {
     return <Box display={ "flex" } alignItems={ "center" } justifyContent={ "center" } height={ 300 }>
       <CircularProgress/>
     </Box>;
+  }
+
+  if (Workspace.instance.loadError) {
+    return <Box p={2}>
+      <Alert severity={ "error" }>Error initialing workspace: { Workspace.instance.loadError }</Alert>
+    </Box>
   }
 
   return <HashRouter>
@@ -84,7 +90,7 @@ export function FileViewRoute() {
   const entryPath = loc.pathname.startsWith("/f/") ? decodeURIComponent(loc.pathname.substring("/f".length)) : undefined;
 
   useEffect(() => {
-    ClientWorkspace.instance.selectedEntry = entryPath ? new StoragePath(entryPath) : undefined;
+    Workspace.instance.selectedEntry = entryPath ? new StoragePath(entryPath) : undefined;
   }, [ entryPath ]);
 
   return null;

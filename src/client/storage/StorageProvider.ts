@@ -1,5 +1,5 @@
 import { EntryStorage } from "@storage/EntryStorage";
-import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";
+import { SyncTargetProvider } from "@sync/SyncTargetProvider";
 import * as React from "react";
 
 
@@ -19,9 +19,10 @@ export interface StorageProvider<TOptions = unknown> {
   name: string;
   title: string;
   storageFactory?: (options: TOptions) => EntryStorage;
-  syncFactory?: (options: TOptions) => RemoteSyncProvider;
+  syncFactory?: (options: TOptions) => SyncTargetProvider;
   configEditor: React.ComponentType<StorageProviderConfigEditorProps<TOptions>>;
   validateOptions: (options: unknown) => Promise<string | undefined>;
+  validateStartupOptions?: (options: unknown) => Promise<string | undefined>;
 }
 
 

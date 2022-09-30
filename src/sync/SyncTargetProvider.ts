@@ -3,7 +3,9 @@ import { ContentIdentity } from "@sync/ContentIdentity";
 import { SyncOutlineEntry } from "@sync/SyncEntry";
 
 
-export interface RemoteSyncProvider {
+export interface SyncTargetProvider {
+  getId(): Promise<string>;
+
   getOutline(path: StoragePath): Promise<SyncOutlineEntry | undefined>;
 
   update(path: StoragePath, data: Buffer, remoteIdentity: ContentIdentity | undefined): Promise<void>;

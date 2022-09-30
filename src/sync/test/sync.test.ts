@@ -2,25 +2,23 @@ import { KVEntryStorage } from "@storage/KVEntryStorage";
 import { MapKV } from "@storage/MapKV";
 import { EntryStorage } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
-import { LocalSyncWorker, SyncDiffType } from "@sync/LocalSyncWorker";
-import { MemorySyncMetadataStorage } from "@sync/MemorySyncMetadataStorage";
-import { RemoteSyncWorker } from "@sync/RemoteSyncWorker";
+import { Sync, SyncDiffType } from "@sync/Sync";
+import { SyncTarget } from "@sync/SyncTarget";
 import { DiffAction } from "@sync/SyncMetadataStorage";
 import { SyncJobRunner } from "@sync/test/SyncJobRunner";
 
 
-function prepare() {
+async function prepare() {
   const local = new KVEntryStorage(new MapKV());
 
   const remote = new KVEntryStorage(new MapKV());
-  const remoteSync = new RemoteSyncWorker(remote);
+  const target = new SyncTarget(remote);
 
-  const metadata = new MemorySyncMetadataStorage();
-  const localSync = new LocalSyncWorker(local, remoteSync, metadata);
+  const source = new Sync(local, target);
 
-  const runner = new SyncJobRunner(localSync, async cb => await cb());
+  const runner = new SyncJobRunner(source, async cb => await cb());
 
-  return { local, remote, localSync, metadata, runner };
+  return { local, remote, source, runner };
 }
 
 
@@ -30,49 +28,49 @@ async function write(storage: EntryStorage, path: string, data: string) {
 
 
 it("diff between equal files", async () => {
-  const d = prepare();
+  const d = await prepare();
   await write(d.local, "/file.txt", "hello world");
   await write(d.remote, "/file.txt", "hello world");
 
-  await d.localSync.updateDiff();
-  await d.localSync.acceptMulti(d.localSync.actualDiff);
-  expect(d.localSync.actualDiff).toHaveLength(0);
+  await d.source.updateDiff();
+  await d.source.acceptMulti(d.source.actualDiff);
+  expect(d.source.actualDiff).toHaveLength(0);
 
-  await d.localSync.updateDiff();
-  expect(d.localSync.actualDiff).toHaveLength(0);
+  await d.source.updateDiff();
+  expect(d.source.actualDiff).toHaveLength(0);
 });
 
 
 it("local file changed", async () => {
-  const d = prepare();
+  const d = await prepare();
   await write(d.local, "/file.txt", "hello, world!");
 
-  await d.localSync.updateDiff();
-  await d.localSync.acceptMulti(d.localSync.actualDiff);
+  await d.source.updateDiff();
+  await d.source.acceptMulti(d.source.actualDiff);
 
   await write(d.local, "/file.txt", "hello, world! updated");
   await write(d.remote, "/file.txt", "hello world");
 
-  await d.localSync.updateDiff();
-  expect(d.localSync.actualDiff).toHaveLength(1);
-  expect(d.localSync.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
+  await d.source.updateDiff();
+  expect(d.source.actualDiff).toHaveLength(1);
+  expect(d.source.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
 });
 
 
 it("initializing from remote storage", async () => {
-  const d = prepare();
+  const d = await prepare();
   await write(d.remote, "/file.txt", "hello world");
-  await d.localSync.updateDiff();
+  await d.source.updateDiff();
 
-  expect(d.localSync.actualDiff).toHaveLength(1);
-  expect(d.localSync.actualDiff[0]!.diff).toEqual(SyncDiffType.RemoteCreate);
+  expect(d.source.actualDiff).toHaveLength(1);
+  expect(d.source.actualDiff[0]!.diff).toEqual(SyncDiffType.RemoteCreate);
 
-  await d.localSync.acceptMulti(d.localSync.actualDiff);
-  const jobs = await d.localSync.getJobs(Infinity);
-  for (const job of jobs) await d.localSync.doJob(job);
+  await d.source.acceptMulti(d.source.actualDiff);
+  const jobs = await d.source.getJobs(Infinity);
+  for (const job of jobs) await d.source.doJob(job);
 
-  await d.localSync.updateDiff();
-  expect(d.localSync.actualDiff.length).toEqual(0);
+  await d.source.updateDiff();
+  expect(d.source.actualDiff.length).toEqual(0);
 
   const localRead = await d.local.read(new StoragePath("/file.txt"));
   expect(localRead.toString()).toEqual("hello world");
@@ -80,20 +78,20 @@ it("initializing from remote storage", async () => {
 
 
 it("resolving conflict by accepting local changes", async () => {
-  const d = prepare();
+  const d = await prepare();
   await write(d.local, "file.txt", "local");
   await write(d.remote, "file.txt", "remote");
-  await d.localSync.updateDiff();
+  await d.source.updateDiff();
 
-  expect(d.localSync.actualDiff).toHaveLength(1);
-  expect(d.localSync.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
+  expect(d.source.actualDiff).toHaveLength(1);
+  expect(d.source.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
 
-  await d.localSync.accept(d.localSync.actualDiff[0]!, DiffAction.AcceptLocal);
-  const jobs = await d.localSync.getJobs(Infinity);
-  for (const job of jobs) await d.localSync.doJob(job);
+  await d.source.accept(d.source.actualDiff[0]!, DiffAction.AcceptLocal);
+  const jobs = await d.source.getJobs(Infinity);
+  for (const job of jobs) await d.source.doJob(job);
 
-  await d.localSync.updateDiff();
-  expect(d.localSync.actualDiff.length).toEqual(0);
+  await d.source.updateDiff();
+  expect(d.source.actualDiff.length).toEqual(0);
 
   const localRead = await d.local.read(new StoragePath("/file.txt"));
   expect(localRead.toString()).toEqual("local");
@@ -104,20 +102,20 @@ it("resolving conflict by accepting local changes", async () => {
 
 
 it("resolving conflict by accepting remote changes", async () => {
-  const d = prepare();
+  const d = await prepare();
   await write(d.local, "file.txt", "local");
   await write(d.remote, "file.txt", "remote");
-  await d.localSync.updateDiff();
+  await d.source.updateDiff();
 
-  expect(d.localSync.actualDiff).toHaveLength(1);
-  expect(d.localSync.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
+  expect(d.source.actualDiff).toHaveLength(1);
+  expect(d.source.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
 
-  await d.localSync.accept(d.localSync.actualDiff[0]!, DiffAction.AcceptRemote);
-  const jobs = await d.localSync.getJobs(Infinity);
-  for (const job of jobs) await d.localSync.doJob(job);
+  await d.source.accept(d.source.actualDiff[0]!, DiffAction.AcceptRemote);
+  const jobs = await d.source.getJobs(Infinity);
+  for (const job of jobs) await d.source.doJob(job);
 
-  await d.localSync.updateDiff();
-  expect(d.localSync.actualDiff.length).toEqual(0);
+  await d.source.updateDiff();
+  expect(d.source.actualDiff.length).toEqual(0);
 
   const localRead = await d.local.read(new StoragePath("/file.txt"));
   expect(localRead.toString()).toEqual("remote");

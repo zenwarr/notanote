@@ -22,7 +22,7 @@ import { Form } from "react-final-form";
 import { TextField } from "mui-rff";
 import { PluginBackend } from "../backend/PluginBackend";
 import { Backend } from "../backend/Backend";
-import { ClientWorkspace } from "../ClientWorkspace";
+import { Workspace } from "../Workspace";
 import { CommandManager } from "../commands/CommandManager";
 
 
@@ -51,7 +51,7 @@ const PluginConfigEditor = observer((props: { doc: Document }) => {
   const [ cloneDialogOpen, setCloneDialogOpen ] = useState(false);
 
   async function update(pluginName: string) {
-    const wsId = ClientWorkspace.instance.remoteStorageId;
+    const wsId = Workspace.instance.remoteStorageName;
     await CommandManager.instance.runAction(getUpdatePluginCommandName(pluginName), () => Backend.get(PluginBackend).update(wsId, pluginName));
   }
 
@@ -107,7 +107,7 @@ function CloneDialog(props: { open: boolean, onClose: () => void, doc: Document 
     }
 
     try {
-      await Backend.get(PluginBackend).clone(ClientWorkspace.instance.remoteStorageId, params.name, params.url);
+      await Backend.get(PluginBackend).clone(Workspace.instance.remoteStorageName, params.name, params.url);
       props.onClose();
     } catch (error: any) {
       alert(`Failed to clone plugin: ${ error.message }`);

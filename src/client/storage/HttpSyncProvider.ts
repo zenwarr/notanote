@@ -1,6 +1,6 @@
 import { StoragePath } from "@storage/StoragePath";
 import { ContentIdentity } from "@sync/ContentIdentity";
-import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";
+import { SyncTargetProvider } from "@sync/SyncTargetProvider";
 import ky from "ky";
 import * as bson from "bson";
 import { SyncOutlineEntry } from "@sync/SyncEntry";
@@ -9,7 +9,7 @@ import { SyncOutlineEntry } from "@sync/SyncEntry";
 const DEFAULT_STORAGE_NAME = "default";
 
 
-export class HttpSyncProvider implements RemoteSyncProvider {
+export class HttpSyncProvider implements SyncTargetProvider {
   constructor(server: string, storageName = DEFAULT_STORAGE_NAME) {
     this.server = server;
     this.storageName = storageName;
@@ -18,6 +18,20 @@ export class HttpSyncProvider implements RemoteSyncProvider {
 
   private readonly storageName: string;
   private readonly server: string | undefined;
+
+
+  async getId(): Promise<string> {
+    const data = await ky.get(`api/storages/${ this.storageName }/config`, {
+      prefixUrl: this.server,
+      credentials: "include"
+    }).json();
+
+    if (!(data && typeof data === "object") || typeof (data as any).id !== "string") {
+      throw new Error("Invalid response: string expected");
+    }
+
+    return (data as any).id;
+  }
 
 
   async getOutline(path: StoragePath): Promise<SyncOutlineEntry | undefined> {

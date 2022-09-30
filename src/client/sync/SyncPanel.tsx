@@ -1,15 +1,15 @@
 import { StoragePath } from "@storage/StoragePath";
 import * as mobx from "mobx-react-lite";
 import { formatRelative } from "date-fns";
-import { ClientWorkspace } from "../ClientWorkspace";
+import { Workspace } from "../Workspace";
 import { Grid, Box, Paper, Typography, Stack, Button, CircularProgress } from "@mui/material";
 import { DiffTree } from "./DiffTree";
 import { SyncJobs } from "./SyncJobs";
 
 
 export const SyncPanel = mobx.observer(() => {
-  const jobs = ClientWorkspace.instance.syncJobRunner;
-  const sw = ClientWorkspace.instance.syncWorker;
+  const jobs = Workspace.instance.syncJobRunner;
+  const sw = Workspace.instance.sync;
 
   if (!jobs || !sw) {
     return null;

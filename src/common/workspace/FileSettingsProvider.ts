@@ -1,6 +1,6 @@
 import { EntryStorage, StorageErrorCode } from "@storage/EntryStorage";
 import { tryParseJson } from "../utils/tryParse";
-import { SpecialWorkspaceEntry } from "./Workspace";
+import { SpecialPath } from "./Workspace";
 import { FileSettings } from "../Settings";
 import { StoragePath } from "@storage/StoragePath";
 
@@ -22,7 +22,7 @@ export class FileSettingsProvider {
 
   async load(): Promise<void> {
     try {
-      const text = (await this.fs.get(SpecialWorkspaceEntry.Settings).read()).toString();
+      const text = (await this.fs.get(SpecialPath.Settings).read()).toString();
       if (!text) {
         return;
       }
@@ -58,18 +58,11 @@ export class FileSettingsProvider {
       };
     }
 
-    if (entryPath.valueOf() === SpecialWorkspaceEntry.PluginConfig.valueOf()) {
+    if (entryPath.valueOf() === SpecialPath.PluginConfig.valueOf()) {
       specificSettings = {
         ...specificSettings,
         editor: {
           name: "pluginConfig.editor"
-        }
-      };
-    } else if (entryPath.valueOf() === SpecialWorkspaceEntry.DeviceConfig.valueOf()) {
-      specificSettings = {
-        ...specificSettings,
-        editor: {
-          name: "deviceConfig.editor"
         }
       };
     }
@@ -91,7 +84,6 @@ export class FileSettingsProvider {
 
   static init(fs: EntryStorage): void {
     if (FileSettingsProvider._instance) {
-      console.error("FileSettingsProvider is already initialized");
       return;
     }
     FileSettingsProvider._instance = new FileSettingsProvider(fs);

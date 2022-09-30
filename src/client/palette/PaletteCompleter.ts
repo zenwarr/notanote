@@ -1,6 +1,6 @@
 import levenshtein from "js-levenshtein";
 import { StorageEntryData } from "@common/workspace/StorageEntryData";
-import { ClientWorkspace } from "../ClientWorkspace";
+import { Workspace } from "../Workspace";
 import { PaletteOption } from "./Palette";
 import { RecentDocStorage } from "../RecentDocStorage";
 
@@ -12,7 +12,7 @@ export function filePaletteCompleter(value: string): PaletteOption[] {
   if (!value) {
     const recentDocs = RecentDocStorage.instance.getRecentDocs();
     let recentEntries: (StorageEntryData | undefined)[] = [];
-    ClientWorkspace.instance.walk(entry => {
+    Workspace.instance.walk(entry => {
       if (entry.stats.isDirectory) {
         return false;
       }
@@ -47,7 +47,7 @@ export function filePaletteCompleter(value: string): PaletteOption[] {
 
   const result: PaletteOption[] = [];
   const resultIds: string[] = [];
-  ClientWorkspace.instance.walk(entry => {
+  Workspace.instance.walk(entry => {
     const entryPath = entry.path;
     if (!entry.stats.isDirectory && entryPath.normalized.toLowerCase().includes(value)) {
       result.push({
@@ -77,7 +77,7 @@ function getClosestEntries(value: string, count: number, exclude: string[]): Pal
 
   const allEntries: StorageEntryData[] = [];
   const distance = new Map<string, number>();
-  ClientWorkspace.instance.walk(entry => {
+  Workspace.instance.walk(entry => {
     let normalizedPath = entry.path.normalized;
     if (!entry.stats.isDirectory && !exclude.includes(normalizedPath)) {
       allEntries.push(entry);

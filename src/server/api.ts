@@ -1,14 +1,14 @@
-import fastifyPassport from "@fastify/passport";
+import { ErrorCode, LogicError } from "@common/errors";
 import { StoragePath } from "@storage/StoragePath";
 import { ContentIdentity } from "@sync/ContentIdentity";
-import { RemoteSyncWorker } from "@sync/RemoteSyncWorker";
+import { SyncTarget } from "@sync/SyncTarget";
+import { StorageSyncData } from "@sync/StorageSyncData";
 import { FastifyInstance, FastifyRequest } from "fastify";
-import { getProfile, requireAuthenticatedUser } from "./auth";
 import S from "fluent-json-schema";
-import { ErrorCode, LogicError } from "@common/errors";
+import * as fs from "fs";
+import { getProfile, requireAuthenticatedUser } from "./auth";
 import { commitAndPushChanges, initGithubIntegration } from "./github/Github";
 import { buildStoragePlugin, clonePlugin, updatePlugin } from "./plugin/PluginManager";
-import * as fs from "fs";
 import { ServerStorageFactory } from "./storage/ServerStorageFactory";
 
 
@@ -125,6 +125,27 @@ export default async function initApiRoutes(app: FastifyInstance) {
 
 
   app.get<{
+    Params: StorageRouteParams
+  }>("/api/storages/:storageId/config", {
+    schema: {
+      params: S.object().prop("storageId", S.string().required())
+    }
+  }, async (req) => {
+    const d = await getStorage(req);
+    const syncData = new StorageSyncData(d.storage);
+    await syncData.initStorage();
+    const id = (await syncData.getConfig())?.storageId;
+    if (!id) {
+      throw new LogicError(ErrorCode.Internal, "Storage id not defined");
+    }
+
+    return {
+      id
+    }
+  });
+
+
+  app.get<{
     Params: StorageRouteParams,
     Querystring: { path: string }
   }>("/api/storages/:storageId/sync/outline", {
@@ -136,7 +157,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     const s = await getStorage(req);
     const path = req.query.path;
 
-    const worker = new RemoteSyncWorker(s.storage);
+    const worker = new SyncTarget(s.storage);
     return worker.getOutline(new StoragePath(path));
   });
 
@@ -153,7 +174,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     }
   }, async (req, res) => {
     const s = await getStorage(req);
-    const worker = new RemoteSyncWorker(s.storage);
+    const worker = new SyncTarget(s.storage);
     await worker.update(new StoragePath(req.body.path), req.body.data, req.body.remoteIdentity);
     return {};
   });
@@ -170,7 +191,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     }
   }, async (req, res) => {
     const s = await getStorage(req);
-    const worker = new RemoteSyncWorker(s.storage);
+    const worker = new SyncTarget(s.storage);
     await worker.createDir(new StoragePath(req.body.path), req.body.remoteIdentity);
     return {};
   });
@@ -187,7 +208,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     }
   }, async (req, res) => {
     const s = await getStorage(req);
-    const worker = new RemoteSyncWorker(s.storage);
+    const worker = new SyncTarget(s.storage);
     await worker.remove(new StoragePath(req.body.path), req.body.remoteIdentity);
     return {};
   });
@@ -205,7 +226,7 @@ export default async function initApiRoutes(app: FastifyInstance) {
     const s = await getStorage(req);
     const path = req.query.path;
 
-    const worker = new RemoteSyncWorker(s.storage);
+    const worker = new SyncTarget(s.storage);
     return worker.read(new StoragePath(path));
   });
 }

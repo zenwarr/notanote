@@ -6,7 +6,7 @@ import * as fs from "fs";
 import * as _ from "lodash";
 import { RemotePluginSpec } from "@common/plugin";
 import { clone, pullChanges, runCommand } from "../github/Github";
-import { SpecialWorkspaceEntry } from "@common/workspace/Workspace";
+import { SpecialPath } from "@common/workspace/Workspace";
 import { ErrorCode, LogicError } from "@common/errors";
 
 
@@ -25,21 +25,21 @@ export interface PluginBuildDirs {
 
 
 export async function buildStoragePlugin(storageRoot: string, pluginId: string): Promise<PluginBuildResult> {
-  const pluginDir = path.join(storageRoot, SpecialWorkspaceEntry.Plugins.normalized, pluginId);
+  const pluginDir = path.join(storageRoot, SpecialPath.PluginsDir.normalized, pluginId);
   const buildDirs = getBuildDirs(storageRoot, pluginId);
   return buildPlugin(pluginDir, pluginId, buildDirs);
 }
 
 
 export async function updatePlugin(storageRoot: string, pluginId: string): Promise<void> {
-  const pluginDir = path.join(storageRoot, SpecialWorkspaceEntry.Plugins.normalized, pluginId);
+  const pluginDir = path.join(storageRoot, SpecialPath.PluginsDir.normalized, pluginId);
   console.log("Pulling changes from remote repository...");
   await pullChanges(pluginDir);
 }
 
 
 export async function clonePlugin(storageRoot: string, pluginId: string, cloneUrl: string): Promise<void> {
-  const pluginDir = path.join(storageRoot, SpecialWorkspaceEntry.Plugins.normalized, pluginId);
+  const pluginDir = path.join(storageRoot, SpecialPath.PluginsDir.normalized, pluginId);
   if (await asyncExists(pluginDir)) {
     throw new LogicError(ErrorCode.AlreadyExists, `Plugin "${ pluginId }" already exists`);
   }

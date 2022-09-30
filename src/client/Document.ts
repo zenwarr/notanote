@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import { FileSettings } from "@common/Settings";
-import { ClientWorkspace } from "./ClientWorkspace";
+import { Workspace } from "./Workspace";
 import { StorageEntryPointer } from "@storage/EntryStorage";
 
 
@@ -55,7 +55,7 @@ export class Document {
 
   private async onChangesAsync() {
     await this.entry.writeOrCreate(await this.contentToBuffer());
-    await ClientWorkspace.instance.syncWorker?.updateDiff(this.entry.path);
+    await Workspace.instance.sync?.updateDiff(this.entry.path);
   }
 
 

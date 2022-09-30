@@ -1,6 +1,6 @@
 import { StoragePath } from "@storage/StoragePath";
 import { ContentIdentity } from "@sync/ContentIdentity";
-import { SyncDiffType } from "@sync/LocalSyncWorker";
+import { SyncDiffType } from "@sync/Sync";
 import { EntrySyncMetadata } from "@sync/SyncMetadataStorage";
 
 

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
-import { ClientWorkspace } from "./ClientWorkspace";
+import { Workspace } from "./Workspace";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
 import { StoragePath } from "@storage/StoragePath";
 import { StorageEntryType } from "@storage/EntryStorage";
@@ -28,7 +28,7 @@ export function CreateEntryDialog(props: CreateEntryDialogProps) {
 
     setLoading(true);
     try {
-      await ClientWorkspace.instance.createEntry(new StoragePath(inputPath), props.type);
+      await Workspace.instance.createEntry(new StoragePath(inputPath), props.type);
       props.onClose();
     } catch (err: any) {
       alert("Failed to create: " + err.message);

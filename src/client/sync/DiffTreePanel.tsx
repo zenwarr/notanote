@@ -1,10 +1,10 @@
 import { Button, Stack } from "@mui/material";
 import { StoragePath } from "@storage/StoragePath";
-import { isConflictingDiff } from "@sync/LocalSyncWorker";
+import { isConflictingDiff } from "@sync/Sync";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { DiffAction } from "@sync/SyncMetadataStorage";
 import { useState } from "react";
-import { ClientWorkspace } from "../ClientWorkspace";
+import { Workspace } from "../Workspace";
 import { FullScreenDialog } from "../utils/FullScreenDialog";
 import { DiffCompareLoader } from "./DiffCompareLoader";
 
@@ -26,7 +26,7 @@ export function DiffTreePanel(props: DiffTreePanelProps) {
       return;
     }
 
-    await ClientWorkspace.instance.acceptChangeTree(props.selectedPath, props.allDiffs);
+    await Workspace.instance.acceptChangeTree(props.selectedPath, props.allDiffs);
   }
 
   async function resolve(action: DiffAction) {
@@ -35,7 +35,7 @@ export function DiffTreePanel(props: DiffTreePanelProps) {
     }
 
     setDiffModalActive(false);
-    await ClientWorkspace.instance.acceptChanges(d, action);
+    await Workspace.instance.acceptChanges(d, action);
   }
 
   return <>

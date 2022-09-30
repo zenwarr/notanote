@@ -1,7 +1,9 @@
+import { shouldPathBeSynced } from "@sync/Ignore";
+import { StorageSyncData } from "@sync/StorageSyncData";
 import { StorageError, StorageErrorCode, EntryStorage } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
-import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";
-import { RemoteSyncWorker } from "@sync/RemoteSyncWorker";
+import { SyncTargetProvider } from "@sync/SyncTargetProvider";
+import { SyncTarget } from "@sync/SyncTarget";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { SyncOutlineEntry } from "@sync/SyncEntry";
 import { walkEntriesDownToTop } from "@sync/WalkEntriesDownToTop";
@@ -71,14 +73,13 @@ export interface DiffHandleRule {
 }
 
 
-export class LocalSyncWorker {
-  constructor(local: EntryStorage, syncProvider: RemoteSyncProvider, syncMetadata: SyncMetadataStorage) {
-    this.local = local;
-    this.remoteSyncProvider = syncProvider;
-    this.syncMetadata = syncMetadata;
+export class Sync {
+  constructor(storage: EntryStorage, syncTarget: SyncTargetProvider) {
+    this.storage = storage;
+    this.syncTarget = syncTarget;
 
     // todo: rename
-    this.localSyncProvider = new RemoteSyncWorker(this.local);
+    this.localSyncTarget = new SyncTarget(this.storage);
     mobx.makeObservable(this, {
       actualDiff: mobx.observable,
       mergeDiff: mobx.action,
@@ -87,13 +88,30 @@ export class LocalSyncWorker {
   }
 
 
-  private readonly local: EntryStorage;
-  private readonly remoteSyncProvider: RemoteSyncProvider;
-  private readonly localSyncProvider: RemoteSyncProvider;
-  private readonly syncMetadata: SyncMetadataStorage;
+  private readonly storage: EntryStorage;
+  private readonly syncTarget: SyncTargetProvider;
+  private readonly localSyncTarget: SyncTargetProvider;
+  private syncMetadata: SyncMetadataStorage | undefined;
   diffHandleRules: DiffHandleRule[] | undefined;
   actualDiff: SyncDiffEntry[] = [];
   updatingDiff = false;
+
+
+  private async getSyncMetadataStorage(): Promise<SyncMetadataStorage> {
+    if (!this.syncMetadata) {
+      let remoteStorageId: string | undefined;
+      try {
+        remoteStorageId = await this.syncTarget.getId();
+      } catch (e: any) {
+        throw new Error("Connection to remote storage failed: " + e.message);
+      }
+
+      const sd = new StorageSyncData(this.storage);
+      this.syncMetadata = sd.getSyncMetadataStorageForRemoteStorage(remoteStorageId);
+    }
+
+    return this.syncMetadata;
+  }
 
 
   /**
@@ -113,13 +131,13 @@ export class LocalSyncWorker {
     }
 
     // now walk local paths top-down and add entries missing from remote to the map
-    for await (const ep of walkEntriesDownToTop(this.local.get(start))) {
-      if (!allPaths.has(ep.path.normalized)) {
+    for await (const ep of walkEntriesDownToTop(this.storage.get(start))) {
+      if (!allPaths.has(ep.path.normalized) && shouldPathBeSynced(ep.path)) {
         allPaths.set(ep.path.normalized, undefined);
       }
     }
 
-    const metadataMap = await this.syncMetadata.get();
+    const metadataMap = await (await this.getSyncMetadataStorage()).get();
 
     const result: SyncDiffEntry[] = [];
     // now iterate over the union of all local and remote paths. Order is not important here.
@@ -143,7 +161,7 @@ export class LocalSyncWorker {
       throw new Error("Cannot resolve clean diff with DiffAction.AcceptLocal or DiffAction.AcceptRemote");
     }
 
-    await this.syncMetadata.update(diff.path, meta => {
+    await (await this.getSyncMetadataStorage()).update(diff.path, meta => {
       updatedMeta = {
         synced: meta?.synced,
         accepted: getAcceptedContentIdentity(diff, action),
@@ -164,7 +182,7 @@ export class LocalSyncWorker {
 
 
   async acceptMulti(entries: Omit<SyncDiffEntry, "syncMetadata">[]): Promise<void> {
-    const meta = await this.syncMetadata.get();
+    const meta = await (await this.getSyncMetadataStorage()).get();
     const result: SyncMetadataMap = {};
     const updatedMeta = new Map<string, EntrySyncMetadata>();
 
@@ -187,7 +205,7 @@ export class LocalSyncWorker {
       updatedMeta.set(entryDiff.path.normalized, entryMeta);
     }
 
-    await this.syncMetadata.setMulti(result);
+    await (await this.getSyncMetadataStorage()).setMulti(result);
 
     for (const diff of this.actualDiff) {
       const updatedEntryMeta = updatedMeta.get(diff.path.normalized);
@@ -211,8 +229,8 @@ export class LocalSyncWorker {
       }
     }
 
-    let local = await guardedLoad(() => this.local.read(path));
-    let remote = await guardedLoad(() => this.remoteSyncProvider.read(path));
+    let local = await guardedLoad(() => this.storage.read(path));
+    let remote = await guardedLoad(() => this.syncTarget.read(path));
 
     return {
       local,
@@ -268,7 +286,7 @@ export class LocalSyncWorker {
 
     const result: SyncJob[] = [];
 
-    const metadata = await this.syncMetadata.get();
+    const metadata = await (await this.getSyncMetadataStorage()).get();
     for (const [ path, entry ] of walkSyncMetadataTopDown(metadata)) {
       if (entry.synced !== entry.accepted && (!filter || filter(path))) {
         result.push({ path, syncMetadata: entry });
@@ -292,21 +310,21 @@ export class LocalSyncWorker {
 
     const action = job.syncMetadata.action;
 
-    let to: RemoteSyncProvider, from: RemoteSyncProvider;
+    let to: SyncTargetProvider, from: SyncTargetProvider;
     if (isConflictingDiff(job.syncMetadata.diff)) {
-      to = action === DiffAction.AcceptLocal ? this.remoteSyncProvider : this.localSyncProvider;
-      from = action === DiffAction.AcceptLocal ? this.localSyncProvider : this.remoteSyncProvider;
+      to = action === DiffAction.AcceptLocal ? this.syncTarget : this.localSyncTarget;
+      from = action === DiffAction.AcceptLocal ? this.localSyncTarget : this.syncTarget;
     } else if (isCleanLocalDiff(job.syncMetadata.diff)) {
-      to = this.remoteSyncProvider;
-      from = this.localSyncProvider;
+      to = this.syncTarget;
+      from = this.localSyncTarget;
     } else {
-      to = this.localSyncProvider;
-      from = this.remoteSyncProvider;
+      to = this.localSyncTarget;
+      from = this.syncTarget;
     }
 
     if (accepted) {
       if (accepted === DirContentIdentity) {
-        await this.remoteSyncProvider.createDir(job.path, synced);
+        await this.syncTarget.createDir(job.path, synced);
       } else {
         const data = await from.read(job.path);
         const contentIdentity = await getContentIdentityForData(data);
@@ -325,7 +343,7 @@ export class LocalSyncWorker {
     }
 
     let updatedMeta: EntrySyncMetadata | undefined;
-    await this.syncMetadata.update(job.path, meta => {
+    await (await this.getSyncMetadataStorage()).update(job.path, meta => {
       if (meta && meta?.synced === synced) {
         updatedMeta = { ...meta, synced: accepted || undefined, action: undefined, diff: undefined };
       } else {
@@ -410,7 +428,7 @@ export class LocalSyncWorker {
 
     const meta = metadataMap[path.normalized];
     const synced = meta?.synced;
-    const actual = await getContentIdentity(this.local.get(path));
+    const actual = await getContentIdentity(this.storage.get(path));
 
     const actualDiff = this.getEntryIdentityDiff(actual, synced, remote?.identity);
 
@@ -419,7 +437,7 @@ export class LocalSyncWorker {
 
 
   private async loadOutline(start: StoragePath) {
-    return this.remoteSyncProvider.getOutline(start);
+    return this.syncTarget.getOutline(start);
   }
 }
 

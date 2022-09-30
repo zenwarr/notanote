@@ -2,7 +2,7 @@ import { EntryStorage } from "@storage/EntryStorage";
 import { ErrorCode, LogicError } from "@common/errors";
 import { joinNestedPathSecure, StoragePath } from "@storage/StoragePath";
 import path from "path";
-import { createWorkspaceDefaults, SpecialWorkspaceEntry } from "@common/workspace/Workspace";
+import { createWorkspaceDefaults, SpecialPath } from "@common/workspace/Workspace";
 import { FsStorage } from "@storage/FsStorage";
 import { PluginConfigStorageEntry } from "../plugin/PluginConfigEntry";
 import { StorageWithMounts } from "@storage/StorageWithMounts";
@@ -20,7 +20,7 @@ export class ServerStorageFactory {
 
     const base = new FsStorage(root);
     const withMounts = new StorageWithMounts(base);
-    withMounts.mount(SpecialWorkspaceEntry.PluginConfig, new PluginConfigStorageEntry(storageId, root));
+    withMounts.mount(SpecialPath.PluginConfig, new PluginConfigStorageEntry(storageId, root));
 
     if (!await exists(base, StoragePath.root)) {
       await createWorkspaceDefaults(base);

@@ -2,7 +2,7 @@ import { Dialog } from "@mui/material";
 import { SyncJobRunnerError } from "@sync/test/SyncJobRunner";
 import * as mobx from "mobx-react-lite";
 import { useState } from "react";
-import { ClientWorkspace } from "../ClientWorkspace";
+import { Workspace } from "../Workspace";
 import { ErrorDisplay } from "../error-boundary/ErrorDisplay";
 
 
@@ -10,7 +10,7 @@ export type SyncJobsProps = {}
 
 
 export const SyncJobs = mobx.observer((props: SyncJobsProps) => {
-  const runner = ClientWorkspace.instance.syncJobRunner;
+  const runner = Workspace.instance.syncJobRunner;
   const [ openError, setOpenError ] = useState<SyncJobRunnerError | undefined>();
 
   if (!runner) {

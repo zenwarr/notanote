@@ -8,7 +8,7 @@ import { observer } from "mobx-react-lite";
 import * as React from "react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { ClientWorkspace } from "../ClientWorkspace";
+import { Workspace } from "../Workspace";
 import { CreateEntryDialog } from "../CreateEntryDialog";
 import { ContainerWithSizeDetection } from "../utils/ContainerWithSizeDetection";
 import { TreeMenu } from "./TreeMenu";
@@ -34,7 +34,7 @@ function getCreateOptions(selectedPath: StoragePath | undefined, createType: Sto
   if (!selectedPath) {
     parentPath = StoragePath.root;
   } else {
-    const entry = ClientWorkspace.instance.storage.getMemoryData(selectedPath);
+    const entry = Workspace.instance.storage.getMemoryData(selectedPath);
     if (!entry) {
       parentPath = StoragePath.root;
     } else if (entry.stats.isDirectory) {
@@ -55,7 +55,7 @@ function getCreateOptions(selectedPath: StoragePath | undefined, createType: Sto
 
 
 export const WorkspaceView = observer((props: WorkspaceViewProps) => {
-  const cw = ClientWorkspace.instance;
+  const cw = Workspace.instance;
   const [ entryDialogOpened, setEntryDialogOpened ] = useState(false);
   const createOptions = useRef<CreateOptions | undefined>(undefined);
 
@@ -87,7 +87,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
       return;
     }
 
-    await ClientWorkspace.instance.remove(cw.selectedEntry);
+    await Workspace.instance.remove(cw.selectedEntry);
   }
 
   const containerClassName = cn(classes.treeContainer, { [classes.treeContainerPadding]: props.treeWithPadding });

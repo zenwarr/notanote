@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { DocumentManager } from "./DocumentManager";
 import { Document } from "./Document";
 import { observer } from "mobx-react-lite";
-import { ClientWorkspace } from "./ClientWorkspace";
+import { Workspace } from "./Workspace";
 import { useWindowTitle } from "./useWindowTitle";
 import { CircularProgress } from "@mui/material";
 import { makeStyles } from "@mui/styles";
@@ -55,7 +55,7 @@ export function FileView(props: FileViewProps) {
     applyGlobalDocSettings(doc);
     return doc;
   }, [ props.entryPath ]), {
-    onError: err => console.error(`Failed to load file ${ props.entryPath.normalized }: ${ err.message }`),
+    onError: err => console.error(`Failed to load file ${ props.entryPath.normalized }`, err),
   });
 
   const componentLoad = useLoad<React.ComponentType<EditorProps> | undefined>(useCallback(async () => {
@@ -90,7 +90,7 @@ export interface ConnectedFileViewProps {
 
 
 export const ConnectedFileView = observer((props: ConnectedFileViewProps) => {
-  const ws = ClientWorkspace.instance;
+  const ws = Workspace.instance;
   const openedDoc = ws.selectedFile ? ws.storage.get(ws.selectedFile) : undefined;
 
   useWindowTitle(openedDoc?.path.normalized);

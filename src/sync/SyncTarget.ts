@@ -1,21 +1,40 @@
 import { StorageEntryStats, StorageError, StorageErrorCode, EntryStorage } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
 import { ContentIdentity, DirContentIdentity, getContentIdentity } from "@sync/ContentIdentity";
-import { RemoteSyncProvider } from "@sync/RemoteSyncProvider";
+import { shouldPathBeSynced } from "@sync/Ignore";
+import { SyncTargetProvider } from "@sync/SyncTargetProvider";
+import { StorageSyncData } from "@sync/StorageSyncData";
 import { SyncOutlineEntry } from "@sync/SyncEntry";
 
 
-export class RemoteSyncWorker implements RemoteSyncProvider {
+export class SyncTarget implements SyncTargetProvider {
   constructor(storage: EntryStorage) {
-    this.remote = storage;
+    this.storage = storage;
   }
 
 
-  private remote!: EntryStorage;
+  private storage!: EntryStorage;
+
+
+  async getId(): Promise<string> {
+    const sd = new StorageSyncData(this.storage);
+    await sd.initStorage();
+    const id = (await sd.getConfig())?.storageId;
+
+    if (!id) {
+      throw new Error("Storage id not defined");
+    }
+
+    return id;
+  }
 
 
   async getOutline(start: StoragePath): Promise<SyncOutlineEntry | undefined> {
-    const storage = this.remote;
+    if (!shouldPathBeSynced(start)) {
+      return undefined;
+    }
+
+    const storage = this.storage;
 
     let stats: StorageEntryStats | undefined = undefined;
     try {
@@ -52,23 +71,23 @@ export class RemoteSyncWorker implements RemoteSyncProvider {
 
   async update(path: StoragePath, data: Buffer, remoteIdentity: ContentIdentity | undefined): Promise<void> {
     // todo: check identity
-    await this.remote.writeOrCreate(path, data);
+    await this.storage.writeOrCreate(path, data);
   }
 
 
   async createDir(path: StoragePath, remoteIdentity: ContentIdentity | undefined): Promise<void> {
     // todo: check identity
-    await this.remote.createDir(path);
+    await this.storage.createDir(path);
   }
 
 
   async remove(path: StoragePath, remoteIdentity: ContentIdentity): Promise<void> {
     // todo: check identity
-    await this.remote.remove(path);
+    await this.storage.remove(path);
   }
 
 
   async read(path: StoragePath): Promise<Buffer> {
-    return this.remote.read(path);
+    return this.storage.read(path);
   }
 }

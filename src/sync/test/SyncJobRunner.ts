@@ -1,6 +1,6 @@
 import * as mobx from "mobx";
 import { StoragePath } from "@storage/StoragePath";
-import { LocalSyncWorker, SyncJob } from "@sync/LocalSyncWorker";
+import { SyncJob } from "@sync/Sync";
 
 
 const MAX_PARALLEL_JOBS = 3;
@@ -19,9 +19,15 @@ export type TaskQueue = (cb: () => Promise<void>) => Promise<void>;
 const backgroundTaskQueue: TaskQueue = async cb => { setTimeout(cb, 0) };
 
 
+export interface SyncJobSource {
+  getJobs(count: number, filter?: (path: StoragePath) => boolean): Promise<SyncJob[]>;
+  doJob(job: SyncJob): Promise<void>;
+}
+
+
 export class SyncJobRunner {
-  constructor(worker: LocalSyncWorker, taskQueue: TaskQueue = backgroundTaskQueue) {
-    this.worker = worker;
+  constructor(source: SyncJobSource, taskQueue: TaskQueue = backgroundTaskQueue) {
+    this.syncSource = source;
     this.taskQueue = taskQueue;
     mobx.makeObservable(this, {
       runningJobs: mobx.observable
@@ -31,7 +37,7 @@ export class SyncJobRunner {
 
   async run(): Promise<void> {
     const jobCount = Math.max(MAX_PARALLEL_JOBS - this.runningJobs.length, 0);
-    const jobs = await this.worker.getJobs(jobCount, jobPath => !this.lockedPaths.has(jobPath.normalized));
+    const jobs = await this.syncSource.getJobs(jobCount, jobPath => !this.lockedPaths.has(jobPath.normalized));
     for (const job of jobs) {
       await this.taskQueue(() => this.runJob(job));
     }
@@ -53,7 +59,7 @@ export class SyncJobRunner {
     try {
       this.runningJobs.push(job);
       this.lockedPaths.add(job.path.normalized);
-      await this.worker.doJob(job);
+      await this.syncSource.doJob(job);
       this.lastSuccessfulJobDone = new Date();
       this.errors = this.errors.filter(e => !e.path.isEqual(job.path));
     } catch (error) {
@@ -76,7 +82,7 @@ export class SyncJobRunner {
   lastSuccessfulJobDone: Date | undefined = undefined;
 
   private readonly lockedPaths = new Set<string>();
-  private readonly worker: LocalSyncWorker;
+  private readonly syncSource: SyncJobSource;
   private readonly taskQueue: TaskQueue;
   private _isWorking = false;
 }

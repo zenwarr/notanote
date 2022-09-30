@@ -1,4 +1,4 @@
-import { SpecialWorkspaceEntry } from "@common/workspace/Workspace";
+import { SpecialPath } from "@common/workspace/Workspace";
 import child_process from "child_process";
 import path from "path";
 import assert from "assert";
@@ -163,7 +163,7 @@ async function getPrivateKeyPathAndEnsureParentExists(root: string): Promise<str
 
 
 async function getPrivateKeyPath(root: string): Promise<string | undefined> {
-  const secretsPath = path.join(root, SpecialWorkspaceEntry.Secrets.normalized);
+  const secretsPath = path.join(root, SpecialPath.SecretsDir.normalized);
   if (secretsPath) {
     return path.join(secretsPath, "ssh_key");
   } else {
