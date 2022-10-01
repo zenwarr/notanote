@@ -21,7 +21,7 @@ export class HttpSyncProvider implements SyncTargetProvider {
 
 
   async getId(): Promise<string> {
-    const data = (await httpRequest(`api/storages/${ this.storageName }/config`, {
+    const data = await (await httpRequest(`api/storages/${ this.storageName }/config`, {
       prefixUrl: this.server,
       credentials: "include",
       throwHttpErrors: false,

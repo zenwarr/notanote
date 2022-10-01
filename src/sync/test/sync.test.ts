@@ -6,7 +6,7 @@ import { StorageSyncData, StorageSyncConfig } from "@sync/StorageSyncData";
 import { Sync, SyncDiffType } from "@sync/Sync";
 import { SyncTarget } from "@sync/SyncTarget";
 import { DiffAction } from "@sync/SyncMetadataStorage";
-import { SyncJobRunner } from "@sync/test/SyncJobRunner";
+import { SyncJobRunner } from "@sync/SyncJobRunner";
 
 
 async function prepare(config?: StorageSyncConfig) {

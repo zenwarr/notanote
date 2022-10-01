@@ -25,7 +25,7 @@ export const SyncStatus = observer((props: SyncStatusProps) => {
   return <Tooltip title={ "Last sync: " + syncDate } placement={ "bottom-start" }>
     <Button onClick={ props.onClick }>
       <Box display={ "flex" }>
-        <SyncStatusIcon color={ color } rotate={ jobs.runningJobs.length > 0 }/>
+        <SyncStatusIcon color={ color } rotate={ jobs.isWorking }/>
 
         &nbsp;
 

@@ -7,7 +7,7 @@ import { isConflictingDiff, Sync } from "@sync/Sync";
 import { SyncTargetProvider } from "@sync/SyncTargetProvider";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { DiffAction } from "@sync/SyncMetadataStorage";
-import { SyncJobRunner } from "@sync/test/SyncJobRunner";
+import { SyncJobRunner } from "@sync/SyncJobRunner";
 import { makeObservable, observable } from "mobx";
 import { RecentDocStorage } from "./RecentDocStorage";
 
@@ -67,6 +67,9 @@ export class Workspace {
       this.loadError = error.message;
       this.loading = false;
     }
+
+    // run and forget
+    setTimeout(() => this.syncJobRunner?.run(), 500);
   }
 
 
@@ -102,7 +105,6 @@ export class Workspace {
     }
 
     await this.sync?.updateDiff(entry.path);
-    await this.syncJobRunner?.run();
 
     if (type === "file") {
       this.selectedEntry = path;
@@ -124,20 +126,17 @@ export class Workspace {
     await pointer.remove();
 
     await this.sync?.updateDiff(pointer.path);
-    await this.syncJobRunner?.run();
   }
 
 
   async acceptChangeTree(path: StoragePath, diff: SyncDiffEntry[]) {
     let syncDiffEntries = diff.filter(e => e.path.inside(path, true) && !isConflictingDiff(e.diff));
     await this.sync?.acceptMulti(syncDiffEntries);
-    await this.syncJobRunner?.run();
   }
 
 
   async acceptChanges(diff: SyncDiffEntry, action: DiffAction) {
     await this.sync?.accept(diff, action);
-    await this.syncJobRunner?.run();
   }
 
 
