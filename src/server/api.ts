@@ -19,7 +19,7 @@ type StorageRouteParams = {
 
 async function getStorage(req: FastifyRequest<{ Params: StorageRouteParams }>) {
   const profile = getProfile(req);
-  const storage = await ServerStorageFactory.instance.getOrCreateForId(profile.id, req.params.storageId);
+  const storage = await ServerStorageFactory.instance.getOrCreateForName(profile.id, req.params.storageId);
   if (!storage) {
     throw new LogicError(ErrorCode.NotFound, "workspace not found");
   }

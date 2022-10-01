@@ -51,7 +51,7 @@ export function registerHttpStorageProvider() {
   StorageProviderManager.instance.registerProvider<HttpStorageConfig>({
     name: "http",
     title: "HTTP",
-    syncFactory: c => new HttpSyncProvider(c.server, c.storageName),
+    syncFactory: c => new HttpSyncProvider(c.server, c.storageName || undefined),
     configEditor: HttpConfigEditor,
     validateOptions: async o => validateOptions(o, true),
     validateStartupOptions: async o=> validateOptions(o, false)

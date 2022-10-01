@@ -8,19 +8,16 @@ import { PluginConfigStorageEntry } from "../plugin/PluginConfigEntry";
 import { StorageWithMounts } from "@storage/StorageWithMounts";
 
 
-export const DEFAULT_STORAGE_ID = "default";
-
-
 export class ServerStorageFactory {
-  async getOrCreateForId(userId: string, storageId: string): Promise<{ storage: EntryStorage, realRoot: string }> {
-    const root = getStorageRoot(userId, storageId);
+  async getOrCreateForName(userId: string, storageName: string): Promise<{ storage: EntryStorage, realRoot: string }> {
+    const root = getStorageRoot(userId, storageName);
     if (!root) {
       throw new LogicError(ErrorCode.NotFound, "storage root not found");
     }
 
     const base = new FsStorage(root);
     const withMounts = new StorageWithMounts(base);
-    withMounts.mount(SpecialPath.PluginConfig, new PluginConfigStorageEntry(storageId, root));
+    withMounts.mount(SpecialPath.PluginConfig, new PluginConfigStorageEntry(storageName, root));
 
     if (!await exists(base, StoragePath.root)) {
       await createWorkspaceDefaults(base);
@@ -37,8 +34,13 @@ export class ServerStorageFactory {
 }
 
 
-function getStorageRoot(userId: string, workspaceId: string) {
-  return joinNestedPathSecure(getCommonStoragesRoot(), path.join(userId, workspaceId));
+function getStorageRoot(userId: string, storageName: string) {
+  // check storage name is not empty and contains only latin letters
+  if (!storageName || !storageName.match(/^[a-zA-Z0-9_-]+$/)) {
+    throw new Error("Invalid storage name");
+  }
+
+  return joinNestedPathSecure(getCommonStoragesRoot(), path.join(userId, storageName));
 }
 
 
