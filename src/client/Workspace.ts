@@ -1,5 +1,5 @@
 import { FileSettingsProvider } from "@common/workspace/FileSettingsProvider";
-import { StorageEntryData } from "@common/workspace/StorageEntryData";
+import { StorageEntryData } from "@storage/StorageEntryData";
 import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
 import { StorageEntryType } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";

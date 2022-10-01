@@ -1,4 +1,4 @@
-import { StorageEntryData } from "@common/workspace/StorageEntryData";
+import { StorageEntryData } from "@storage/StorageEntryData";
 import { StoragePath } from "./StoragePath";
 
 

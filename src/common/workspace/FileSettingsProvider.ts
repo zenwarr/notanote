@@ -1,8 +1,9 @@
+import { patternMatches, singlePatternMatches } from "@common/utils/patterns";
 import { EntryStorage, StorageErrorCode } from "@storage/EntryStorage";
+import { StoragePath } from "@storage/StoragePath";
+import { FileSettings } from "../Settings";
 import { tryParseJson } from "../utils/tryParse";
 import { SpecialPath } from "./Workspace";
-import { FileSettings } from "../Settings";
-import { StoragePath } from "@storage/StoragePath";
 
 
 interface WorkspaceSettings {
@@ -39,13 +40,7 @@ export class FileSettingsProvider {
 
 
   getSettingsForPath(entryPath: StoragePath): FileSettings {
-    const matching = this.settings?.patterns?.filter(pat => {
-      if (typeof pat.files === "string") {
-        return patternMatches(entryPath, pat.files);
-      } else {
-        return pat.files.some(pattern => patternMatches(entryPath, pattern));
-      }
-    });
+    const matching = this.settings?.patterns?.filter(pat => patternMatches(entryPath, pat.files));
 
     let specificSettings = {
       ...this.settings?.settings
@@ -95,11 +90,3 @@ export class FileSettingsProvider {
 }
 
 
-export function patternMatches(sp: StoragePath, pattern: string): boolean {
-  if (!pattern.startsWith("/")) {
-    pattern = "/" + pattern;
-  }
-
-  const re = new RegExp(pattern);
-  return sp.normalized.match(re) != null;
-}

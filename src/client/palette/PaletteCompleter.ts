@@ -1,5 +1,5 @@
 import levenshtein from "js-levenshtein";
-import { StorageEntryData } from "@common/workspace/StorageEntryData";
+import { StorageEntryData } from "@storage/StorageEntryData";
 import { Workspace } from "../Workspace";
 import { PaletteOption } from "./Palette";
 import { RecentDocStorage } from "../RecentDocStorage";

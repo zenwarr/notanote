@@ -2,14 +2,21 @@ import { KVEntryStorage } from "@storage/KVEntryStorage";
 import { MapKV } from "@storage/MapKV";
 import { EntryStorage } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
+import { StorageSyncData, StorageSyncConfig } from "@sync/StorageSyncData";
 import { Sync, SyncDiffType } from "@sync/Sync";
 import { SyncTarget } from "@sync/SyncTarget";
 import { DiffAction } from "@sync/SyncMetadataStorage";
 import { SyncJobRunner } from "@sync/test/SyncJobRunner";
 
 
-async function prepare() {
+async function prepare(config?: StorageSyncConfig) {
   const local = new KVEntryStorage(new MapKV());
+
+  const sd = new StorageSyncData(local);
+  await sd.initStorage();
+  if (config) {
+    await sd.setConfig(config);
+  }
 
   const remote = new KVEntryStorage(new MapKV());
   const target = new SyncTarget(remote);
@@ -122,4 +129,31 @@ it("resolving conflict by accepting remote changes", async () => {
 
   const remoteRead = await d.remote.read(new StoragePath("/file.txt"));
   expect(remoteRead.toString()).toEqual("remote");
+});
+
+
+it("automatically accept change", async () => {
+  const d = await prepare({
+    storageId: "test",
+    diffRules: [
+      {
+        diff: SyncDiffType.LocalCreate,
+        action: DiffAction.AcceptAuto,
+      }
+    ]
+  });
+  await write(d.local, "/file.txt", "hello, world!");
+
+  await d.source.updateDiff();
+  const jobs = await d.source.getJobs(Infinity);
+  for (const job of jobs) await d.source.doJob(job);
+
+  await d.source.updateDiff();
+  expect(d.source.actualDiff.length).toEqual(0);
+
+  const localRead = await d.local.read(new StoragePath("/file.txt"));
+  expect(localRead.toString()).toEqual("hello, world!");
+
+  const remoteRead = await d.remote.read(new StoragePath("/file.txt"));
+  expect(remoteRead.toString()).toEqual("hello, world!");
 });

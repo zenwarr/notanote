@@ -3,7 +3,7 @@ import * as mobx from "mobx";
 import * as p from "path";
 import { StorageEntryPointer, StorageError, StorageErrorCode, EntryStorage } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
-import { StorageEntryData } from "@common/workspace/StorageEntryData";
+import { StorageEntryData } from "@storage/StorageEntryData";
 
 
 /**

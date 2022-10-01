@@ -2,12 +2,21 @@ import { tryParseJson } from "@common/utils/tryParse";
 import { SpecialPath } from "@common/workspace/Workspace";
 import { EntryStorage, StorageEntryPointer, StorageError, StorageErrorCode } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
-import { EntrySyncMetadata, mergeMetadataMaps, SyncMetadataMap, SyncMetadataStorage } from "@sync/SyncMetadataStorage";
+import { SyncDiffType } from "@sync/Sync";
+import { DiffAction, EntrySyncMetadata, mergeMetadataMaps, SyncMetadataMap, SyncMetadataStorage } from "@sync/SyncMetadataStorage";
 import * as uuid from "uuid";
 
 
-export interface SyncStorageConfig {
+export interface DiffHandleRule {
+  files?: string | string[];
+  diff?: SyncDiffType | SyncDiffType[];
+  action: DiffAction;
+}
+
+
+export interface StorageSyncConfig {
   storageId: string;
+  diffRules?: DiffHandleRule[];
 }
 
 
@@ -29,7 +38,7 @@ export class StorageSyncData {
    */
   async initStorage() {
     if (!await this.storage.exists(SpecialPath.SyncStorageConfig)) {
-      const defaultConfig: SyncStorageConfig = {
+      const defaultConfig: StorageSyncConfig = {
         storageId: uuid.v4()
       };
       await this.storage.writeOrCreate(SpecialPath.SyncStorageConfig, Buffer.from(JSON.stringify(defaultConfig)));
@@ -37,9 +46,14 @@ export class StorageSyncData {
   }
 
 
-  async getConfig(): Promise<SyncStorageConfig | null> {
+  async getConfig(): Promise<StorageSyncConfig | null> {
     const data = await this.storage.read(SpecialPath.SyncStorageConfig);
     return tryParseJson(data.toString());
+  }
+
+
+  async setConfig(config: StorageSyncConfig): Promise<void> {
+    await this.storage.writeOrCreate(SpecialPath.SyncStorageConfig, Buffer.from(JSON.stringify(config, undefined, 2)));
   }
 
 
@@ -67,7 +81,7 @@ export class SyncMetadataStorageImpl implements SyncMetadataStorage {
       return JSON.parse(d.toString());
     } catch (e: any) {
       if (e instanceof StorageError && e.code === StorageErrorCode.NotExists) {
-        return {}
+        return {};
       } else {
         throw e;
       }

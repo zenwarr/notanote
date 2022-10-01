@@ -1,4 +1,4 @@
-import { StorageEntryData, walkStorageEntryData } from "@common/workspace/StorageEntryData";
+import { StorageEntryData, walkStorageEntryData } from "@storage/StorageEntryData";
 import { StoragePath } from "@storage/StoragePath";
 import * as mobx from "mobx-react-lite";
 import { useMemo } from "react";

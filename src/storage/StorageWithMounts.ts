@@ -1,4 +1,4 @@
-import { walkStorageEntryData } from "@common/workspace/StorageEntryData";
+import { walkStorageEntryData } from "@storage/StorageEntryData";
 import { StorageEntryStats, StorageEntryPointer, StorageError, StorageErrorCode, EntryStorage } from "./EntryStorage";
 import { StoragePath } from "./StoragePath";
 

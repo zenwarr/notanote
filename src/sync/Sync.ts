@@ -1,5 +1,6 @@
+import { patternMatches } from "@common/utils/patterns";
 import { shouldPathBeSynced } from "@sync/Ignore";
-import { StorageSyncData } from "@sync/StorageSyncData";
+import { DiffHandleRule, StorageSyncData } from "@sync/StorageSyncData";
 import { StorageError, StorageErrorCode, EntryStorage } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
 import { SyncTargetProvider } from "@sync/SyncTargetProvider";
@@ -67,12 +68,6 @@ export interface SyncJob {
 }
 
 
-export interface DiffHandleRule {
-  diff: SyncDiffType;
-  action: DiffAction;
-}
-
-
 export class Sync {
   constructor(storage: EntryStorage, syncTarget: SyncTargetProvider) {
     this.storage = storage;
@@ -92,9 +87,19 @@ export class Sync {
   private readonly syncTarget: SyncTargetProvider;
   private readonly localSyncTarget: SyncTargetProvider;
   private syncMetadata: SyncMetadataStorage | undefined;
-  diffHandleRules: DiffHandleRule[] | undefined;
   actualDiff: SyncDiffEntry[] = [];
   updatingDiff = false;
+
+
+  private async getDiffHandleRules(): Promise<DiffHandleRule[] | undefined> {
+    const sd = new StorageSyncData(this.storage);
+    const config = await sd.getConfig();
+    if (!config?.diffRules) {
+      return undefined;
+    }
+
+    return config.diffRules;
+  }
 
 
   private async getSyncMetadataStorage(): Promise<SyncMetadataStorage> {
@@ -266,7 +271,7 @@ export class Sync {
 
   private async handleDiff(diffs: SyncDiffEntry[]): Promise<void> {
     for (const diff of diffs) {
-      const rule = this.findDiffHandleRule(diff);
+      const rule = await this.findDiffHandleRule(diff);
       if (rule) {
         await this.accept(diff, rule.action);
       }
@@ -274,8 +279,27 @@ export class Sync {
   }
 
 
-  private findDiffHandleRule(diff: SyncDiffEntry): DiffHandleRule | undefined {
-    return this.diffHandleRules?.find(r => r.diff === diff.diff);
+  private async findDiffHandleRule(diff: SyncDiffEntry): Promise<DiffHandleRule | undefined> {
+    function diffRuleMatches(diffRule: SyncDiffType | SyncDiffType[]) {
+      return Array.isArray(diffRule) ? diffRule.includes(diff.diff) : diffRule === diff.diff;
+    }
+
+    const rules = await this.getDiffHandleRules();
+    return rules?.find(rule => {
+      if (!rule.files && !rule.diff) {
+        return false;
+      }
+
+      if (rule.files && !patternMatches(diff.path, rule.files)) {
+        return false;
+      }
+
+      if (rule.diff && !diffRuleMatches(rule.diff)) {
+        return false;
+      }
+
+      return true;
+    });
   }
 
 
