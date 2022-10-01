@@ -129,7 +129,8 @@ export class Workspace {
 
 
   async acceptChangeTree(path: StoragePath, diff: SyncDiffEntry[]) {
-    await this.sync?.acceptMulti(diff.filter(e => e.path.inside(path, true) && !isConflictingDiff(e.diff)));
+    let syncDiffEntries = diff.filter(e => e.path.inside(path, true) && !isConflictingDiff(e.diff));
+    await this.sync?.acceptMulti(syncDiffEntries);
     await this.syncJobRunner?.run();
   }
 

@@ -28,6 +28,10 @@ export const SyncJobs = mobx.observer((props: SyncJobsProps) => {
       }
     </ul>
 
+    {
+      runner.errors.length > 0 && <div>Errors:</div>
+    }
+
     <ul>
       {
         runner.errors.map(error => <li key={ error.path.normalized } onClick={ () => setOpenError(error) }>

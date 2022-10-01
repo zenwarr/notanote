@@ -1,10 +1,12 @@
 import { makeStyles } from "@mui/styles";
 import { StoragePath } from "@storage/StoragePath";
-import { isConflictingDiff, SyncDiffType, isCleanRemoteDiff, isCleanLocalDiff } from "@sync/Sync";
+import { isConflictingDiff, SyncDiffType, isCleanRemoteDiff } from "@sync/Sync";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import cn from "classnames";
-import DownloadIcon from '@mui/icons-material/Download';
-import VerticalAlignCenterIcon from '@mui/icons-material/VerticalAlignCenter';
+import DownloadIcon from "@mui/icons-material/Download";
+import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
+import CheckIcon from "@mui/icons-material/Check";
+import { Tooltip } from "@mui/material";
 
 
 export type DiffTreeNodeProps = {
@@ -18,9 +20,7 @@ export function DiffTreeNode(props: DiffTreeNodeProps) {
 
   const d = props.diff;
 
-  const containerClassName = cn({
-    [classes.accepted]: d && d.syncMetadata?.accepted === d.actual && !(d.syncMetadata?.accepted == null && d.actual == null)
-  });
+  const isAccepted = d && d.syncMetadata?.accepted === d.actual && !(d.syncMetadata?.accepted == null && d.actual == null);
 
   const itemClassName = cn({
     [classes.new]: d && (d.diff === SyncDiffType.LocalCreate || d.diff === SyncDiffType.ConflictingCreate),
@@ -43,26 +43,34 @@ export function DiffTreeNode(props: DiffTreeNodeProps) {
     [classes.removed]: d && d.diff === SyncDiffType.ConflictingRemoteRemove
   });
 
-  return <span className={ containerClassName }>
-    <span className={ itemClassName }>
-      { props.path.isEqual(StoragePath.root) ? "<root>" : props.path.basename }
-    </span>
-
-    {
-      isCleanRemote && <span>
-        <DownloadIcon className={ remoteIconClassName }/>
+  return <Tooltip title={ <pre>{ JSON.stringify(d, undefined, 2) }</pre> }>
+    <span>
+      <span className={ itemClassName }>
+        { props.path.isEqual(StoragePath.root) ? "<root>" : props.path.basename }
       </span>
-    }
 
-    {
-      isConflict && <span>
-        <VerticalAlignCenterIcon color={ "error" } className={ classes.icon }/>
-        <span className={ conflictTextClass }>
-          { getConflictText(d?.diff) }
+      {
+          isCleanRemote && <span>
+          <DownloadIcon className={ remoteIconClassName }/>
         </span>
-      </span>
-    }
-  </span>;
+      }
+
+      {
+          isConflict && <span>
+          <VerticalAlignCenterIcon color={ "error" } className={ classes.icon }/>
+          <span className={ conflictTextClass }>
+            { getConflictText(d?.diff) }
+          </span>
+        </span>
+      }
+
+      {
+          isAccepted && <Tooltip title={ "Change is accepted and is going to be applied soon" }>
+          <CheckIcon color={ "success" } className={ classes.acceptIcon }/>
+        </Tooltip>
+      }
+    </span>
+  </Tooltip>;
 }
 
 
@@ -79,13 +87,14 @@ const useStyles = makeStyles(theme => ({
   missing: {
     color: "gray"
   },
-  accepted: {
-    opacity: 0.5
-  },
   icon: {
     verticalAlign: "middle",
+    marginLeft: theme.spacing(0.5)
+  },
+  acceptIcon: {
+    verticalAlign: "middle",
     marginLeft: theme.spacing(0.5),
-    marginRight: theme.spacing(0.5)
+    fontSize: 12
   }
 }));
 

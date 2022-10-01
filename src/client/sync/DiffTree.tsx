@@ -59,7 +59,7 @@ export const DiffTree = mobx.observer((props: DiffTreeProps) => {
           }
 
           {
-              props.diff.length === 0 && <div>
+            props.diff.length === 0 && <div>
               No changes
             </div>
           }

@@ -46,12 +46,6 @@ export const SyncPanel = mobx.observer(() => {
           <Typography mb={ 2 } variant={ "h5" }>Jobs</Typography>
 
           <SyncJobs/>
-
-          {
-            jobs.errors.map(err => <div key={ err.date.valueOf() }>
-              { err.date.toLocaleString() }: { err.path.normalized }: { err.error.message }
-            </div>)
-          }
         </Paper>
       </Grid>
     </Grid>
