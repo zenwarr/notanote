@@ -1,6 +1,6 @@
 {
-	"appId": "com.nuclear.notes",
-	"appName": "nuclear-notes",
-	"webDir": "static",
-	"bundledWebRuntime": false
+  "appId": "com.nuclear-notes.app",
+  "appName": "Nuclear notes",
+  "webDir": "static",
+  "bundledWebRuntime": false
 }
