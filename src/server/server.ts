@@ -72,12 +72,14 @@ export async function startApp() {
     if (err instanceof LogicError) {
       res.status(getStatusCodeForError(err.code)).send({
         error: err.message,
-        code: err.code
+        code: err.code,
+        class: "LogicError"
       });
     } else if (err instanceof StorageError) {
       res.status(500).send({
         error: err.message,
-        code: err.code
+        code: err.code,
+        class: "StorageError"
       });
     } else if (err != null && typeof err === "object") {
       res.status(500).send({

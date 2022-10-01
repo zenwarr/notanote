@@ -1,6 +1,7 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { Button, TextField, Stack, CircularProgress } from "@mui/material";
 import ky from "ky";
+import { httpRequest } from "../utils/httpRequest";
 
 
 export type HttpLoginStatusProps = {
@@ -142,25 +143,19 @@ async function requestLogOut(server: string) {
 
 
 async function requestLogIn(server: string, name: string, password: string): Promise<UserInfo | undefined> {
-  const r = await ky.post("auth/login", {
-    prefixUrl: server,
-    credentials: "include",
-    json: { name, password },
-    throwHttpErrors: false
-  });
+  try {
+    const r = await httpRequest("auth/login", {
+      prefixUrl: server,
+      credentials: "include",
+      json: { name, password }
+    });
 
-  if (r.status !== 200) {
-    try {
-      const json = await r.json();
-      alert((json != null && typeof json === "object" && typeof (json as any).error === "string") ? (json as any).error : "Unknown error");
-    } catch (err) {
-      alert("Unknown error");
-    }
-    return undefined;
-  } else {
     const d = await r.json() as any;
     return {
       name: d.name
     };
+  } catch (err: any) {
+    alert(err.message);
+    return undefined;
   }
 }

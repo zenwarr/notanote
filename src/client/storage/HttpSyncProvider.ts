@@ -1,9 +1,9 @@
 import { StoragePath } from "@storage/StoragePath";
 import { ContentIdentity } from "@sync/ContentIdentity";
 import { SyncTargetProvider } from "@sync/SyncTargetProvider";
-import ky from "ky";
 import * as bson from "bson";
 import { SyncOutlineEntry } from "@sync/SyncEntry";
+import { httpRequest } from "utils/httpRequest";
 
 
 const DEFAULT_STORAGE_NAME = "default";
@@ -21,10 +21,11 @@ export class HttpSyncProvider implements SyncTargetProvider {
 
 
   async getId(): Promise<string> {
-    const data = await ky.get(`api/storages/${ this.storageName }/config`, {
+    const data = (await httpRequest(`api/storages/${ this.storageName }/config`, {
       prefixUrl: this.server,
-      credentials: "include"
-    }).json();
+      credentials: "include",
+      throwHttpErrors: false,
+    })).json();
 
     if (!(data && typeof data === "object") || typeof (data as any).id !== "string") {
       throw new Error("Invalid response: string expected");
@@ -35,27 +36,23 @@ export class HttpSyncProvider implements SyncTargetProvider {
 
 
   async getOutline(path: StoragePath): Promise<SyncOutlineEntry | undefined> {
-    const data = await ky.get(`api/storages/${ this.storageName }/sync/outline`, {
+    return (await httpRequest(`api/storages/${ this.storageName }/sync/outline`, {
       prefixUrl: this.server,
       credentials: "include",
+      throwHttpErrors: false,
       searchParams: {
         path: path.normalized
       }
-    }).text();
-
-    if (!data) {
-      return undefined;
-    }
-
-    return JSON.parse(data);
+    })).json();
   }
 
 
   async update(path: StoragePath, data: Buffer, remoteIdentity: ContentIdentity | undefined): Promise<void> {
-    // todo: check errors
-    await ky.post(`api/storages/${ this.storageName }/sync/update`, {
+    await httpRequest(`api/storages/${ this.storageName }/sync/update`, {
+      method: "post",
       prefixUrl: this.server,
       credentials: "include",
+      throwHttpErrors: false,
       headers: {
         "content-type": "application/bson"
       },
@@ -69,8 +66,8 @@ export class HttpSyncProvider implements SyncTargetProvider {
 
 
   async createDir(path: StoragePath, remoteIdentity: ContentIdentity | undefined): Promise<void> {
-    // todo: check errors
-    await ky.post(`api/storages/${ this.storageName }/sync/create-dir`, {
+    await httpRequest(`api/storages/${ this.storageName }/sync/create-dir`, {
+      method: "post",
       prefixUrl: this.server,
       credentials: "include",
       headers: {
@@ -85,8 +82,8 @@ export class HttpSyncProvider implements SyncTargetProvider {
 
 
   async remove(path: StoragePath, remoteIdentity: ContentIdentity): Promise<void> {
-    // todo: check errors
-    await ky.post(`api/storages/${ this.storageName }/sync/remove`, {
+    await httpRequest(`api/storages/${ this.storageName }/sync/remove`, {
+      method: "post",
       prefixUrl: this.server,
       credentials: "include",
       headers: {
@@ -101,14 +98,14 @@ export class HttpSyncProvider implements SyncTargetProvider {
 
 
   async read(path: StoragePath): Promise<Buffer> {
-    // todo: check errors
-    const ab = await ky.get(`api/storages/${ this.storageName }/sync/read`, {
+    const r = await httpRequest(`api/storages/${ this.storageName }/sync/read`, {
       prefixUrl: this.server,
       credentials: "include",
       searchParams: {
         path: path.normalized
       }
-    }).arrayBuffer();
-    return Buffer.from(ab);
+    });
+
+    return Buffer.from(await r.arrayBuffer());
   }
 }
