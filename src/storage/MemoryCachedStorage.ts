@@ -32,10 +32,9 @@ export class MemoryCachedStorage extends EntryStorage {
   }
 
 
-  override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
+  override async createDir(path: StoragePath): Promise<void> {
     await this.remote.createDir(path);
     await this.memory.createDir(path);
-    return new StorageEntryPointer(path, this);
   }
 
 
@@ -84,9 +83,8 @@ export class MemoryCachedStorage extends EntryStorage {
   }
 
 
-  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<StorageEntryPointer> {
+  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<void> {
     await this.remote.writeOrCreate(path, content);
     await this.memory.writeOrCreate(path, content);
-    return new StorageEntryPointer(path, this);
   }
 }

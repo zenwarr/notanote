@@ -157,7 +157,7 @@ export class MemoryStorage extends EntryStorage {
   }
 
 
-  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<StorageEntryPointer> {
+  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<void> {
     let p = this.getDataObject(path);
     if (!p) {
       p = this.createDataObject({
@@ -172,8 +172,6 @@ export class MemoryStorage extends EntryStorage {
     }
 
     p.content = content;
-
-    return new StorageEntryPointer(path, this);
   }
 
 
@@ -182,7 +180,7 @@ export class MemoryStorage extends EntryStorage {
   }
 
 
-  override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
+  override async createDir(path: StoragePath): Promise<void> {
     this.createDataObject({
       path,
       stats: {
@@ -191,9 +189,7 @@ export class MemoryStorage extends EntryStorage {
         createTs: new Date().valueOf(),
         updateTs: new Date().valueOf()
       }
-    })
-
-    return new StorageEntryPointer(path, this);
+    });
   }
 
 

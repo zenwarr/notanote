@@ -18,7 +18,7 @@ export class FsStorage extends EntryStorage {
   private readonly rootPath: string;
 
 
-  override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
+  override async createDir(path: StoragePath): Promise<void> {
     const realPath = this.toAbsolutePath(path);
     try {
       await fs.promises.mkdir(realPath, { recursive: true });
@@ -29,8 +29,6 @@ export class FsStorage extends EntryStorage {
         throw new StorageError(StorageErrorCode.Unknown, path, err?.message || "Unknown error");
       }
     }
-
-    return new StorageEntryPointer(path, this);
   }
 
 
@@ -123,13 +121,12 @@ export class FsStorage extends EntryStorage {
   }
 
 
-  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<StorageEntryPointer> {
+  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<void> {
     const absPath = this.toAbsolutePath(path);
 
     await this.createDir(path.parentDir);
 
     await fs.promises.writeFile(absPath, content);
-    return new StorageEntryPointer(path, this);
   }
 
 

@@ -42,7 +42,7 @@ export class KVEntryStorage extends EntryStorage {
   }
 
 
-  override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
+  override async createDir(path: StoragePath): Promise<void> {
     let curPath = StoragePath.root;
     for (const part of path.parts) {
       curPath = curPath.child(part);
@@ -58,8 +58,6 @@ export class KVEntryStorage extends EntryStorage {
         throw new StorageError(StorageErrorCode.InvalidStructure, path, `Cannot create directory: a file with the same name already exists`);
       }
     }
-
-    return new StorageEntryPointer(curPath, this);
   }
 
 
@@ -133,7 +131,7 @@ export class KVEntryStorage extends EntryStorage {
   }
 
 
-  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<StorageEntryPointer> {
+  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<void> {
     await this.createDir(path.parentDir);
 
     const entry = await this._kv.get(path.normalized);
@@ -152,8 +150,6 @@ export class KVEntryStorage extends EntryStorage {
         data: content,
       });
     }
-
-    return new StorageEntryPointer(path, this);
   }
 
 

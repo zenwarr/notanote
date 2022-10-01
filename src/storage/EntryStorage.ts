@@ -39,7 +39,7 @@ export abstract class EntryStorage {
    * If a directory already exists (or a file with given path exists), this method must throw an error.
    * Creating parent directories can partially fail, in which case already created dirs can be left in the storage.
    */
-  abstract createDir(path: StoragePath): Promise<StorageEntryPointer>;
+  abstract createDir(path: StoragePath): Promise<void>;
 
 
   /**
@@ -54,7 +54,7 @@ export abstract class EntryStorage {
    * Using the method on a directory must throw an error.
    * If the file does not exist, it must be created (its parent directories must be created too).
    */
-  abstract writeOrCreate(path: StoragePath, content: Buffer): Promise<StorageEntryPointer>;
+  abstract writeOrCreate(path: StoragePath, content: Buffer): Promise<void>;
 
 
   /**

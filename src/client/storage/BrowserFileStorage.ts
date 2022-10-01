@@ -46,13 +46,11 @@ export class BrowserFileStorage extends EntryStorage {
   }
 
 
-  override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
+  override async createDir(path: StoragePath): Promise<void> {
     const dirs = await this.getDirectoryHandle(path, true);
     if (!dirs) {
       throw new Error("Failed to create directory");
     }
-
-    return new StorageEntryPointer(path, this);
   }
 
 
@@ -212,7 +210,7 @@ export class BrowserFileStorage extends EntryStorage {
   }
 
 
-  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<StorageEntryPointer> {
+  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<void> {
     const handles = await this.getHandle(path, true);
     if (!handles) {
       throw new StorageError(StorageErrorCode.NotExists, path, "File does not exist");
@@ -231,8 +229,6 @@ export class BrowserFileStorage extends EntryStorage {
     await writable.truncate(0);
     await writable.write(content);
     await writable.close();
-
-    return new StorageEntryPointer(path, this);
   }
 
 

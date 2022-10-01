@@ -9,7 +9,10 @@ export async function registerStorageProviders() {
 
   const platform = getPlatform();
   if (platform === Platform.Electron) {
-    const { registerNodeFsStorageProvider } = await require("../storage-config/NodeFsStorageConfigEditor")
+    const { registerNodeFsStorageProvider } = await require("../storage-config/NodeFsStorageConfigEditor");
     registerNodeFsStorageProvider();
+  } else if (platform === Platform.Android) {
+    const { registerAndroidStorageProvider } = await require("../storage-config/AndroidStorageConfigEditor");
+    registerAndroidStorageProvider();
   }
 }

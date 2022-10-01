@@ -27,13 +27,12 @@ export class StorageWithMounts extends EntryStorage {
   private mounts = new Map<string, MountedFile>();
 
 
-  override async createDir(path: StoragePath): Promise<StorageEntryPointer> {
+  override async createDir(path: StoragePath): Promise<void> {
     if (this.mounts.has(path.normalized)) {
       throw new StorageError(StorageErrorCode.AlreadyExists, path, "Storage entry already exists");
     }
 
     await this.base.createDir(path);
-    return new StorageEntryPointer(path, this);
   }
 
 
@@ -131,12 +130,12 @@ export class StorageWithMounts extends EntryStorage {
   }
 
 
-  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<StorageEntryPointer> {
+  override async writeOrCreate(path: StoragePath, content: Buffer): Promise<void> {
     const mounted = this.mounts.get(path.normalized);
     if (mounted) {
       await mounted.write(path, content);
     }
 
-    return this.base.writeOrCreate(path, content);
+    await this.base.writeOrCreate(path, content);
   }
 }
