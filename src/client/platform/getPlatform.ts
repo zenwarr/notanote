@@ -1,6 +1,3 @@
-import { Capacitor } from "@capacitor/core";
-
-
 export enum Platform {
   Web = "web",
   Electron = "electron",
@@ -9,6 +6,24 @@ export enum Platform {
 }
 
 
+let platform: Platform | undefined;
+
+
 export function getPlatform(): Platform {
-  return Capacitor.getPlatform() as Platform;
+  if (platform) {
+    return platform;
+  }
+
+  try {
+    const cap = require("@capacitor/core");
+    platform = cap.Capacitor.getPlatform() as Platform;
+  } catch (e: any) {
+    if (e.code === "MODULE_NOT_FOUND") {
+      platform = Platform.Web;
+    } else {
+      throw e;
+    }
+  }
+
+  return platform;
 }
