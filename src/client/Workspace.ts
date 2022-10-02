@@ -52,13 +52,6 @@ export class Workspace {
       // todo: failing on this step can lead to damaging data
       await this.storage.initWithRemoteOutline();
 
-      // todo: run in background
-      try {
-        await this.sync?.updateDiff(StoragePath.root);
-      } catch (e: any) {
-        console.error("Failed to update diff: ", e);
-      }
-
       await FileSettingsProvider.instance.load();
 
       this.loading = false;
@@ -69,7 +62,15 @@ export class Workspace {
     }
 
     // run and forget
-    setTimeout(() => this.syncJobRunner?.run(), 500);
+    setTimeout(async () => {
+      try {
+        await this.sync?.updateDiff(StoragePath.root);
+      } catch (e: any) {
+        console.error("Failed to update diff: ", e);
+      }
+
+      await this.syncJobRunner?.run()
+    }, 500);
   }
 
 
