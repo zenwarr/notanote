@@ -95,12 +95,10 @@ async function initialize(config?: StorageConfig): Promise<boolean> {
     throw new Error("Local storage configuration is invalid: " + valError);
   }
 
-  const backedLocalStorage = localStorageProvider.storageFactory(config.local.options);
-  const localStorage = new MemoryCachedStorage(backedLocalStorage);
+  const localStorage = localStorageProvider.storageFactory(config.local.options);
 
   StorageProviderManager.instance.setStorageConfig(config);
   Workspace.init(localStorage, syncProvider);
-  FileSettingsProvider.init(localStorage);
 
   return true;
 }

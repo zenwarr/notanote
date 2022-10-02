@@ -1,7 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { configure } from "mobx";
 import { Workbox } from "workbox-window";
-import { getPlatform } from "./platform/getPlatform";
 import { registerStorageProviders } from "./storage/StorageRegistration";
 import { AppThemeProvider } from "./Theme";
 import { ErrorBoundary } from "./error-boundary/ErrorBoundary";

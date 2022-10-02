@@ -17,13 +17,13 @@ interface WorkspaceSettings {
 
 export class FileSettingsProvider {
   constructor(fs: EntryStorage) {
-    this.fs = fs;
+    this.storage = fs;
   }
 
 
   async load(): Promise<void> {
     try {
-      const text = (await this.fs.get(SpecialPath.Settings).read()).toString();
+      const text = (await this.storage.get(SpecialPath.Settings).read()).toString();
       if (!text) {
         return;
       }
@@ -73,6 +73,7 @@ export class FileSettingsProvider {
     if (!FileSettingsProvider._instance) {
       throw new Error("FileSettingsProvider is not initialized");
     }
+
     return FileSettingsProvider._instance;
   }
 
@@ -81,12 +82,13 @@ export class FileSettingsProvider {
     if (FileSettingsProvider._instance) {
       return;
     }
+
     FileSettingsProvider._instance = new FileSettingsProvider(fs);
   }
 
 
   private settings: WorkspaceSettings | undefined;
-  private readonly fs: EntryStorage;
+  private readonly storage: EntryStorage;
 }
 
 

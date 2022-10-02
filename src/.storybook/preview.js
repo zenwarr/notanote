@@ -29,15 +29,6 @@ export const decorators = [
       registerStorageProviders();
     }
 
-    const remote = new KVEntryStorage(new IdbKvStorage("remote-fs-storage"));
-    const local = new KVEntryStorage(new IdbKvStorage("local-fs-storage"));
-
-    const syncTarget = new SyncTarget(remote);
-    const memCached = new MemoryCachedStorage(local);
-
-    Workspace.init(memCached, syncTarget);
-    FileSettingsProvider.init(memCached);
-
     return <AppThemeProvider>
       <Story/>
     </AppThemeProvider>

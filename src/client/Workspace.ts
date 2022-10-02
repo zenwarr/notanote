@@ -1,7 +1,7 @@
 import { FileSettingsProvider } from "@common/workspace/FileSettingsProvider";
 import { StorageEntryData } from "@storage/StorageEntryData";
 import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
-import { StorageEntryType } from "@storage/EntryStorage";
+import { EntryStorage, StorageEntryType } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
 import { isConflictingDiff, Sync } from "@sync/Sync";
 import { SyncTargetProvider } from "@sync/SyncTargetProvider";
@@ -13,7 +13,7 @@ import { RecentDocStorage } from "./RecentDocStorage";
 
 
 export class Workspace {
-  constructor(storage: MemoryCachedStorage, syncTarget: SyncTargetProvider | undefined, storageName: string) {
+  constructor(storage: EntryStorage, syncTarget: SyncTargetProvider | undefined, storageName: string) {
     makeObservable(this, {
       loading: observable,
       loadError: observable,
@@ -28,8 +28,10 @@ export class Workspace {
       this._selectedFile = lastOpenedDocPath;
     }
 
-    this.storage = storage;
+    this.storage = new MemoryCachedStorage(storage);
     this.remoteStorageName = storageName;
+
+    FileSettingsProvider.init(this.storage);
 
     if (syncTarget) {
       this.sync = new Sync(
@@ -183,7 +185,7 @@ export class Workspace {
   }
 
 
-  static init(storage: MemoryCachedStorage, syncTarget: SyncTargetProvider | undefined) {
+  static init(storage: EntryStorage, syncTarget: SyncTargetProvider | undefined) {
     this._instance = new Workspace(storage, syncTarget, "default");
   }
 }
