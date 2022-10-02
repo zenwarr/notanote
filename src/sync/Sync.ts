@@ -144,16 +144,34 @@ export class Sync {
 
     await this.cleanMetadata(start, allPaths);
 
-    const metadataMap = await (await this.getSyncMetadataStorage()).get();
+    let metadataStorage = await this.getSyncMetadataStorage();
+    let metadata = await metadataStorage.get();
 
     const result: SyncDiffEntry[] = [];
+    const nonConflicting = new Map<string, ContentIdentity>();
     // now iterate over the union of all local and remote paths. Order is not important here.
     for (const path of allPaths.keys()) {
-      const diff = await this.getEntryDiff(new StoragePath(path), allPaths.get(path), metadataMap);
+      const { diff, actual: actualIdentity } = await this.getEntryDiff(new StoragePath(path), allPaths.get(path), metadata);
       if (diff) {
         result.push(diff);
+      } else if (actualIdentity) {
+        nonConflicting.set(path, actualIdentity);
       }
     }
+
+    metadata = await metadataStorage.get();
+    const updatedMeta: SyncMetadataMap = {};
+    for (const [ path, actual ] of nonConflicting.entries()) {
+      if (!(path in metadata)) {
+        updatedMeta[path] = {
+          synced: actual,
+          accepted: actual,
+          action: undefined,
+          diff: undefined
+        };
+      }
+    }
+    await metadataStorage.setMulti(updatedMeta);
 
     return result;
   }
@@ -475,9 +493,12 @@ export class Sync {
   }
 
 
-  private async getEntryDiff(path: StoragePath, remote: SyncOutlineEntry | undefined, metadataMap: SyncMetadataMap): Promise<SyncDiffEntry | undefined> {
+  private async getEntryDiff(path: StoragePath, remote: SyncOutlineEntry | undefined, metadataMap: SyncMetadataMap) {
     if (path.isEqual(StoragePath.root)) {
-      return undefined;
+      return {
+        diff: undefined,
+        actual: DirContentIdentity
+      };
     }
 
     const meta = metadataMap[path.normalized];
@@ -486,7 +507,10 @@ export class Sync {
 
     const actualDiff = this.getEntryIdentityDiff(actual, synced, remote?.identity);
 
-    return actualDiff && { path, diff: actualDiff, actual, remote: remote?.identity, syncMetadata: meta! };
+    return {
+      diff: actualDiff && { path, diff: actualDiff, actual, remote: remote?.identity, syncMetadata: meta! },
+      actual
+    };
   }
 
 

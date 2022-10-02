@@ -201,3 +201,20 @@ it("automatically accept change", async () => {
   const remoteRead = await d.remote.read(new StoragePath("/file.txt"));
   expect(remoteRead.toString()).toEqual("hello, world!");
 });
+
+
+it("no false conflicts on initial update", async () => {
+  const d = await prepare();
+
+  await write(d.local, "/file.txt", "hello, world!");
+  await write(d.remote, "/file.txt", "hello, world!");
+
+  await d.sync.updateDiff();
+  expect(d.sync.actualDiff.length).toEqual(0);
+
+  await write(d.local, "/file.txt", "hello, world updated");
+
+  await d.sync.updateDiff();
+  expect(d.sync.actualDiff.length).toEqual(1);
+  expect(d.sync.actualDiff[0]!.diff).toEqual(SyncDiffType.LocalUpdate);
+});
