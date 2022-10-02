@@ -123,7 +123,7 @@ export class Sync {
    * Returns difference between local and remote state.
    * @param start
    */
-  async getDiff(start: StoragePath): Promise<SyncDiffEntry[]> {
+  private async getDiff(start: StoragePath) {
     const remoteOutline = await this.loadOutline(start);
 
     const allPaths = new Map<string, SyncOutlineEntry | undefined>();
@@ -141,6 +141,8 @@ export class Sync {
         allPaths.set(ep.path.normalized, undefined);
       }
     }
+
+    await this.cleanMetadata(start, allPaths);
 
     const metadataMap = await (await this.getSyncMetadataStorage()).get();
 
@@ -258,6 +260,31 @@ export class Sync {
     } finally {
       this.updatingDiff = false;
     }
+  }
+
+
+  /**
+   * Removes keys from the metadata map that are not present in the allPaths map.
+   * This is required before calculating diff because metadata map can have keys for previously accepted, but deleted entries.
+   */
+  private async cleanMetadata(start: StoragePath, allPaths: Map<string, SyncOutlineEntry | undefined>) {
+    const sm = await this.getSyncMetadataStorage();
+    const meta = await sm.get();
+
+    const toDelete: SyncMetadataMap = {};
+    // iterate over keys and remove those that are not in allPaths
+    for (const key of Object.keys(meta)) {
+      if (!allPaths.has(key)) {
+        const value = meta[key]!;
+        if (value.accepted && value.accepted !== value.synced) {
+          console.log(`Accepted state is lost: ${ key } (accepted identity is ${ value.accepted })`);
+        }
+
+        toDelete[key] = undefined;
+      }
+    }
+
+    await sm.setMulti(toDelete);
   }
 
 

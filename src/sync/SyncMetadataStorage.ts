@@ -30,16 +30,26 @@ export enum DiffAction {
 }
 
 
-// todo: we should remove metadata for keys missing both in the local and remote storage
-// because sync does not know about them
-// but if another file with the same name is going to be added to local storage later, we will get incorrect sync metadata for it
 export interface SyncMetadataStorage {
+  /**
+   * Returns entire metadata map
+   */
   get(): Promise<SyncMetadataMap>;
 
+  /**
+   * Sets a single value in the map
+   */
   set(path: StoragePath, data: EntrySyncMetadata | undefined): Promise<void>;
 
+  /**
+   * Updates a single entry in the map depending on its actual value
+   */
   update(path: StoragePath, updater: (d: EntrySyncMetadata | undefined) => EntrySyncMetadata | undefined): Promise<void>;
 
+  /**
+   * Sets multiple values at once.
+   * If a value for a key has `undefined` or `null` value, the value is going to be deleted from the storage.
+   */
   setMulti(data: SyncMetadataMap): Promise<void>;
 }
 
