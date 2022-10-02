@@ -79,7 +79,8 @@ export async function startApp() {
       res.status(500).send({
         error: err.message,
         code: err.code,
-        class: "StorageError"
+        class: "StorageError",
+        path: err.path.normalized
       });
     } else if (err != null && typeof err === "object") {
       res.status(500).send({
