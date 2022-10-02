@@ -78,7 +78,8 @@ export class Sync {
     mobx.makeObservable(this, {
       actualDiff: mobx.observable,
       mergeDiff: mobx.action,
-      updatingDiff: mobx.observable
+      updatingDiff: mobx.observable,
+      conflictCount: mobx.computed,
     } as any);
   }
 
@@ -89,6 +90,23 @@ export class Sync {
   private syncMetadata: SyncMetadataStorage | undefined;
   actualDiff: SyncDiffEntry[] = [];
   updatingDiff = false;
+
+
+  get cleanDiffCount() {
+    return this.actualDiff.length - this.conflictCount;
+  }
+
+
+  get conflictCount() {
+    let count = 0;
+    for (const diff of this.actualDiff) {
+      if (isConflictingDiff(diff.diff)) {
+        ++count;
+      }
+    }
+
+    return count;
+  }
 
 
   private async getDiffHandleRules(): Promise<DiffHandleRule[] | undefined> {

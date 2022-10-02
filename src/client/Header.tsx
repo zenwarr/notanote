@@ -3,7 +3,7 @@ import { Box, Hidden, IconButton } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { useState } from "react";
 import { SyncDialog } from "./sync/SyncDialog";
-import { SyncStatus } from "./sync/SyncStatus";
+import { SyncStatusConnected } from "./sync/SyncStatusConnected";
 import { ProfileHeader } from "./ProfileHeader";
 import MenuIcon from "@mui/icons-material/Menu";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
@@ -33,7 +33,7 @@ export const Header = observer((props: HeaderProps) => {
         </Hidden>
 
         <div className={ classes.syncPanel }>
-          <SyncStatus onClick={ () => setSyncOpen(true) }/>
+          <SyncStatusConnected onClick={ () => setSyncOpen(true) }/>
         </div>
 
         <Box mr={ 1 }>

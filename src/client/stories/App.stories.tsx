@@ -8,12 +8,12 @@ import { App } from "../App";
 import { AudioRecord } from "../audio/AudioRecord";
 import { ErrorDisplay } from "../error-boundary/ErrorDisplay";
 import { Palette } from "../palette/Palette";
-import { getPlatform } from "../platform/getPlatform";
 import { AppConfigurationGuard } from "../storage-config/AppConfigurationGuard";
 import { StorageConfigView } from "../storage-config/StorageConfigView";
 import { StorageConfig } from "../storage/StorageProvider";
 import { DiffCompare } from "../sync/DiffCompare";
 import { DiffTreeNode } from "../sync/DiffTreeNode";
+import { SyncStatus } from "../sync/SyncStatusConnected";
 import { demoCompleter } from "./demo";
 
 
@@ -105,3 +105,6 @@ export function StorageConfigTest() {
     }/>
   </Box>;
 }
+
+
+export const syncStatus = () => <SyncStatus isError={ false } cleanDiffCount={ 1 } conflictCount={ 2 } isWorking={ false }/>;
