@@ -1,4 +1,4 @@
-import { FileSettingsProvider } from "@common/workspace/FileSettingsProvider";
+import { WorkspaceSettingsProvider } from "@common/workspace/WorkspaceSettingsProvider";
 import { StorageEntryData } from "@storage/StorageEntryData";
 import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
 import { EntryStorage, StorageEntryType } from "@storage/EntryStorage";
@@ -31,7 +31,7 @@ export class Workspace {
     this.storage = new MemoryCachedStorage(storage);
     this.remoteStorageName = storageName;
 
-    FileSettingsProvider.init(this.storage);
+    WorkspaceSettingsProvider.init(this.storage);
 
     if (syncTarget) {
       this.sync = new Sync(
@@ -54,7 +54,7 @@ export class Workspace {
       // todo: failing on this step can lead to damaging data
       await this.storage.initWithRemoteOutline();
 
-      await FileSettingsProvider.instance.load();
+      await WorkspaceSettingsProvider.instance.init();
 
       this.loading = false;
     } catch (error: any) {

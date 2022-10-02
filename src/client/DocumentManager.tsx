@@ -2,7 +2,7 @@ import { Document } from "./Document";
 import { makeObservable, observable } from "mobx";
 import { Workspace } from "./Workspace";
 import { StoragePath } from "@storage/StoragePath";
-import { FileSettingsProvider } from "@common/workspace/FileSettingsProvider";
+import { WorkspaceSettingsProvider } from "@common/workspace/WorkspaceSettingsProvider";
 import { DocumentEditorProvider } from "./DocumentEditorProvider";
 
 
@@ -26,7 +26,7 @@ export class DocumentManager {
 
     const entry = Workspace.instance.storage.get(path);
 
-    const document = new Document(entry, FileSettingsProvider.instance.getSettingsForPath(path));
+    const document = new Document(entry, WorkspaceSettingsProvider.instance.getSettingsForPath(path));
     await document.load();
     document.setEditorStateAdapter(await DocumentEditorProvider.instance.getStateAdapter(document));
     this.documents.set(path.normalized, { doc: document, usageCount: 1 });

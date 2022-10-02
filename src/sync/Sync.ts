@@ -1,4 +1,5 @@
 import { patternMatches } from "@common/utils/patterns";
+import { WorkspaceSettingsProvider } from "@common/workspace/WorkspaceSettingsProvider";
 import { shouldPathBeSynced } from "@sync/Ignore";
 import { DiffHandleRule, StorageSyncData } from "@sync/StorageSyncData";
 import { StorageError, StorageErrorCode, EntryStorage } from "@storage/EntryStorage";
@@ -88,6 +89,7 @@ export class Sync {
   private readonly syncTarget: SyncTargetProvider;
   private readonly localSyncTarget: SyncTargetProvider;
   private syncMetadata: SyncMetadataStorage | undefined;
+  private cachedDiffRules: DiffHandleRule[] | undefined;
   actualDiff: SyncDiffEntry[] = [];
   updatingDiff = false;
 
@@ -109,14 +111,24 @@ export class Sync {
   }
 
 
-  private async getDiffHandleRules(): Promise<DiffHandleRule[] | undefined> {
-    const sd = new StorageSyncData(this.storage);
-    const config = await sd.getConfig();
-    if (!config?.diffRules) {
-      return undefined;
+  private async getDiffHandleRules(): Promise<DiffHandleRule[]> {
+    if (this.cachedDiffRules) {
+      return this.cachedDiffRules;
     }
 
-    return config.diffRules;
+    const sd = new StorageSyncData(this.storage);
+    const workspaceSettings = new WorkspaceSettingsProvider(this.storage);
+
+    const [ sync, _ ] = await Promise.all([ sd.getConfig(), workspaceSettings.init() ]);
+    const syncRules = sync?.diffRules || [];
+    const wsRules = workspaceSettings.settings?.sync?.diffRules || [];
+
+    this.cachedDiffRules = [
+      ...wsRules,
+      ...syncRules
+    ];
+
+    return this.cachedDiffRules;
   }
 
 
@@ -351,7 +363,7 @@ export class Sync {
     }
 
     const rules = await this.getDiffHandleRules();
-    return rules?.find(rule => {
+    return rules.find(rule => {
       if (!rule.files && !rule.diff) {
         return false;
       }

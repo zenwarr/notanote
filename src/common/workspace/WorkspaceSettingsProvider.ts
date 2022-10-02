@@ -1,6 +1,7 @@
 import { patternMatches, singlePatternMatches } from "@common/utils/patterns";
 import { EntryStorage, StorageErrorCode } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
+import { StorageSyncConfig } from "@sync/StorageSyncData";
 import { FileSettings } from "../Settings";
 import { tryParseJson } from "../utils/tryParse";
 import { SpecialPath } from "./Workspace";
@@ -11,17 +12,18 @@ interface WorkspaceSettings {
   patterns?: {
     files: string | string[];
     settings?: FileSettings
-  }[]
+  }[];
+  sync?: Omit<StorageSyncConfig, "storageId">;
 }
 
 
-export class FileSettingsProvider {
+export class WorkspaceSettingsProvider {
   constructor(fs: EntryStorage) {
     this.storage = fs;
   }
 
 
-  async load(): Promise<void> {
+  async init(): Promise<void> {
     try {
       const text = (await this.storage.get(SpecialPath.Settings).read()).toString();
       if (!text) {
@@ -66,29 +68,28 @@ export class FileSettingsProvider {
   }
 
 
-  private static _instance: FileSettingsProvider | undefined;
+  private static _instance: WorkspaceSettingsProvider | undefined;
 
 
-  static get instance(): FileSettingsProvider {
-    if (!FileSettingsProvider._instance) {
+  static get instance(): WorkspaceSettingsProvider {
+    if (!WorkspaceSettingsProvider._instance) {
       throw new Error("FileSettingsProvider is not initialized");
     }
 
-    return FileSettingsProvider._instance;
+    return WorkspaceSettingsProvider._instance;
   }
 
 
   static init(fs: EntryStorage): void {
-    if (FileSettingsProvider._instance) {
+    if (WorkspaceSettingsProvider._instance) {
       return;
     }
 
-    FileSettingsProvider._instance = new FileSettingsProvider(fs);
+    WorkspaceSettingsProvider._instance = new WorkspaceSettingsProvider(fs);
   }
 
 
-  private settings: WorkspaceSettings | undefined;
+  settings: WorkspaceSettings | undefined;
   private readonly storage: EntryStorage;
 }
-
 

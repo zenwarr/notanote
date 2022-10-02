@@ -1,6 +1,4 @@
-import { FileSettingsProvider } from "@common/workspace/FileSettingsProvider";
 import { Alert, Box, CircularProgress } from "@mui/material";
-import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
 import { SyncTargetProvider } from "@sync/SyncTargetProvider";
 import { useEffect, useMemo, useState } from "react";
 import { App } from "../App";
