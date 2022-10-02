@@ -23,9 +23,9 @@ async function prepare(config?: StorageSyncConfig) {
 
   const source = new Sync(local, target);
 
-  const runner = new SyncJobRunner(source, async cb => await cb());
+  const runner = new SyncJobRunner(source);
 
-  return { local, remote, source, runner };
+  return { local, remote, sync: source, runner };
 }
 
 
@@ -39,12 +39,12 @@ it("diff between equal files", async () => {
   await write(d.local, "/file.txt", "hello world");
   await write(d.remote, "/file.txt", "hello world");
 
-  await d.source.updateDiff();
-  await d.source.acceptMulti(d.source.actualDiff);
-  expect(d.source.actualDiff).toHaveLength(0);
+  await d.sync.updateDiff();
+  await d.sync.acceptMulti(d.sync.actualDiff);
+  expect(d.sync.actualDiff).toHaveLength(0);
 
-  await d.source.updateDiff();
-  expect(d.source.actualDiff).toHaveLength(0);
+  await d.sync.updateDiff();
+  expect(d.sync.actualDiff).toHaveLength(0);
 });
 
 
@@ -52,32 +52,31 @@ it("local file changed", async () => {
   const d = await prepare();
   await write(d.local, "/file.txt", "hello, world!");
 
-  await d.source.updateDiff();
-  await d.source.acceptMulti(d.source.actualDiff);
+  await d.sync.updateDiff();
+  await d.sync.acceptMulti(d.sync.actualDiff);
 
   await write(d.local, "/file.txt", "hello, world! updated");
   await write(d.remote, "/file.txt", "hello world");
 
-  await d.source.updateDiff();
-  expect(d.source.actualDiff).toHaveLength(1);
-  expect(d.source.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
+  await d.sync.updateDiff();
+  expect(d.sync.actualDiff).toHaveLength(1);
+  expect(d.sync.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
 });
 
 
 it("initializing from remote storage", async () => {
   const d = await prepare();
   await write(d.remote, "/file.txt", "hello world");
-  await d.source.updateDiff();
+  await d.sync.updateDiff();
 
-  expect(d.source.actualDiff).toHaveLength(1);
-  expect(d.source.actualDiff[0]!.diff).toEqual(SyncDiffType.RemoteCreate);
+  expect(d.sync.actualDiff).toHaveLength(1);
+  expect(d.sync.actualDiff[0]!.diff).toEqual(SyncDiffType.RemoteCreate);
 
-  await d.source.acceptMulti(d.source.actualDiff);
-  const jobs = await d.source.getJobs(Infinity);
-  for (const job of jobs) await d.source.doJob(job);
+  await d.sync.acceptMulti(d.sync.actualDiff);
+  await d.runner.run(true);
 
-  await d.source.updateDiff();
-  expect(d.source.actualDiff.length).toEqual(0);
+  await d.sync.updateDiff();
+  expect(d.sync.actualDiff.length).toEqual(0);
 
   const localRead = await d.local.read(new StoragePath("/file.txt"));
   expect(localRead.toString()).toEqual("hello world");
@@ -88,17 +87,16 @@ it("resolving conflict by accepting local changes", async () => {
   const d = await prepare();
   await write(d.local, "file.txt", "local");
   await write(d.remote, "file.txt", "remote");
-  await d.source.updateDiff();
+  await d.sync.updateDiff();
 
-  expect(d.source.actualDiff).toHaveLength(1);
-  expect(d.source.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
+  expect(d.sync.actualDiff).toHaveLength(1);
+  expect(d.sync.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
 
-  await d.source.accept(d.source.actualDiff[0]!, DiffAction.AcceptLocal);
-  const jobs = await d.source.getJobs(Infinity);
-  for (const job of jobs) await d.source.doJob(job);
+  await d.sync.accept(d.sync.actualDiff[0]!, DiffAction.AcceptLocal);
+  await d.runner.run(true);
 
-  await d.source.updateDiff();
-  expect(d.source.actualDiff.length).toEqual(0);
+  await d.sync.updateDiff();
+  expect(d.sync.actualDiff.length).toEqual(0);
 
   const localRead = await d.local.read(new StoragePath("/file.txt"));
   expect(localRead.toString()).toEqual("local");
@@ -112,23 +110,46 @@ it("resolving conflict by accepting remote changes", async () => {
   const d = await prepare();
   await write(d.local, "file.txt", "local");
   await write(d.remote, "file.txt", "remote");
-  await d.source.updateDiff();
+  await d.sync.updateDiff();
 
-  expect(d.source.actualDiff).toHaveLength(1);
-  expect(d.source.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
+  expect(d.sync.actualDiff).toHaveLength(1);
+  expect(d.sync.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
 
-  await d.source.accept(d.source.actualDiff[0]!, DiffAction.AcceptRemote);
-  const jobs = await d.source.getJobs(Infinity);
-  for (const job of jobs) await d.source.doJob(job);
+  await d.sync.accept(d.sync.actualDiff[0]!, DiffAction.AcceptRemote);
+  await d.runner.run(true);
 
-  await d.source.updateDiff();
-  expect(d.source.actualDiff.length).toEqual(0);
+  await d.sync.updateDiff();
+  expect(d.sync.actualDiff.length).toEqual(0);
 
   const localRead = await d.local.read(new StoragePath("/file.txt"));
   expect(localRead.toString()).toEqual("remote");
 
   const remoteRead = await d.remote.read(new StoragePath("/file.txt"));
   expect(remoteRead.toString()).toEqual("remote");
+});
+
+
+it("modification after accepting", async () => {
+  const d = await prepare();
+
+  await write(d.remote, "file.txt", "remote");
+  await d.sync.updateDiff();
+  await d.sync.acceptMulti(d.sync.actualDiff);
+
+  await d.remote.remove(new StoragePath("/file.txt"));
+
+  await d.runner.run(true);
+
+  expect(await d.local.exists(new StoragePath("file.txt"))).toEqual(false);
+  expect(await d.remote.exists(new StoragePath("file.txt"))).toEqual(false);
+
+  expect(d.sync.actualDiff).toHaveLength(1);
+  expect(d.runner.errors).toHaveLength(1);
+  expect(d.runner.errors[0]!.path.normalized).toEqual("/file.txt");
+
+  await d.sync.updateDiff();
+
+  expect(d.sync.actualDiff).toHaveLength(0);
 });
 
 
@@ -144,12 +165,11 @@ it("automatically accept change", async () => {
   });
   await write(d.local, "/file.txt", "hello, world!");
 
-  await d.source.updateDiff();
-  const jobs = await d.source.getJobs(Infinity);
-  for (const job of jobs) await d.source.doJob(job);
+  await d.sync.updateDiff();
+  await d.runner.run(true);
 
-  await d.source.updateDiff();
-  expect(d.source.actualDiff.length).toEqual(0);
+  await d.sync.updateDiff();
+  expect(d.sync.actualDiff.length).toEqual(0);
 
   const localRead = await d.local.read(new StoragePath("/file.txt"));
   expect(localRead.toString()).toEqual("hello, world!");

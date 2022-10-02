@@ -253,7 +253,7 @@ export class Sync {
     try {
       this.updatingDiff = true;
       const diff = await this.getDiff(start);
-      this.mergeDiff(diff);
+      this.mergeDiff(start, diff);
       await this.handleDiff(diff);
     } finally {
       this.updatingDiff = false;
@@ -261,11 +261,14 @@ export class Sync {
   }
 
 
-  private mergeDiff(diff: SyncDiffEntry[]): void {
+  private mergeDiff(start: StoragePath, diff: SyncDiffEntry[]): void {
     for (const d of diff) {
       this.actualDiff = this.actualDiff.filter(e => !e.path.isEqual(d.path));
       this.actualDiff.push(d);
     }
+
+    // remove entries that are under start path but not in new diff
+    this.actualDiff = this.actualDiff.filter(e => !e.path.inside(start) || diff.some(d => d.path.isEqual(e.path)));
   }
 
 
