@@ -46,9 +46,18 @@ export class StorageSyncData {
   }
 
 
-  async getConfig(): Promise<StorageSyncConfig | null> {
-    const data = await this.storage.read(SpecialPath.SyncStorageConfig);
-    return tryParseJson(data.toString());
+  async getConfig(): Promise<StorageSyncConfig | undefined> {
+    try {
+      const data = await this.storage.read(SpecialPath.SyncStorageConfig);
+      return tryParseJson(data.toString());
+    } catch (err) {
+      if (err instanceof StorageError && err.code === StorageErrorCode.NotExists) {
+        return undefined;
+      } else {
+        console.error("Failed to load storage sync settings: ", err);
+        return undefined;
+      }
+    }
   }
 
 
