@@ -18,8 +18,8 @@
     "allowToChangeInstallationDirectory": true
   },
   "win": {
-    "target": "nsis",
-    "icon": "assets/appIcon.ico"
+    "target": "nsis"
+
   },
   "linux": {
     "target": [
