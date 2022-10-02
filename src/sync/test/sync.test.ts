@@ -153,6 +153,30 @@ it("modification after accepting", async () => {
 });
 
 
+it("local modification after accepting", async () => {
+  const d = await prepare();
+
+  await write(d.local, "file.txt", "local");
+  await d.sync.updateDiff();
+  await d.sync.acceptMulti(d.sync.actualDiff);
+
+  await d.local.remove(new StoragePath("file.txt"));
+
+  await d.runner.run(true);
+
+  expect(await d.local.exists(new StoragePath("file.txt"))).toEqual(false);
+  expect(await d.remote.exists(new StoragePath("file.txt"))).toEqual(false);
+
+  expect(d.sync.actualDiff).toHaveLength(1);
+  expect(d.runner.errors).toHaveLength(1);
+  expect(d.runner.errors[0]!.path.normalized).toEqual("/file.txt");
+
+  await d.sync.updateDiff();
+
+  expect(d.sync.actualDiff).toHaveLength(0);
+});
+
+
 it("automatically accept change", async () => {
   const d = await prepare({
     storageId: "test",
