@@ -295,6 +295,10 @@ export class Sync {
 
 
   async updateDiff(start: StoragePath = StoragePath.root): Promise<void> {
+    if (!shouldPathBeSynced(start)) {
+      return;
+    }
+
     // todo: wait for update to finish
     if (this.updatingDiff) {
       throw new Error("Another diff update is running now");
