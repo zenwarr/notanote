@@ -3,11 +3,12 @@ import { StoragePath } from "@storage/StoragePath";
 import { SyncDiffType } from "@sync/Sync";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { DiffAction } from "@sync/SyncMetadataStorage";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { App } from "../App";
 import { AudioRecord } from "../audio/AudioRecord";
 import { ErrorDisplay } from "../error-boundary/ErrorDisplay";
 import { Palette } from "../palette/Palette";
+import { transformScriptText } from "../plugin/PluginManager";
 import { AppConfigurationGuard } from "../storage-config/AppConfigurationGuard";
 import { StorageConfigView } from "../storage-config/StorageConfigView";
 import { StorageConfig } from "../storage/StorageProvider";
@@ -108,3 +109,24 @@ export function StorageConfigTest() {
 
 
 export const syncStatus = () => <SyncStatus isError={ false } cleanDiffCount={ 1 } conflictCount={ 2 } isWorking={ false }/>;
+
+
+export const Script = () => {
+  const [ compiled, setCompiled ] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const r = await transformScriptText("index.tsx", `
+      import * as React from "react";
+      console.log(React.render);
+      export const X = { a: "b" };
+      `);
+      setCompiled(r.code);
+      console.log("imported: ", r.imports);
+    })();
+  }, []);
+
+  return <pre>
+    { compiled }
+  </pre>;
+};

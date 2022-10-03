@@ -1,7 +1,7 @@
+import * as babel from "@babel/core";
 import { SpecialPath } from "@common/workspace/Workspace";
 import { EntryStorage } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
-import initSwc, { transformSync } from "@swc/wasm-web";
 import { ContentIdentity, getContentIdentity, getContentIdentityForData } from "@sync/ContentIdentity";
 import * as React from "react";
 import { Document, DocumentEditorStateAdapter } from "../document/Document";
@@ -113,7 +113,7 @@ export class PluginManager {
       if (await filesChanged(this.storage, cached.files)) {
         this.loadedPlugins.delete(name);
       } else {
-        return cached.plugin
+        return cached.plugin;
       }
     }
 
@@ -127,8 +127,8 @@ export class PluginManager {
     }
 
     let scriptSourceBuf = await this.storage.read(loadSpec);
-    const scriptText = await transformScriptText(scriptSourceBuf.toString());
-    const loaded = await loadScript(scriptText);
+    const { code, imports } = await transformScriptText(loadSpec.basename, scriptSourceBuf.toString());
+    const loaded = await this.loadScript(code, imports);
 
     this.loadedPlugins.set(name, {
       plugin: loaded,
@@ -140,13 +140,56 @@ export class PluginManager {
   }
 
 
+  private async loadScript(scriptText: string, imports: string[]): Promise<PluginExport> {
+    const pluginExport: any = {};
+
+    async function importModule(module: string): Promise<unknown> {
+      switch (module) {
+        case "react":
+          return await import("react");
+        case "mobx":
+          return await import("mobx");
+        case "mobx-react-lite":
+          return await import("mobx-react-lite");
+        case "date-fns":
+          return await import("date-fns");
+        case "@mui/material":
+          return await import("@mui/material");
+        case "csv":
+          return await import("csv");
+        case "react-data-grid":
+          require("react-data-grid/lib/styles.css");
+          return await import("react-data-grid");
+        case "@mui/x-date-pickers":
+          return await import("@mui/x-date-pickers");
+        default:
+          throw new Error("Cannot require module " + module);
+      }
+    }
+
+    await Promise.all(imports.map(async (module) => {
+      this.cachedImports[module] = this.cachedImports[module] || await importModule(module);
+    }));
+
+    new Function("require", "exports", scriptText)((mod: string) => {
+      if (!this.cachedImports[mod]) {
+        throw new Error("Cannot require module " + mod);
+      }
+
+      return this.cachedImports[mod];
+    }, pluginExport);
+    return pluginExport;
+  }
+
+
   private readonly plugins: PluginMeta[] = [];
   private readonly loadedPlugins = new Map<string, LoadedPluginData>();
+  private readonly cachedImports: Record<string, unknown> = {};
 }
 
 
 async function filesChanged(storage: EntryStorage, files: Record<string, ContentIdentity>): Promise<boolean> {
-  const results = await Promise.all(Object.values(files).map(async ([path, prev]) => {
+  const results = await Promise.all(Object.values(files).map(async ([ path, prev ]) => {
     const actual = await getContentIdentity(storage.get(new StoragePath(path)));
     return actual !== prev;
   }));
@@ -155,58 +198,35 @@ async function filesChanged(storage: EntryStorage, files: Record<string, Content
 }
 
 
-export async function loadScript(scriptText: string): Promise<PluginExport> {
-  const pluginExport: any = {};
+export async function transformScriptText(filename: string, scriptText: string): Promise<{ code: string, imports: string[] }> {
+  const imports: string[] = [];
 
-  function requireReplacement(module: string): any {
-    switch (module) {
-      case "react":
-        return require("react");
-      case "mobx":
-        return require("mobx");
-      case "mobx-react-lite":
-        return require("mobx-react-lite");
-      case "date-fns":
-        return require("date-fns");
-      case "@mui/material":
-        return require("@mui/material");
-      case "csv":
-        return require("csv");
-      case "react-data-grid":
-        require("react-data-grid/lib/styles.css");
-        return require("react-data-grid");
-      case "@mui/x-date-pickers":
-        return require("@mui/x-date-pickers");
-      default:
-        throw new Error("Cannot require module " + module);
-    }
+  const r = await babel.transformAsync(scriptText, {
+    filename,
+    comments: false,
+    presets: [ require("@babel/preset-react"), require("@babel/preset-typescript") ],
+    plugins: [
+      [require("@babel/plugin-transform-modules-commonjs").default, {
+        importInterop: "none",
+      }],
+      {
+        visitor: {
+          ImportDeclaration: path => {
+            let importPath = path.node.source.value;
+            if (!imports.includes(importPath)) {
+              imports.push(importPath);
+            }
+          }
+        }
+      }
+    ]
+  });
+
+  if (!r || !r.code) {
+    throw new Error("Compilation failed: babel returned no result");
   }
 
-  new Function("require", "exports", scriptText)(requireReplacement, pluginExport);
-  return pluginExport;
-}
-
-
-let swcInited = false;
-
-export async function transformScriptText(scriptText: string): Promise<string> {
-  if (!swcInited) {
-    await initSwc();
-    swcInited = true;
-  }
-
-  return transformSync(scriptText, {
-    jsc: {
-      parser: {
-        syntax: "typescript",
-        tsx: true
-      },
-      preserveAllComments: false
-    },
-    module: {
-      type: "commonjs"
-    }
-  }).code;
+  return { code: r?.code, imports };
 }
 
 
