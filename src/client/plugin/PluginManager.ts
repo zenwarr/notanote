@@ -6,6 +6,7 @@ import { ContentIdentity, getContentIdentity, getContentIdentityForData } from "
 import * as React from "react";
 import { Document, DocumentEditorStateAdapter } from "../document/Document";
 import { setupPluginDeps } from "./SetupPluginDeps";
+import "react-data-grid/lib/styles.css";
 
 
 export interface EditorProps {
@@ -158,7 +159,6 @@ export class PluginManager {
         case "csv":
           return await import("csv");
         case "react-data-grid":
-          require("react-data-grid/lib/styles.css");
           return await import("react-data-grid");
         case "@mui/x-date-pickers":
           return await import("@mui/x-date-pickers");
