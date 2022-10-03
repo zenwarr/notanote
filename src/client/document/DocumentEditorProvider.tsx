@@ -1,6 +1,7 @@
 import * as React from "react";
-import { PluginManager } from "./plugin/PluginManager";
 import { Document, DocumentEditorStateAdapter } from "./Document";
+import { PluginManager } from "../plugin/PluginManager";
+import { ReadonlyStateAdapter } from "./ReadonlyStateAdapter";
 
 
 const TEXT_EXTS = [ ".md", ".txt" ];
@@ -24,31 +25,39 @@ export interface DocumentEditorProps {
 
 interface LazyEditorModule {
   editor: React.ComponentType<DocumentEditorProps>;
-  state: new (doc: Document) => DocumentEditorStateAdapter;
+  state: new (doc: Document, initialContent: Buffer) => DocumentEditorStateAdapter;
 }
 
 
 export class DocumentEditorProvider {
-  async getStateAdapter(doc: Document): Promise<DocumentEditorStateAdapter> {
-    let StateClass: new (doc: Document) => DocumentEditorStateAdapter;
+  constructor(plugins: PluginManager) {
+    this.plugins = plugins;
+  }
+
+
+  private readonly plugins: PluginManager;
+
+
+  async getStateAdapter(doc: Document, initialContent: Buffer): Promise<DocumentEditorStateAdapter> {
+    let StateClass: new (doc: Document, initialContent: Buffer) => DocumentEditorStateAdapter;
 
     if (doc.settings.editor != null) {
-      const editor = await PluginManager.instance.getCustomEditorForDocument(doc);
+      const editor = await this.plugins.getCustomEditorForDocument(doc);
       if (!editor) {
         StateClass = (await this.getDefault(doc)).state;
       } else {
-        StateClass = editor.stateAdapter;
+        StateClass = editor.stateAdapter || ReadonlyStateAdapter;
       }
     } else {
       StateClass = (await this.getDefault(doc)).state;
     }
 
-    return new StateClass(doc);
+    return new StateClass(doc, initialContent);
   }
 
 
   async getComponent(doc: Document): Promise<React.ComponentType<DocumentEditorProps>> {
-    const editor = await PluginManager.instance.getCustomEditorForDocument(doc);
+    const editor = await this.plugins.getCustomEditorForDocument(doc);
     if (editor?.component) {
       return editor.component;
     } else {
@@ -67,7 +76,7 @@ export class DocumentEditorProvider {
 
 
   async loadMonaco(): Promise<LazyEditorModule> {
-    const [ editor, state ] = await Promise.all([ import("./monaco/MonacoEditor"), import("./monaco/MonacoEditorStateAdapter") ]);
+    const [ editor, state ] = await Promise.all([ import("../monaco/MonacoEditor"), import("../monaco/MonacoEditorStateAdapter") ]);
     return {
       editor: editor.MonacoEditor,
       state: state.MonacoEditorStateAdapter
@@ -76,15 +85,12 @@ export class DocumentEditorProvider {
 
 
   async loadCodeMirror(): Promise<LazyEditorModule> {
-    const [ editor, state ] = await Promise.all([ import("./code-editor/CodeEditor"), import("./code-editor/CodeEditorState") ]);
+    const [ editor, state ] = await Promise.all([ import("../code-editor/CodeEditor"), import("../code-editor/CodeEditorState") ]);
     return {
       editor: editor.CodeEditor,
       state: state.CodeEditorStateAdapter
     };
   }
-
-
-  static instance = new DocumentEditorProvider();
 }
 
 

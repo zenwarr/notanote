@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import { FileSettings } from "@common/Settings";
-import { Workspace } from "./Workspace";
+import { Workspace } from "../Workspace";
 import { StorageEntryPointer } from "@storage/EntryStorage";
 
 
@@ -13,13 +13,7 @@ export class Document {
   constructor(entry: StorageEntryPointer, settings: FileSettings) {
     this.entry = entry;
     this.settings = settings;
-    this.content = Buffer.alloc(0);
     this.onChangesDebounced = _.debounce(this.onChangesAsync.bind(this), 500);
-  }
-
-
-  async load(): Promise<void> {
-    this.content = await this.entry.read();
   }
 
 
@@ -34,17 +28,12 @@ export class Document {
 
 
   async contentToBuffer(): Promise<Buffer> {
-    if (this.adapter) {
-      const adapterData = await this.adapter.serializeContent();
-      return typeof adapterData === "string" ? Buffer.from(adapterData) : adapterData;
-    } else {
-      return this.content;
+    if (!this.adapter) {
+      throw new Error("Invariant error: state adapter was not property initialized");
     }
-  }
 
-
-  getLastSavedData() {
-    return this.content;
+    const adapterData = await this.adapter.serializeContent();
+    return typeof adapterData === "string" ? Buffer.from(adapterData) : adapterData;
   }
 
 
@@ -62,6 +51,5 @@ export class Document {
   private onChangesDebounced: () => Promise<void> | undefined;
   readonly entry: StorageEntryPointer;
   readonly settings: FileSettings;
-  private content: Buffer;
   private adapter: DocumentEditorStateAdapter | undefined;
 }

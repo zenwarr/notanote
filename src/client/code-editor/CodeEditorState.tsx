@@ -25,7 +25,7 @@ import { CHECKBOX_RE} from "./ReactWidget";
 import { NodeProp } from "@lezer/common";
 import { languages } from "@codemirror/language-data";
 import { format } from "date-fns";
-import { Document, DocumentEditorStateAdapter } from "../Document";
+import { Document, DocumentEditorStateAdapter } from "../document/Document";
 import { StoragePath } from "@storage/StoragePath";
 
 
@@ -266,10 +266,10 @@ const customKeymap: KeyBinding[] = [
 
 
 export class CodeEditorStateAdapter implements DocumentEditorStateAdapter {
-  constructor(doc: Document) {
+  constructor(doc: Document, initialContent: Buffer) {
     this.doc = doc;
     const self = this;
-    this.state = createEditorState(doc.getLastSavedData().toString(), doc.entry.path, doc.settings, {
+    this.state = createEditorState(initialContent.toString(), doc.entry.path, doc.settings, {
       onUpdate: upd => {
         self.state = upd.state;
         if (upd.docChanged) {

@@ -2,10 +2,8 @@ import { EntryStorage } from "@storage/EntryStorage";
 import { ErrorCode, LogicError } from "@common/errors";
 import { joinNestedPathSecure, StoragePath } from "@storage/StoragePath";
 import path from "path";
-import { createWorkspaceDefaults, SpecialPath } from "@common/workspace/Workspace";
+import { createWorkspaceDefaults } from "@common/workspace/Workspace";
 import { FsStorage } from "@storage/FsStorage";
-import { PluginConfigStorageEntry } from "../plugin/PluginConfigEntry";
-import { StorageWithMounts } from "@storage/StorageWithMounts";
 
 
 export class ServerStorageFactory {
@@ -15,16 +13,14 @@ export class ServerStorageFactory {
       throw new LogicError(ErrorCode.NotFound, "storage root not found");
     }
 
-    const base = new FsStorage(root);
-    const withMounts = new StorageWithMounts(base);
-    withMounts.mount(SpecialPath.PluginConfig, new PluginConfigStorageEntry(storageName, root));
+    const storage = new FsStorage(root);
 
-    if (!await exists(base, StoragePath.root)) {
-      await createWorkspaceDefaults(base);
+    if (!await exists(storage, StoragePath.root)) {
+      await createWorkspaceDefaults(storage);
     }
 
     return {
-      storage: withMounts,
+      storage,
       realRoot: root
     };
   }

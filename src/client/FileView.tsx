@@ -1,8 +1,8 @@
 import { useLoad } from "./useLoad";
 import * as React from "react";
 import { useCallback } from "react";
-import { DocumentManager } from "./DocumentManager";
-import { Document } from "./Document";
+import { DocumentManager } from "./document/DocumentManager";
+import { Document } from "./document/Document";
 import { observer } from "mobx-react-lite";
 import { Workspace } from "./Workspace";
 import { useWindowTitle } from "./useWindowTitle";
@@ -11,7 +11,7 @@ import { makeStyles } from "@mui/styles";
 import { EditorProps } from "./plugin/PluginManager";
 import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
 import { StoragePath } from "@storage/StoragePath";
-import { DocumentEditorProvider } from "./DocumentEditorProvider";
+import { DocumentEditorProvider } from "./document/DocumentEditorProvider";
 
 
 export type FileViewProps = {
@@ -63,7 +63,8 @@ export function FileView(props: FileViewProps) {
       return undefined;
     }
 
-    return DocumentEditorProvider.instance.getComponent(contentLoad.data);
+    const editorProvider = new DocumentEditorProvider(Workspace.instance.plugins);
+    return editorProvider.getComponent(contentLoad.data);
   }, [ contentLoad.data?.settings.editor?.name, contentLoad.isLoaded ]));
 
   if (contentLoad.loadError) {

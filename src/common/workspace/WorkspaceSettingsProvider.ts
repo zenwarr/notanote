@@ -55,15 +55,6 @@ export class WorkspaceSettingsProvider {
       };
     }
 
-    if (entryPath.valueOf() === SpecialPath.PluginConfig.valueOf()) {
-      specificSettings = {
-        ...specificSettings,
-        editor: {
-          name: "pluginConfig.editor"
-        }
-      };
-    }
-
     return specificSettings;
   }
 

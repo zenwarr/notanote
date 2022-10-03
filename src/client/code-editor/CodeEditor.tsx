@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef} from "react";
-import { Document } from "../Document";
-import { DocumentManager } from "../DocumentManager";
+import { Document } from "../document/Document";
+import { DocumentManager } from "../document/DocumentManager";
 import "./CodeEditor.css";
 import { EditorView } from "@codemirror/view";
 import { useCurrentThemeIsDark } from "../Theme";

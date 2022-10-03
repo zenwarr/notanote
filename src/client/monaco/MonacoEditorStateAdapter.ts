@@ -1,11 +1,12 @@
-import { Document, DocumentEditorStateAdapter } from "../Document";
+import { Document, DocumentEditorStateAdapter } from "../document/Document";
 import * as monaco from "monaco-editor";
 import assert from "assert";
 
 
 export class MonacoEditorStateAdapter implements DocumentEditorStateAdapter {
-  constructor(doc: Document) {
+  constructor(doc: Document, initialContent: Buffer) {
     this.doc = doc;
+    this.initialContent = initialContent;
   }
 
 
@@ -22,10 +23,11 @@ export class MonacoEditorStateAdapter implements DocumentEditorStateAdapter {
 
 
   get initialText(): string {
-    return this.doc.getLastSavedData().toString();
+    return this.initialContent.toString();
   }
 
 
   private _model: monaco.editor.IModel | null = null;
+  private readonly initialContent: Buffer;
   private readonly doc: Document;
 }

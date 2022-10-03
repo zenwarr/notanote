@@ -9,6 +9,7 @@ import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { DiffAction } from "@sync/SyncMetadataStorage";
 import { SyncJobRunner } from "@sync/SyncJobRunner";
 import { makeObservable, observable } from "mobx";
+import { PluginManager } from "./plugin/PluginManager";
 import { RecentDocStorage } from "./RecentDocStorage";
 
 
@@ -32,6 +33,7 @@ export class Workspace {
     this.remoteStorageName = storageName;
 
     WorkspaceSettingsProvider.init(this.storage);
+    this.plugins = new PluginManager(this.storage);
 
     if (syncTarget) {
       this.sync = new Sync(
@@ -54,6 +56,7 @@ export class Workspace {
       // todo: failing on this step can lead to damaging data
       await this.storage.initWithRemoteOutline();
 
+      await this.plugins.discoverPlugins();
       await WorkspaceSettingsProvider.instance.init();
 
       this.loading = false;
@@ -174,6 +177,7 @@ export class Workspace {
   private static _instance: Workspace | undefined;
   sync: Sync | undefined;
   syncJobRunner: SyncJobRunner | undefined;
+  plugins: PluginManager;
 
 
   static get instance() {

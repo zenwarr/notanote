@@ -3036,6 +3036,11 @@
     regenerator-runtime "^0.13.7"
     resolve-from "^5.0.0"
 
+"@swc/wasm-web@^1.3.4":
+  version "1.3.4"
+  resolved "https://registry.npmjs.org/@swc/wasm-web/-/wasm-web-1.3.4.tgz#4f2b8972af9aa55cc469b6d39d796624c37e3a6d"
+  integrity sha512-iFmDvsZTJg+IwAZm2DvUg3aHWVsM+9rDZhhpa9wRrwE8VRehAy8utW9Fa8qITqYH/NcqXkCeaXAeERBQjnHDuw==
+
 "@tsconfig/node10@^1.0.7":
   version "1.0.8"
   resolved "https://registry.npmjs.org/@tsconfig/node10/-/node10-1.0.8.tgz#c1e4e80d6f964fbecb3359c43bd48b40f7cadad9"

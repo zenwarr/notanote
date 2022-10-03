@@ -1,5 +1,9 @@
+import { SpecialPath } from "@common/workspace/Workspace";
+import { EntryStorage } from "@storage/EntryStorage";
+import { StoragePath } from "@storage/StoragePath";
+import initSwc, { transformSync } from "@swc/wasm-web";
 import * as React from "react";
-import { Document, DocumentEditorStateAdapter } from "../Document";
+import { Document, DocumentEditorStateAdapter } from "../document/Document";
 import { setupPluginDeps } from "./SetupPluginDeps";
 
 
@@ -9,23 +13,56 @@ export interface EditorProps {
 }
 
 
-export type PluginLoadSpec = string | (new () => LoadedPlugin);
+export type PluginLoadSpec = StoragePath | (new () => LoadedPlugin);
 
 
 export interface PluginMeta {
   name: string;
-
-  /**
-   * If string, loads plugin from given relative URL path.
-   * If class, this plugin is built-in and loads from given class.
-   */
   load: PluginLoadSpec;
 }
 
 
 export class PluginManager {
-  constructor() {
+  constructor(storage: EntryStorage) {
+    this.storage = storage;
     setupPluginDeps();
+  }
+
+
+  private storage: EntryStorage;
+
+
+  async discoverPlugins(): Promise<void> {
+    for (const child of await this.storage.children(SpecialPath.PluginsDir)) {
+      const stat = await child.stats();
+      if (!stat.isDirectory) {
+        continue;
+      }
+
+      const entryPoint = await this.findFirstFile(child.path, [ "index.js", "index.jsx" ]);
+      if (!entryPoint) {
+        // plugin entry point not found
+        console.error(`Plugin entry file not found for plugin ${ child.path }: index.js or index.jsx expected`);
+        return;
+      }
+
+      this.registerPluginAndNotFail({
+        name: child.path.basename,
+        load: entryPoint,
+      });
+    }
+  }
+
+
+  private async findFirstFile(parent: StoragePath, names: string[]) {
+    for (const name of names) {
+      const path = parent.child(name);
+      if (await this.storage.exists(path)) {
+        return path;
+      }
+    }
+
+    return undefined;
   }
 
 
@@ -64,11 +101,6 @@ export class PluginManager {
   }
 
 
-  getPlugins() {
-    return this.plugins;
-  }
-
-
   private async loadPluginByName(name: string): Promise<LoadedPlugin | undefined> {
     const plugin = this.plugins.find(x => x.name === name);
     if (!plugin) {
@@ -80,38 +112,76 @@ export class PluginManager {
 
 
   private async loadPlugin(name: string, loadSpec: PluginLoadSpec): Promise<LoadedPlugin> {
-    const cached = this.loadedPlugins.get(loadSpec);
+    const cached = this.loadedPlugins.get(name);
     if (cached != null) {
       return cached;
     }
 
     if (typeof loadSpec === "function") {
       const plugin = new loadSpec();
-      this.loadedPlugins.set(loadSpec, plugin);
+      this.loadedPlugins.set(name, plugin);
       return plugin;
     }
 
-    return new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = loadSpec;
-      script.onload = () => {
-        const loadedPlugin = (window as any)[`plugin_${ name }`];
-        if (!loadedPlugin) {
-          reject(new Error("Cannot load plugin: something went wrong during load, no export found"));
-        } else {
-          this.loadedPlugins.set(loadSpec, loadedPlugin);
-          resolve(loadedPlugin);
-        }
-      };
-      script.onerror = reject;
-      document.body.appendChild(script);
-    });
+    const scriptText = await transformScriptText((await this.storage.read(loadSpec)).toString());
+    const loaded = loadScript(scriptText);
+    this.loadedPlugins.set(name, loaded);
+    return loaded;
   }
 
 
   private readonly plugins: PluginMeta[] = [];
-  private readonly loadedPlugins = new Map<PluginLoadSpec, LoadedPlugin>();
-  public static readonly instance = new PluginManager();
+  private readonly loadedPlugins = new Map<string, LoadedPlugin>();
+}
+
+
+export function loadScript(scriptText: string) {
+  const pluginExport: any = {};
+
+  function requireReplacement(module: string): any {
+    switch (module) {
+      case "react":
+        return require("react");
+      case "mobx":
+        return require("mobx");
+      case "mobx-react-lite":
+        return require("mobx-react-lite");
+      case "date-fns":
+        return require("date-fns");
+      case "@mui/material":
+        return require("@mui/material");
+      case "csv":
+        return require("csv");
+      default:
+        throw new Error("Cannot require module " + module);
+    }
+  }
+
+  new Function("require", "exports", scriptText)(requireReplacement, pluginExport);
+  return pluginExport;
+}
+
+
+let swcInited = false;
+
+export async function transformScriptText(scriptText: string): Promise<string> {
+  if (!swcInited) {
+    await initSwc();
+    swcInited = true;
+  }
+
+  return transformSync(scriptText, {
+    jsc: {
+      parser: {
+        syntax: "typescript",
+        tsx: true
+      },
+      preserveAllComments: false
+    },
+    module: {
+      type: "commonjs"
+    }
+  }).code;
 }
 
 
@@ -119,7 +189,7 @@ export interface LoadedPlugin {
   editors: {
     [name: string]: {
       component: React.ComponentType<EditorProps>
-      stateAdapter: new (doc: Document) => DocumentEditorStateAdapter;
+      stateAdapter?: new (doc: Document, initialContent: Buffer) => DocumentEditorStateAdapter;
     }
   };
 }
