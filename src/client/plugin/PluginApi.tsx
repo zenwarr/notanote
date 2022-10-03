@@ -1,4 +1,3 @@
-import { StoragePath } from "@storage/storage-path";
 import { useMemo } from "react";
 import * as router from "react-router-dom";
 import * as React from "react";
@@ -12,3 +11,6 @@ export function Link(props: React.PropsWithChildren<{ path: string, className?: 
     { props.children }
   </router.Link>;
 }
+
+
+export { useCurrentThemeIsDark } from "../Theme";
