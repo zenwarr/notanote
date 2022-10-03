@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Workspace } from "./Workspace";
+import { Workspace } from "./workspace/Workspace";
 
 
 export function usePreventClose() {

@@ -2,7 +2,7 @@ import { Dialog } from "@mui/material";
 import { SyncJobRunnerError } from "@sync/SyncJobRunner";
 import * as mobx from "mobx-react-lite";
 import { useState } from "react";
-import { Workspace } from "../Workspace";
+import { Workspace } from "../workspace/Workspace";
 import { ErrorDisplay } from "../error-boundary/ErrorDisplay";
 
 

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
-import { Workspace } from "./Workspace";
+import { Workspace } from "./workspace/Workspace";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
 import { StoragePath } from "@storage/StoragePath";
 import { StorageEntryType } from "@storage/EntryStorage";

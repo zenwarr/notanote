@@ -1,7 +1,7 @@
 import { StoragePath } from "@storage/StoragePath";
 import { SyncDiffType } from "@sync/Sync";
 import { useCallback } from "react";
-import { Workspace } from "../Workspace";
+import { Workspace } from "../workspace/Workspace";
 import { useLoad } from "../useLoad";
 import { LoadGuard } from "../utils/LoadGuard";
 import { DiffCompare } from "./DiffCompare";

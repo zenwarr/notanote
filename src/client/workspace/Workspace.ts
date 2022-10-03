@@ -9,8 +9,8 @@ import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { DiffAction } from "@sync/SyncMetadataStorage";
 import { SyncJobRunner } from "@sync/SyncJobRunner";
 import { makeObservable, observable } from "mobx";
-import { PluginManager } from "./plugin/PluginManager";
-import { RecentDocStorage } from "./RecentDocStorage";
+import { PluginManager } from "../plugin/PluginManager";
+import { RecentDocStorage } from "../RecentDocStorage";
 
 
 export class Workspace {

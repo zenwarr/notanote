@@ -2,14 +2,14 @@ import { Box, Alert, CircularProgress, Hidden, SwipeableDrawer } from "@mui/mate
 import makeStyles from "@mui/styles/makeStyles";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { WorkspaceView } from "./WorkspaceView/WorkspaceView";
+import { WorkspaceView } from "./workspace/WorkspaceView";
 import { ConnectedFileView } from "./FileView";
 import { Header } from "./Header";
 import { usePreventClose } from "./usePreventClose";
 import { useEffect, useState } from "react";
 import { Route, Routes, useLocation } from "react-router";
 import { HashRouter } from "react-router-dom";
-import { Workspace } from "./Workspace";
+import { Workspace } from "./workspace/Workspace";
 import "./App.css";
 import { useShortcuts } from "./Shortcuts";
 import { PaletteProvider } from "./palette/PaletteProvider";

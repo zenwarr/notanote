@@ -1,7 +1,7 @@
 import { WorkspaceSettingsProvider } from "@common/workspace/WorkspaceSettingsProvider";
 import * as _ from "lodash";
 import { FileSettings } from "@common/Settings";
-import { Workspace } from "../Workspace";
+import { Workspace } from "../workspace/Workspace";
 import { StorageEntryPointer } from "@storage/EntryStorage";
 import { DocumentEditorProvider } from "./DocumentEditorProvider";
 

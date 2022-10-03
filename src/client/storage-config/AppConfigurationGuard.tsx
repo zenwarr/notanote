@@ -2,7 +2,7 @@ import { Alert, Box, CircularProgress } from "@mui/material";
 import { SyncTargetProvider } from "@sync/SyncTargetProvider";
 import { useEffect, useMemo, useState } from "react";
 import { App } from "../App";
-import { Workspace } from "../Workspace";
+import { Workspace } from "../workspace/Workspace";
 import { StorageConfig, StorageProviderManager } from "../storage/StorageProvider";
 import { StorageConfigView } from "./StorageConfigView";
 

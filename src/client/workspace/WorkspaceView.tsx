@@ -8,7 +8,8 @@ import { observer } from "mobx-react-lite";
 import * as React from "react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { Workspace } from "../Workspace";
+import { getFileRoutePath } from "./routing";
+import { Workspace } from "./Workspace";
 import { CreateEntryDialog } from "../CreateEntryDialog";
 import { ContainerWithSizeDetection } from "../utils/ContainerWithSizeDetection";
 import { TreeMenu } from "./TreeMenu";
@@ -63,7 +64,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const classes = useStyles();
 
   function onSelect(path: StoragePath) {
-    navigate(`/f/${ encodeURIComponent(path.normalized) }`);
+    navigate(getFileRoutePath(path));
     props.onFileSelected?.(path);
   }
 

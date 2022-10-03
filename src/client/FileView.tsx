@@ -3,7 +3,7 @@ import * as React from "react";
 import { useCallback } from "react";
 import { Document } from "./document/Document";
 import { observer } from "mobx-react-lite";
-import { Workspace } from "./Workspace";
+import { Workspace } from "./workspace/Workspace";
 import { useWindowTitle } from "./useWindowTitle";
 import { CircularProgress } from "@mui/material";
 import { makeStyles } from "@mui/styles";

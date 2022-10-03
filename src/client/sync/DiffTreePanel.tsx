@@ -4,7 +4,7 @@ import { isConflictingDiff } from "@sync/Sync";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { DiffAction } from "@sync/SyncMetadataStorage";
 import { useState } from "react";
-import { Workspace } from "../Workspace";
+import { Workspace } from "../workspace/Workspace";
 import { FullScreenDialog } from "../utils/FullScreenDialog";
 import { DiffCompareLoader } from "./DiffCompareLoader";
 

@@ -1,7 +1,7 @@
 import * as mobx from "mobx";
 import { Backend } from "../backend/Backend";
 import { WorkspaceBackend } from "../backend/WorkspaceBackend";
-import { Workspace } from "../Workspace";
+import { Workspace } from "../workspace/Workspace";
 import { PaletteOption } from "../palette/Palette";
 import * as nanoid from "nanoid";
 

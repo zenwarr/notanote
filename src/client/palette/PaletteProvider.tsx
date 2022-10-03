@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { getFileRoutePath } from "../workspace/routing";
 import { Palette, PaletteCompleter } from "./Palette";
 import { filePaletteCompleter } from "./PaletteCompleter";
 import { CommandManager, commandPaletteCompleter } from "../commands/CommandManager";
@@ -36,7 +37,7 @@ export function PaletteProvider(props: React.PropsWithChildren<{}>) {
 
   function onSelect(value: string) {
     if (mode === PaletteMode.File) {
-      navigate(`/f/${ encodeURIComponent(new StoragePath(value).normalized) }`);
+      navigate(getFileRoutePath(value));
     } else if (mode === PaletteMode.Command) {
       CommandManager.instance.run(value);
     }

@@ -1,7 +1,7 @@
 import { Box, Button } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { observer } from "mobx-react-lite";
-import { Workspace } from "../Workspace";
+import { Workspace } from "../workspace/Workspace";
 import { SyncStatusIcon, SyncStatusIconColor } from "./SyncStatusIcon";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 
