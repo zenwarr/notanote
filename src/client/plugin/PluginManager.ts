@@ -2,6 +2,7 @@ import { SpecialPath } from "@common/workspace/Workspace";
 import { EntryStorage } from "@storage/EntryStorage";
 import { StoragePath } from "@storage/StoragePath";
 import initSwc, { transformSync } from "@swc/wasm-web";
+import { ContentIdentity, getContentIdentity, getContentIdentityForData } from "@sync/ContentIdentity";
 import * as React from "react";
 import { Document, DocumentEditorStateAdapter } from "../document/Document";
 import { setupPluginDeps } from "./SetupPluginDeps";
@@ -13,7 +14,7 @@ export interface EditorProps {
 }
 
 
-export type PluginLoadSpec = StoragePath | (new () => LoadedPlugin);
+export type PluginLoadSpec = StoragePath | (new () => PluginExport);
 
 
 export interface PluginMeta {
@@ -46,7 +47,7 @@ export class PluginManager {
         return;
       }
 
-      this.registerPluginAndNotFail({
+      this.registerPlugin({
         name: child.path.basename,
         load: entryPoint,
       });
@@ -83,25 +84,20 @@ export class PluginManager {
   }
 
 
-  registerPlugin(plugin: PluginMeta) {
-    if (this.plugins.some(x => x.name === plugin.name)) {
-      throw new Error(`Cannot register plugin ${ plugin.name }: another plugin with this name already exists`);
-    }
-
-    this.plugins.push(plugin);
-  }
-
-
-  registerPluginAndNotFail(plugin: PluginMeta) {
+  private registerPlugin(plugin: PluginMeta) {
     try {
-      this.registerPlugin(plugin);
+      if (this.plugins.some(x => x.name === plugin.name)) {
+        throw new Error(`Cannot register plugin ${ plugin.name }: another plugin with this name already exists`);
+      }
+
+      this.plugins.push(plugin);
     } catch (e: any) {
       alert(`Failed to register plugin ${ plugin.name }: ${ e.message }`);
     }
   }
 
 
-  private async loadPluginByName(name: string): Promise<LoadedPlugin | undefined> {
+  private async loadPluginByName(name: string): Promise<PluginExport | undefined> {
     const plugin = this.plugins.find(x => x.name === name);
     if (!plugin) {
       return undefined;
@@ -111,31 +107,55 @@ export class PluginManager {
   }
 
 
-  private async loadPlugin(name: string, loadSpec: PluginLoadSpec): Promise<LoadedPlugin> {
+  private async loadPlugin(name: string, loadSpec: PluginLoadSpec): Promise<PluginExport> {
     const cached = this.loadedPlugins.get(name);
     if (cached != null) {
-      return cached;
+      if (await filesChanged(this.storage, cached.files)) {
+        this.loadedPlugins.delete(name);
+      } else {
+        return cached.plugin
+      }
     }
 
     if (typeof loadSpec === "function") {
       const plugin = new loadSpec();
-      this.loadedPlugins.set(name, plugin);
+      this.loadedPlugins.set(name, {
+        plugin,
+        files: {}
+      });
       return plugin;
     }
 
-    const scriptText = await transformScriptText((await this.storage.read(loadSpec)).toString());
-    const loaded = loadScript(scriptText);
-    this.loadedPlugins.set(name, loaded);
+    let scriptSourceBuf = await this.storage.read(loadSpec);
+    const scriptText = await transformScriptText(scriptSourceBuf.toString());
+    const loaded = await loadScript(scriptText);
+
+    this.loadedPlugins.set(name, {
+      plugin: loaded,
+      files: {
+        [loadSpec.toString()]: getContentIdentityForData(scriptSourceBuf)
+      }
+    });
     return loaded;
   }
 
 
   private readonly plugins: PluginMeta[] = [];
-  private readonly loadedPlugins = new Map<string, LoadedPlugin>();
+  private readonly loadedPlugins = new Map<string, LoadedPluginData>();
 }
 
 
-export function loadScript(scriptText: string) {
+async function filesChanged(storage: EntryStorage, files: Record<string, ContentIdentity>): Promise<boolean> {
+  const results = await Promise.all(Object.values(files).map(async ([path, prev]) => {
+    const actual = await getContentIdentity(storage.get(new StoragePath(path)));
+    return actual !== prev;
+  }));
+
+  return results.some(x => !!x);
+}
+
+
+export async function loadScript(scriptText: string): Promise<PluginExport> {
   const pluginExport: any = {};
 
   function requireReplacement(module: string): any {
@@ -190,7 +210,13 @@ export async function transformScriptText(scriptText: string): Promise<string> {
 }
 
 
-export interface LoadedPlugin {
+interface LoadedPluginData {
+  plugin: PluginExport;
+  files: Record<string, ContentIdentity>;
+}
+
+
+export interface PluginExport {
   editors: {
     [name: string]: {
       component: React.ComponentType<EditorProps>
