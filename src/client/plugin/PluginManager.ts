@@ -162,6 +162,8 @@ export class PluginManager {
           return await import("react-data-grid");
         case "@mui/x-date-pickers":
           return await import("@mui/x-date-pickers");
+        case "nuclear":
+          return await import("./PluginApi");
         default:
           throw new Error("Cannot require module " + module);
       }
