@@ -1,6 +1,6 @@
-import { StorageError, StorageErrorCode } from "./EntryStorage";
-import { StoragePath } from "./StoragePath";
-import { MountedFile } from "./StorageWithMounts";
+import { StorageError, StorageErrorCode } from "./entry-storage";
+import { StoragePath } from "./storage-path";
+import { MountedFile } from "./storage-with-mounts";
 
 
 export abstract class RuntimeStorageEntry extends MountedFile {

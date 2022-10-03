@@ -1,10 +1,10 @@
-import { patternMatches, singlePatternMatches } from "@common/utils/patterns";
-import { EntryStorage, StorageErrorCode } from "@storage/EntryStorage";
-import { StoragePath } from "@storage/StoragePath";
+import { patternMatches } from "@common/utils/patterns";
+import { EntryStorage, StorageErrorCode } from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
 import { StorageSyncConfig } from "@sync/StorageSyncData";
-import { FileSettings } from "../Settings";
-import { tryParseJson } from "../utils/tryParse";
-import { SpecialPath } from "./Workspace";
+import { FileSettings } from "@common/Settings";
+import { tryParseJson } from "@common/utils/tryParse";
+import { SpecialPath } from "@storage/special-path";
 
 
 interface WorkspaceSettings {

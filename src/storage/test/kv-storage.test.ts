@@ -1,6 +1,6 @@
-import { KVEntryStorage } from "../KVEntryStorage";
-import { StoragePath } from "../StoragePath";
-import { MapKV } from "../MapKV";
+import { KVEntryStorage } from "../kv-entry-storage";
+import { StoragePath } from "../storage-path";
+import { MapKV } from "../map-kv";
 
 
 const stor = new MapKV(new Map());

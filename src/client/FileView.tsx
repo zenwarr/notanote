@@ -9,7 +9,7 @@ import { CircularProgress } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { EditorProps } from "./plugin/PluginManager";
 import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 import { DocumentEditorProvider } from "./document/DocumentEditorProvider";
 
 

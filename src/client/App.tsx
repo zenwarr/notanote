@@ -14,7 +14,7 @@ import "./App.css";
 import { useShortcuts } from "./Shortcuts";
 import { PaletteProvider } from "./palette/PaletteProvider";
 import { useAppThemeContext } from "./Theme";
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 import { observer } from "mobx-react-lite";
 
 

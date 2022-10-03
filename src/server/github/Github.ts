@@ -1,4 +1,4 @@
-import { SpecialPath } from "@common/workspace/Workspace";
+import { SpecialPath } from "@storage/special-path";
 import child_process from "child_process";
 import path from "path";
 import assert from "assert";

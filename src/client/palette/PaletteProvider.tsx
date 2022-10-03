@@ -5,7 +5,7 @@ import { getFileRoutePath } from "../workspace/routing";
 import { Palette, PaletteCompleter } from "./Palette";
 import { filePaletteCompleter } from "./PaletteCompleter";
 import { CommandManager, commandPaletteCompleter } from "../commands/CommandManager";
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 
 
 export enum PaletteMode {

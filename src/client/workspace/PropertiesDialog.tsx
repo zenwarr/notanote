@@ -3,7 +3,7 @@ import { useLoad } from "../useLoad";
 import { useCallback } from "react";
 import * as React from "react";
 import { format } from "date-fns";
-import { StorageEntryPointer } from "@storage/EntryStorage";
+import { StorageEntryPointer } from "@storage/entry-storage";
 import { makeStyles } from "@mui/styles";
 
 

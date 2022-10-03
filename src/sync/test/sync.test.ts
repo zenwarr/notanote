@@ -1,7 +1,7 @@
-import { KVEntryStorage } from "@storage/KVEntryStorage";
-import { MapKV } from "@storage/MapKV";
-import { EntryStorage } from "@storage/EntryStorage";
-import { StoragePath } from "@storage/StoragePath";
+import { KVEntryStorage } from "@storage/kv-entry-storage";
+import { MapKV } from "@storage/map-kv";
+import { EntryStorage } from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
 import { StorageSyncData, StorageSyncConfig } from "@sync/StorageSyncData";
 import { Sync, SyncDiffType } from "@sync/Sync";
 import { SyncTarget } from "@sync/SyncTarget";

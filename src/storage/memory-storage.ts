@@ -1,9 +1,9 @@
 import * as _ from "lodash";
 import * as mobx from "mobx";
 import * as p from "path";
-import { StorageEntryPointer, StorageError, StorageErrorCode, EntryStorage } from "@storage/EntryStorage";
-import { StoragePath } from "@storage/StoragePath";
-import { StorageEntryData } from "@storage/StorageEntryData";
+import { StorageEntryPointer, StorageError, StorageErrorCode, EntryStorage } from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
+import { StorageEntryData } from "@storage/storage-entry-data";
 
 
 /**

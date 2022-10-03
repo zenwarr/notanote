@@ -1,5 +1,5 @@
 import { uint8ArrayToBuffer } from "@common/utils/uint8ArrayToBuffer";
-import { KVStorage, KVStorageEntry } from "@storage/KVEntryStorage";
+import { KVStorage, KVStorageEntry } from "@storage/kv-entry-storage";
 import { ClientKeyValueStore } from "./ClientKeyValueStore";
 
 

@@ -1,6 +1,6 @@
 import * as mobx from "mobx";
 import * as luxon from "luxon";
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 import { SyncJob } from "@sync/Sync";
 import { timeout } from "@common/utils/timeout";
 

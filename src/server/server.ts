@@ -1,4 +1,4 @@
-import { StorageError } from "@storage/EntryStorage";
+import { StorageError } from "@storage/entry-storage";
 import fastify from "fastify";
 import path from "path";
 import fastifyFormBody from "@fastify/formbody";

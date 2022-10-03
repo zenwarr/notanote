@@ -1,6 +1,6 @@
 /// <reference types="cordova-plugin-file" />
-import { EntryStorage, StorageEntryPointer, StorageEntryStats, StorageError, StorageErrorCode } from "@storage/EntryStorage";
-import { StoragePath } from "@storage/StoragePath";
+import { EntryStorage, StorageEntryPointer, StorageEntryStats, StorageError, StorageErrorCode } from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
 
 
 declare global {

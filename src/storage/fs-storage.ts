@@ -1,6 +1,6 @@
 import { uint8ArrayToBuffer } from "@common/utils/uint8ArrayToBuffer";
-import { EntryStorage, StorageEntryPointer, StorageEntryStats, StorageError, StorageErrorCode } from "@storage/EntryStorage";
-import { joinNestedPathSecure, StoragePath } from "@storage/StoragePath";
+import { EntryStorage, StorageEntryPointer, StorageEntryStats, StorageError, StorageErrorCode } from "@storage/entry-storage";
+import { joinNestedPathSecure, StoragePath } from "@storage/storage-path";
 import * as fs from "fs";
 import { getPlatform, Platform } from "../client/platform/getPlatform";
 

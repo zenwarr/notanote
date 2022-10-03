@@ -1,5 +1,5 @@
 import { Stack, Box } from "@mui/material";
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 import { SyncDiffType } from "@sync/Sync";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { DiffAction } from "@sync/SyncMetadataStorage";

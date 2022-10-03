@@ -1,6 +1,6 @@
 import { singlePatternMatches } from "@common/utils/patterns";
 import * as path from "path";
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 
 
 beforeAll(() => {

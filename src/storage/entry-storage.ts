@@ -1,5 +1,5 @@
-import { StorageEntryData } from "@storage/StorageEntryData";
-import { StoragePath } from "./StoragePath";
+import { StorageEntryData } from "@storage/storage-entry-data";
+import { StoragePath } from "./storage-path";
 
 
 export enum StorageChangeEvent {

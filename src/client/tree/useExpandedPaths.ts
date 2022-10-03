@@ -1,4 +1,4 @@
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 import { useCallback, useMemo, useState } from "react";
 
 

@@ -1,5 +1,5 @@
-import { StorageEntryStats } from "@storage/EntryStorage";
-import { StoragePath } from "@storage/StoragePath";
+import { StorageEntryStats } from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
 import { ContentIdentity } from "./ContentIdentity";
 
 

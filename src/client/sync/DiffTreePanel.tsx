@@ -1,5 +1,5 @@
 import { Button, Stack } from "@mui/material";
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 import { isConflictingDiff } from "@sync/Sync";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { DiffAction } from "@sync/SyncMetadataStorage";

@@ -1,8 +1,8 @@
-import { WorkspaceSettingsProvider } from "@common/workspace/WorkspaceSettingsProvider";
-import { StorageEntryData } from "@storage/StorageEntryData";
-import { MemoryCachedStorage } from "@storage/MemoryCachedStorage";
-import { EntryStorage, StorageEntryType } from "@storage/EntryStorage";
-import { StoragePath } from "@storage/StoragePath";
+import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
+import { StorageEntryData } from "@storage/storage-entry-data";
+import { MemoryCachedStorage } from "@storage/memory-cached-storage";
+import { EntryStorage, StorageEntryType } from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
 import { isConflictingDiff, Sync } from "@sync/Sync";
 import { SyncTargetProvider } from "@sync/SyncTargetProvider";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";

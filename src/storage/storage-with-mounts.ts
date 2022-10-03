@@ -1,6 +1,6 @@
-import { walkStorageEntryData } from "@storage/StorageEntryData";
-import { StorageEntryStats, StorageEntryPointer, StorageError, StorageErrorCode, EntryStorage } from "./EntryStorage";
-import { StoragePath } from "./StoragePath";
+import { walkStorageEntryData } from "@storage/storage-entry-data";
+import { StorageEntryStats, StorageEntryPointer, StorageError, StorageErrorCode, EntryStorage } from "./entry-storage";
+import { StoragePath } from "./storage-path";
 
 
 export abstract class MountedFile {

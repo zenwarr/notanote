@@ -1,9 +1,9 @@
-import { EntryStorage } from "@storage/EntryStorage";
+import { EntryStorage } from "@storage/entry-storage";
 import { ErrorCode, LogicError } from "@common/errors";
-import { joinNestedPathSecure, StoragePath } from "@storage/StoragePath";
+import { joinNestedPathSecure, StoragePath } from "@storage/storage-path";
 import path from "path";
-import { createWorkspaceDefaults } from "@common/workspace/Workspace";
-import { FsStorage } from "@storage/FsStorage";
+import { createWorkspaceDefaults } from "@storage/special-path";
+import { FsStorage } from "@storage/fs-storage";
 
 
 export class ServerStorageFactory {

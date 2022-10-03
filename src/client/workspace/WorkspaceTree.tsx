@@ -1,5 +1,5 @@
-import { StorageEntryData, walkStorageEntryData } from "@storage/StorageEntryData";
-import { StoragePath } from "@storage/StoragePath";
+import { StorageEntryData, walkStorageEntryData } from "@storage/storage-entry-data";
+import { StoragePath } from "@storage/storage-path";
 import * as mobx from "mobx-react-lite";
 import { useMemo } from "react";
 import { FixedSizeNodeData, FixedSizeTree, FixedSizeTreeProps } from "react-vtree";

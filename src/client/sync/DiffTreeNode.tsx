@@ -1,5 +1,5 @@
 import { makeStyles } from "@mui/styles";
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 import { isConflictingDiff, SyncDiffType, isCleanRemoteDiff } from "@sync/Sync";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import cn from "classnames";

@@ -26,7 +26,7 @@ import { NodeProp } from "@lezer/common";
 import { languages } from "@codemirror/language-data";
 import { format } from "date-fns";
 import { Document, DocumentEditorStateAdapter } from "../document/Document";
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 
 
 function getEditorPluginForFile(entryPath: StoragePath) {

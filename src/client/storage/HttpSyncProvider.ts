@@ -1,4 +1,4 @@
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 import { ContentIdentity } from "@sync/ContentIdentity";
 import { SyncTargetProvider } from "@sync/SyncTargetProvider";
 import * as bson from "bson";

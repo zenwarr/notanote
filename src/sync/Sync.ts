@@ -1,9 +1,9 @@
 import { patternMatches } from "@common/utils/patterns";
-import { WorkspaceSettingsProvider } from "@common/workspace/WorkspaceSettingsProvider";
+import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
 import { shouldPathBeSynced } from "@sync/Ignore";
 import { DiffHandleRule, StorageSyncData } from "@sync/StorageSyncData";
-import { StorageError, StorageErrorCode, EntryStorage } from "@storage/EntryStorage";
-import { StoragePath } from "@storage/StoragePath";
+import { StorageError, StorageErrorCode, EntryStorage } from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
 import { SyncTargetProvider } from "@sync/SyncTargetProvider";
 import { SyncTarget } from "@sync/SyncTarget";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";

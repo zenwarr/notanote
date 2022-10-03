@@ -2,7 +2,7 @@ import * as mobx from "mobx-react-lite";
 import * as m from "mobx";
 import { Box } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 import { DirContentIdentity } from "@sync/ContentIdentity";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { useEffect, useMemo, useState } from "react";

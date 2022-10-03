@@ -3,7 +3,7 @@ import { CreateNewFolderOutlined, DeleteForever, PostAddOutlined } from "@mui/ic
 import * as React from "react";
 import { PropertiesDialog } from "./PropertiesDialog";
 import { useState } from "react";
-import { StorageEntryPointer } from "@storage/EntryStorage";
+import { StorageEntryPointer } from "@storage/entry-storage";
 
 
 export interface TreeMenuProps {

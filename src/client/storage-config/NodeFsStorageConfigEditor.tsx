@@ -1,4 +1,4 @@
-import { FsStorage } from "@storage/FsStorage";
+import { FsStorage } from "@storage/fs-storage";
 import { Button, Stack } from "@mui/material";
 import { StorageProviderConfigEditorProps, StorageProviderManager } from "../storage/StorageProvider";
 import { useState } from "react";

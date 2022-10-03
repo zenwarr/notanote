@@ -1,8 +1,8 @@
-import { WorkspaceSettingsProvider } from "@common/workspace/WorkspaceSettingsProvider";
+import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
 import * as _ from "lodash";
 import { FileSettings } from "@common/Settings";
 import { Workspace } from "../workspace/Workspace";
-import { StorageEntryPointer } from "@storage/EntryStorage";
+import { StorageEntryPointer } from "@storage/entry-storage";
 import { DocumentEditorProvider } from "./DocumentEditorProvider";
 
 

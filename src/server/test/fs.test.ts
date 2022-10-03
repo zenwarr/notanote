@@ -1,8 +1,8 @@
-import { FsStorage } from "@storage/FsStorage";
+import { FsStorage } from "@storage/fs-storage";
 import * as path from "path";
-import { StoragePath } from "@storage/StoragePath";
-import { StorageErrorCode } from "@storage/EntryStorage";
-import { MemoryStorage } from "@storage/MemoryStorage";
+import { StoragePath } from "@storage/storage-path";
+import { StorageErrorCode } from "@storage/entry-storage";
+import { MemoryStorage } from "@storage/memory-storage";
 
 
 describe("fs storage", () => {

@@ -1,5 +1,5 @@
-import { StorageEntryStats, StorageEntryPointer, StorageEntryType, StorageError, StorageErrorCode, EntryStorage } from "./EntryStorage";
-import { StoragePath } from "./StoragePath";
+import { StorageEntryStats, StorageEntryPointer, StorageEntryType, StorageError, StorageErrorCode, EntryStorage } from "./entry-storage";
+import { StoragePath } from "./storage-path";
 
 
 export interface KVStorageEntry {

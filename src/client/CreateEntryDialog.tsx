@@ -2,8 +2,8 @@ import * as React from "react";
 import { useState } from "react";
 import { Workspace } from "./workspace/Workspace";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
-import { StoragePath } from "@storage/StoragePath";
-import { StorageEntryType } from "@storage/EntryStorage";
+import { StoragePath } from "@storage/storage-path";
+import { StorageEntryType } from "@storage/entry-storage";
 
 
 export type CreateEntryDialogProps = {

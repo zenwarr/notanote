@@ -1,5 +1,5 @@
-import { EntryStorage } from "@storage/EntryStorage";
-import { StoragePath } from "@storage/StoragePath";
+import { EntryStorage } from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
 
 
 export namespace SpecialPath {

@@ -1,4 +1,4 @@
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 import { ContentIdentity } from "@sync/ContentIdentity";
 import { SyncDiffType } from "@sync/Sync";
 import { EntrySyncMetadata } from "@sync/SyncMetadataStorage";

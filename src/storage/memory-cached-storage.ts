@@ -1,6 +1,6 @@
-import { StorageEntryPointer, StorageEntryStats, EntryStorage, StorageError, StorageErrorCode } from "./EntryStorage";
-import { StoragePath } from "./StoragePath";
-import { MemoryStorage } from "./MemoryStorage";
+import { StorageEntryPointer, StorageEntryStats, EntryStorage, StorageError, StorageErrorCode } from "./entry-storage";
+import { StoragePath } from "./storage-path";
+import { MemoryStorage } from "./memory-storage";
 
 
 /**

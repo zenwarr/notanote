@@ -1,7 +1,7 @@
 import { tryParseJson } from "@common/utils/tryParse";
-import { SpecialPath } from "@common/workspace/Workspace";
-import { EntryStorage, StorageEntryPointer, StorageError, StorageErrorCode } from "@storage/EntryStorage";
-import { StoragePath } from "@storage/StoragePath";
+import { SpecialPath } from "@storage/special-path";
+import { EntryStorage, StorageEntryPointer, StorageError, StorageErrorCode } from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
 import { SyncDiffType } from "@sync/Sync";
 import { DiffAction, EntrySyncMetadata, mergeMetadataMaps, SyncMetadataMap, SyncMetadataStorage } from "@sync/SyncMetadataStorage";
 import * as uuid from "uuid";

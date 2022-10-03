@@ -1,5 +1,5 @@
 import { ErrorCode, LogicError } from "@common/errors";
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 import { ContentIdentity } from "@sync/ContentIdentity";
 import { SyncTarget } from "@sync/SyncTarget";
 import { StorageSyncData } from "@sync/StorageSyncData";

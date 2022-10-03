@@ -1,4 +1,4 @@
-import { StorageEntryPointer, StorageError, StorageErrorCode } from "@storage/EntryStorage";
+import { StorageEntryPointer, StorageError, StorageErrorCode } from "@storage/entry-storage";
 
 
 export async function* walkEntriesDownToTop(entry: StorageEntryPointer): AsyncGenerator<StorageEntryPointer> {

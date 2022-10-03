@@ -1,5 +1,5 @@
-import { SpecialPath } from "@common/workspace/Workspace";
-import { StoragePath } from "@storage/StoragePath";
+import { SpecialPath } from "@storage/special-path";
+import { StoragePath } from "@storage/storage-path";
 
 
 export function shouldPathBeSynced(path: StoragePath) {

@@ -5,8 +5,8 @@ import {
   StorageError,
   StorageErrorCode,
   EntryStorage
-} from "@storage/EntryStorage";
-import { StoragePath } from "@storage/StoragePath";
+} from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
 import * as mobx from "mobx";
 import { ClientKeyValueStore } from "./ClientKeyValueStore";
 

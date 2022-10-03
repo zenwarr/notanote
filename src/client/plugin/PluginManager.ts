@@ -1,7 +1,7 @@
 import * as babel from "@babel/core";
-import { SpecialPath } from "@common/workspace/Workspace";
-import { EntryStorage } from "@storage/EntryStorage";
-import { StoragePath } from "@storage/StoragePath";
+import { SpecialPath } from "@storage/special-path";
+import { EntryStorage } from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
 import { ContentIdentity, getContentIdentity, getContentIdentityForData } from "@sync/ContentIdentity";
 import * as React from "react";
 import { Document, DocumentEditorStateAdapter } from "../document/Document";

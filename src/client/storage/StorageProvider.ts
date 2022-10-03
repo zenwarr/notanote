@@ -1,4 +1,4 @@
-import { EntryStorage } from "@storage/EntryStorage";
+import { EntryStorage } from "@storage/entry-storage";
 import { SyncTargetProvider } from "@sync/SyncTargetProvider";
 import * as React from "react";
 

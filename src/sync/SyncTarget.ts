@@ -1,5 +1,5 @@
-import { StorageEntryStats, StorageError, StorageErrorCode, EntryStorage } from "@storage/EntryStorage";
-import { StoragePath } from "@storage/StoragePath";
+import { StorageEntryStats, StorageError, StorageErrorCode, EntryStorage } from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
 import { ContentIdentity, DirContentIdentity, getContentIdentity } from "@sync/ContentIdentity";
 import { shouldPathBeSynced } from "@sync/Ignore";
 import { SyncTargetProvider } from "@sync/SyncTargetProvider";

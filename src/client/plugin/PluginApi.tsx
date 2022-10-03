@@ -1,4 +1,4 @@
-import { StoragePath } from "@storage/StoragePath";
+import { StoragePath } from "@storage/storage-path";
 import { useMemo } from "react";
 import * as router from "react-router-dom";
 import * as React from "react";

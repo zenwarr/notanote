@@ -1,8 +1,8 @@
 import * as ky from "ky";
 import kyDefault from "ky";
 import { LogicError } from "@common/errors";
-import { StorageError } from "@storage/EntryStorage";
-import { StoragePath } from "@storage/StoragePath";
+import { StorageError } from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
 
 
 export async function httpRequest(url: string, options: ky.Options): Promise<Response> {
