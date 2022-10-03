@@ -1,7 +1,6 @@
 import { useLoad } from "./useLoad";
 import * as React from "react";
 import { useCallback } from "react";
-import { DocumentManager } from "./document/DocumentManager";
 import { Document } from "./document/Document";
 import { observer } from "mobx-react-lite";
 import { Workspace } from "./Workspace";
@@ -51,7 +50,7 @@ function applyGlobalDocSettings(doc: Document) {
 export function FileView(props: FileViewProps) {
   const classes = useStyles();
   const contentLoad = useLoad(useCallback(async () => {
-    const doc = await DocumentManager.instance.create(props.entryPath);
+    const doc = await Document.create(Workspace.instance.storage.get(props.entryPath));
     applyGlobalDocSettings(doc);
     return doc;
   }, [ props.entryPath ]), {

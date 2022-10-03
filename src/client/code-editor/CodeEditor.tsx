@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useRef} from "react";
 import { Document } from "../document/Document";
-import { DocumentManager } from "../document/DocumentManager";
 import "./CodeEditor.css";
 import { EditorView } from "@codemirror/view";
 import { useCurrentThemeIsDark } from "../Theme";
@@ -40,7 +39,6 @@ export function CodeEditor(props: CodeEditorProps) {
 
     return () => {
       view.destroy();
-      DocumentManager.instance.close(props.doc.entry.path);
     };
   }, [ props.doc ]);
 

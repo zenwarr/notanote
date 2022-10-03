@@ -1,7 +1,6 @@
 import * as monaco from "monaco-editor";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { Document } from "../document/Document";
-import { DocumentManager } from "../document/DocumentManager";
 import { useCurrentThemeIsDark } from "../Theme";
 import { MonacoEditorStateAdapter } from "./MonacoEditorStateAdapter";
 import { defineTheme } from "./Theme";
@@ -52,10 +51,6 @@ export function MonacoEditor(props: MonacoEditorProps) {
       }
     });
     stateAdapter.current.model = editor.getModel();
-
-    return () => {
-      DocumentManager.instance.close(props.doc.entry.path);
-    };
   }, []);
 
   useLayoutEffect(() => {

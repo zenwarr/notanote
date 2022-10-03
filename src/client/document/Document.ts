@@ -1,7 +1,9 @@
+import { WorkspaceSettingsProvider } from "@common/workspace/WorkspaceSettingsProvider";
 import * as _ from "lodash";
 import { FileSettings } from "@common/Settings";
 import { Workspace } from "../Workspace";
 import { StorageEntryPointer } from "@storage/EntryStorage";
+import { DocumentEditorProvider } from "./DocumentEditorProvider";
 
 
 export interface DocumentEditorStateAdapter {
@@ -45,6 +47,16 @@ export class Document {
   private async onChangesAsync() {
     await this.entry.writeOrCreate(await this.contentToBuffer());
     Workspace.instance.scheduleDiffUpdate(this.entry.path);
+  }
+
+
+  static async create(ep: StorageEntryPointer): Promise<Document> {
+    const document = new Document(ep, WorkspaceSettingsProvider.instance.getSettingsForPath(ep.path));
+    const content = await ep.read();
+
+    const editorProvider = new DocumentEditorProvider(Workspace.instance.plugins);
+    document.setEditorStateAdapter(await editorProvider.getStateAdapter(document, content));
+    return document;
   }
 
 
