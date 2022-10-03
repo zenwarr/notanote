@@ -90,4 +90,8 @@ contextBridge.exposeInMainWorld("CapacitorCustomPlatform", {
 // todo: expose only limited API
 contextBridge.exposeInMainWorld("fs", require("fs"));
 contextBridge.exposeInMainWorld("chooseDirectory", () => ipcRenderer.invoke("chooseDirectory"));
+contextBridge.exposeInMainWorld("process", {
+  env: {},
+  cwd: process.cwd
+}); // for babel to work
 ////////////////////////////////////////////////////////
