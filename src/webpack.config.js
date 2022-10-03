@@ -61,9 +61,6 @@ module.exports = (env) => [
         filename: `index.css`,
         chunkFilename: "[id]-[contenthash].css"
       }),
-      new webpack.DefinePlugin({
-        "process.env.CLIENT_VERSION": JSON.stringify(require("./package.json").version)
-      }),
       new webpack.ProvidePlugin({
         Buffer: ['buffer', 'Buffer']
       }),

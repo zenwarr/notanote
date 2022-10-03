@@ -1,6 +1,5 @@
 import * as mobx from "mobx";
 import { Backend } from "../backend/Backend";
-import { SystemBackend } from "../backend/SystemBackend";
 import { WorkspaceBackend } from "../backend/WorkspaceBackend";
 import { Workspace } from "../Workspace";
 import { PaletteOption } from "../palette/Palette";
@@ -34,8 +33,8 @@ const COMMANDS: Command[] = [
 
 
 async function showVersion() {
-  const version = await Backend.get(SystemBackend).getLatestVersion();
-  alert(`Your version: ${ process.env.CLIENT_VERSION }\nLatest version: ${ version }`);
+  const version = require("../../package.json").version;
+  alert(`Client application version: ${ version }`);
 }
 
 
