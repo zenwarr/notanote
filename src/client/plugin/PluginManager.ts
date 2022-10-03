@@ -152,6 +152,11 @@ export function loadScript(scriptText: string) {
         return require("@mui/material");
       case "csv":
         return require("csv");
+      case "react-data-grid":
+        require("react-data-grid/lib/styles.css");
+        return require("react-data-grid");
+      case "@mui/x-date-pickers":
+        return require("@mui/x-date-pickers");
       default:
         throw new Error("Cannot require module " + module);
     }

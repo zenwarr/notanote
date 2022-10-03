@@ -18,7 +18,7 @@ if ("Worker" in window) {
   const bgWorker = new Worker("/background-worker.js");
   bgWorker.onmessage = e => {
     console.log("worker message received: ", e);
-  }
+  };
 }
 
 
@@ -33,7 +33,7 @@ registerStorageProviders();
 createRoot(root!).render(<>
   <ErrorBoundary>
     <AppThemeProvider>
-      <AppConfigurationGuard />
+      <AppConfigurationGuard/>
     </AppThemeProvider>
   </ErrorBoundary>
 </>);

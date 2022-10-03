@@ -1,5 +1,7 @@
 import { Box, Alert, CircularProgress, Hidden, SwipeableDrawer } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { WorkspaceView } from "./WorkspaceView/WorkspaceView";
 import { ConnectedFileView } from "./FileView";
 import { Header } from "./Header";
@@ -26,7 +28,8 @@ export const App = observer(() => {
   const appTheme = useAppThemeContext();
 
   useEffect(() => {
-    Workspace.instance.init().then(() => {}).catch(err => console.error(err));
+    Workspace.instance.init().then(() => {
+    }).catch(err => console.error(err));
   }, []);
 
   function onMobileEntrySelected(path: StoragePath) {
@@ -43,44 +46,46 @@ export const App = observer(() => {
   }
 
   if (Workspace.instance.loadError) {
-    return <Box p={2}>
+    return <Box p={ 2 }>
       <Alert severity={ "error" }>Error initialing workspace: { Workspace.instance.loadError }</Alert>
-    </Box>
+    </Box>;
   }
 
   return <HashRouter>
-    <PaletteProvider>
-      <div className={ classes.root }>
-        <div className={ classes.workspaceView }>
-          <Hidden lgDown>
-            <Box p={ 2 } className={ classes.workspaceViewContainer }>
-              <WorkspaceView/>
-            </Box>
-          </Hidden>
-
-          <Hidden lgUp>
-            <SwipeableDrawer open={ drawerOpen } onOpen={ () => setDrawerOpen(true) } onClose={ () => setDrawerOpen(false) }
-                              disableBackdropTransition={ !iOS } disableDiscovery={ iOS } keepMounted>
-              <Box className={ classes.workspaceViewContainer }>
-                <WorkspaceView treeWithPadding onFileSelected={ onMobileEntrySelected }/>
+    <LocalizationProvider dateAdapter={ AdapterDateFns }>
+      <PaletteProvider>
+        <div className={ classes.root }>
+          <div className={ classes.workspaceView }>
+            <Hidden lgDown>
+              <Box p={ 2 } className={ classes.workspaceViewContainer }>
+                <WorkspaceView/>
               </Box>
-            </SwipeableDrawer>
-          </Hidden>
-        </div>
+            </Hidden>
 
-        <div className={ classes.docView }>
-          <div className={ classes.header }>
-            <Header onToggleDrawer={ () => setDrawerOpen(!drawerOpen) } isDarkTheme={ appTheme.isDark } setIsDark={ appTheme.setIsDark }/>
+            <Hidden lgUp>
+              <SwipeableDrawer open={ drawerOpen } onOpen={ () => setDrawerOpen(true) } onClose={ () => setDrawerOpen(false) }
+                               disableBackdropTransition={ !iOS } disableDiscovery={ iOS } keepMounted>
+                <Box className={ classes.workspaceViewContainer }>
+                  <WorkspaceView treeWithPadding onFileSelected={ onMobileEntrySelected }/>
+                </Box>
+              </SwipeableDrawer>
+            </Hidden>
           </div>
 
-          <Routes>
-            <Route path={ "/f/*" } element={ <FileViewRoute/> }/>
-          </Routes>
+          <div className={ classes.docView }>
+            <div className={ classes.header }>
+              <Header onToggleDrawer={ () => setDrawerOpen(!drawerOpen) } isDarkTheme={ appTheme.isDark } setIsDark={ appTheme.setIsDark }/>
+            </div>
 
-          <ConnectedFileView className={ classes.docEditor }/>
+            <Routes>
+              <Route path={ "/f/*" } element={ <FileViewRoute/> }/>
+            </Routes>
+
+            <ConnectedFileView className={ classes.docEditor }/>
+          </div>
         </div>
-      </div>
-    </PaletteProvider>
+      </PaletteProvider>
+    </LocalizationProvider>
   </HashRouter>;
 });
 

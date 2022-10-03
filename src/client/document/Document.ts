@@ -44,7 +44,7 @@ export class Document {
 
   private async onChangesAsync() {
     await this.entry.writeOrCreate(await this.contentToBuffer());
-    await Workspace.instance.sync?.updateDiff(this.entry.path);
+    Workspace.instance.scheduleDiffUpdate(this.entry.path);
   }
 
 

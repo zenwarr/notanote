@@ -74,7 +74,7 @@ export class Workspace {
         console.error("Failed to update diff: ", e);
       }
 
-      await this.syncJobRunner?.run()
+      await this.syncJobRunner?.run();
     }, 500);
   }
 
@@ -110,7 +110,7 @@ export class Workspace {
       await entry.createDir();
     }
 
-    await this.sync?.updateDiff(entry.path);
+    this.scheduleDiffUpdate(entry.path);
 
     if (type === "file") {
       this.selectedEntry = path;
@@ -131,7 +131,7 @@ export class Workspace {
     const pointer = await this.storage.get(path);
     await pointer.remove();
 
-    await this.sync?.updateDiff(pointer.path);
+    this.scheduleDiffUpdate(pointer.path);
   }
 
 
@@ -168,6 +168,15 @@ export class Workspace {
 
   get selectedFile() {
     return this._selectedFile;
+  }
+
+
+  scheduleDiffUpdate(start: StoragePath) {
+    setTimeout(async () => {
+      if (this.sync) {
+        await this.sync.updateDiff(start);
+      }
+    }, 0);
   }
 
 
