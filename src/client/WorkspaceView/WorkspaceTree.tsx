@@ -40,10 +40,9 @@ export const WorkspaceTree = mobx.observer((props: WorkspaceTreeProps) => {
       }
 
       const isDir = selected.stats.isDirectory;
+      props.onSelect?.(path);
 
-      if (!isDir) {
-        props.onSelect?.(path);
-      } else {
+      if (isDir) {
         expand.onToggle(path);
       }
     },
