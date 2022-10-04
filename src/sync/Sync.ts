@@ -1,4 +1,5 @@
 import { patternMatches } from "@common/utils/patterns";
+import { timeout } from "@common/utils/timeout";
 import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
 import { shouldPathBeSynced } from "@sync/Ignore";
 import { DiffHandleRule, StorageSyncData } from "@sync/StorageSyncData";
@@ -13,6 +14,7 @@ import * as mobx from "mobx";
 import { ContentIdentity, DirContentIdentity, getContentIdentity, getContentIdentityForData } from "./ContentIdentity";
 import { EntryCompareData } from "./EntryCompareData";
 import { DiffAction, EntrySyncMetadata, SyncMetadataMap, SyncMetadataStorage, walkSyncMetadataTopDown } from "./SyncMetadataStorage";
+import { Mutex } from "async-mutex";
 
 
 export enum SyncDiffType {
@@ -74,13 +76,12 @@ export class Sync {
     this.storage = storage;
     this.syncTarget = syncTarget;
 
-    // todo: rename
     this.localSyncTarget = new SyncTarget(this.storage);
     mobx.makeObservable(this, {
       actualDiff: mobx.observable,
       mergeDiff: mobx.action,
-      updatingDiff: mobx.observable,
       conflictCount: mobx.computed,
+      updatingDiff: mobx.observable
     } as any);
   }
 
@@ -89,6 +90,8 @@ export class Sync {
   private readonly syncTarget: SyncTargetProvider;
   private readonly localSyncTarget: SyncTargetProvider;
   private syncMetadata: SyncMetadataStorage | undefined;
+  private lock = new Mutex();
+  private readonly activeJobPaths = new Set<string>();
   private cachedDiffRules: DiffHandleRule[] | undefined;
   actualDiff: SyncDiffEntry[] = [];
   updatingDiff = false;
@@ -151,11 +154,8 @@ export class Sync {
 
   /**
    * Returns difference between local and remote state.
-   * @param start
    */
-  private async getDiff(start: StoragePath) {
-    const remoteOutline = await this.loadOutline(start);
-
+  private async getDiff(remoteOutline: SyncOutlineEntry | undefined, start: StoragePath) {
     const allPaths = new Map<string, SyncOutlineEntry | undefined>();
 
     // walking through the remote outline top-down
@@ -208,14 +208,23 @@ export class Sync {
 
 
   async accept(diff: Omit<SyncDiffEntry, "syncMetadata">, action: DiffAction) {
-    let updatedMeta: EntrySyncMetadata | undefined;
+    const release = await this.lock.acquire();
+    try {
+      await this.acceptInsideLock(diff, action)
+    } finally {
+      release();
+    }
+  }
 
+
+  private async acceptInsideLock(diff: Omit<SyncDiffEntry, "syncMetadata">, action: DiffAction) {
     if (action === DiffAction.AcceptAuto && isConflictingDiff(diff.diff)) {
       throw new Error("Cannot resolve conflicting diff with DiffAction.AcceptAuto");
     } else if (!isConflictingDiff(diff.diff) && (action === DiffAction.AcceptLocal || action === DiffAction.AcceptRemote)) {
       throw new Error("Cannot resolve clean diff with DiffAction.AcceptLocal or DiffAction.AcceptRemote");
     }
 
+    let updatedMeta: EntrySyncMetadata | undefined;
     await (await this.getSyncMetadataStorage()).update(diff.path, meta => {
       updatedMeta = {
         synced: meta?.synced,
@@ -237,36 +246,41 @@ export class Sync {
 
 
   async acceptMulti(entries: Omit<SyncDiffEntry, "syncMetadata">[]): Promise<void> {
-    const meta = await (await this.getSyncMetadataStorage()).get();
-    const result: SyncMetadataMap = {};
-    const updatedMeta = new Map<string, EntrySyncMetadata>();
+    const release = await this.lock.acquire();
+    try {
+      const meta = await (await this.getSyncMetadataStorage()).get();
+      const result: SyncMetadataMap = {};
+      const updatedMeta = new Map<string, EntrySyncMetadata>();
 
-    for (const entryDiff of entries) {
-      let entryMeta = meta[entryDiff.path.normalized];
-      if (entryMeta) {
-        entryMeta.accepted = getAcceptedContentIdentity(entryDiff, DiffAction.AcceptAuto);
-        entryMeta.action = DiffAction.AcceptAuto;
-        entryMeta.diff = entryDiff.diff;
-      } else {
-        entryMeta = {
-          accepted: getAcceptedContentIdentity(entryDiff, DiffAction.AcceptAuto),
-          synced: undefined,
-          action: DiffAction.AcceptAuto,
-          diff: entryDiff.diff
-        };
+      for (const entryDiff of entries) {
+        let entryMeta = meta[entryDiff.path.normalized];
+        if (entryMeta) {
+          entryMeta.accepted = getAcceptedContentIdentity(entryDiff, DiffAction.AcceptAuto);
+          entryMeta.action = DiffAction.AcceptAuto;
+          entryMeta.diff = entryDiff.diff;
+        } else {
+          entryMeta = {
+            accepted: getAcceptedContentIdentity(entryDiff, DiffAction.AcceptAuto),
+            synced: undefined,
+            action: DiffAction.AcceptAuto,
+            diff: entryDiff.diff
+          };
+        }
+
+        result[entryDiff.path.normalized] = entryMeta;
+        updatedMeta.set(entryDiff.path.normalized, entryMeta);
       }
 
-      result[entryDiff.path.normalized] = entryMeta;
-      updatedMeta.set(entryDiff.path.normalized, entryMeta);
-    }
+      await (await this.getSyncMetadataStorage()).setMulti(result);
 
-    await (await this.getSyncMetadataStorage()).setMulti(result);
-
-    for (const diff of this.actualDiff) {
-      const updatedEntryMeta = updatedMeta.get(diff.path.normalized);
-      if (updatedEntryMeta) {
-        diff.syncMetadata = updatedEntryMeta;
+      for (const diff of this.actualDiff) {
+        const updatedEntryMeta = updatedMeta.get(diff.path.normalized);
+        if (updatedEntryMeta) {
+          diff.syncMetadata = updatedEntryMeta;
+        }
       }
+    } finally {
+      release();
     }
   }
 
@@ -299,16 +313,18 @@ export class Sync {
       return;
     }
 
-    // todo: wait for update to finish
-    if (this.updatingDiff) {
-      throw new Error("Another diff update is running now");
-    }
-
+    this.updatingDiff = true;
     try {
-      this.updatingDiff = true;
-      const diff = await this.getDiff(start);
-      this.mergeDiff(start, diff);
-      await this.handleDiff(diff);
+      const outline = await this.loadOutline(start)
+
+      const release = await this.lock.acquire();
+      try {
+        const diff = await this.getDiff(outline, start);
+        this.mergeDiff(start, diff);
+        await this.handleDiff(diff);
+      } finally {
+        release();
+      }
     } finally {
       this.updatingDiff = false;
     }
@@ -355,7 +371,7 @@ export class Sync {
     for (const diff of diffs) {
       const rule = await this.findDiffHandleRule(diff);
       if (rule) {
-        await this.accept(diff, rule.action);
+        await this.acceptInsideLock(diff, rule.action);
       }
     }
   }
@@ -394,7 +410,7 @@ export class Sync {
 
     const metadata = await (await this.getSyncMetadataStorage()).get();
     for (const [ path, entry ] of walkSyncMetadataTopDown(metadata)) {
-      if (entry.synced !== entry.accepted && (!filter || filter(path))) {
+      if (entry.synced !== entry.accepted && !this.activeJobPaths.has(path.normalized) && (!filter || filter(path))) {
         result.push({ path, syncMetadata: entry });
         if (result.length >= count) {
           break;
@@ -407,61 +423,71 @@ export class Sync {
 
 
   async doJob(job: SyncJob): Promise<void> {
-    let accepted = job.syncMetadata.accepted;
-    let synced = job.syncMetadata.synced;
+    if (this.activeJobPaths.has(job.path.normalized)) {
+      throw new Error("Job for given path is already active");
+    }
 
     if (!job.syncMetadata.diff) {
       throw new Error("Invariant error: job without diff");
     }
 
-    const action = job.syncMetadata.action;
+    this.activeJobPaths.add(job.path.normalized);
+    try {
+      const action = job.syncMetadata.action;
 
-    let to: SyncTargetProvider, from: SyncTargetProvider;
-    if (isConflictingDiff(job.syncMetadata.diff)) {
-      to = action === DiffAction.AcceptLocal ? this.syncTarget : this.localSyncTarget;
-      from = action === DiffAction.AcceptLocal ? this.localSyncTarget : this.syncTarget;
-    } else if (isCleanLocalDiff(job.syncMetadata.diff)) {
-      to = this.syncTarget;
-      from = this.localSyncTarget;
-    } else {
-      to = this.localSyncTarget;
-      from = this.syncTarget;
-    }
-
-    if (accepted) {
-      if (accepted === DirContentIdentity) {
-        await this.syncTarget.createDir(job.path, synced);
+      let to: SyncTargetProvider, from: SyncTargetProvider;
+      if (isConflictingDiff(job.syncMetadata.diff)) {
+        to = action === DiffAction.AcceptLocal ? this.syncTarget : this.localSyncTarget;
+        from = action === DiffAction.AcceptLocal ? this.localSyncTarget : this.syncTarget;
+      } else if (isCleanLocalDiff(job.syncMetadata.diff)) {
+        to = this.syncTarget;
+        from = this.localSyncTarget;
       } else {
-        const data = await from.read(job.path);
-        const contentIdentity = await getContentIdentityForData(data);
-        if (contentIdentity !== accepted) {
-          throw new Error("Data is updated after accepting");
+        to = this.localSyncTarget;
+        from = this.syncTarget;
+      }
+
+      let accepted = job.syncMetadata.accepted;
+      let synced = job.syncMetadata.synced;
+      if (accepted) {
+        if (accepted === DirContentIdentity) {
+          await this.syncTarget.createDir(job.path, synced);
+        } else {
+          const data = await from.read(job.path);
+
+          // after async read accepted state could have been changed, so we should check it again
+          const contentIdentity = getContentIdentityForData(data);
+          if (contentIdentity !== accepted) {
+            // just do nothing, this job should be re-run later
+            return;
+          }
+
+          await to.update(job.path, data, synced);
+        }
+      } else {
+        if (!synced) {
+          throw new Error("Invariant error: job.syncMetadata.synced is undefined when trying to remove a remote entry");
         }
 
-        await to.update(job.path, data, synced);
-      }
-    } else {
-      if (!synced) {
-        throw new Error("Invariant error: job.syncMetadata.synced is undefined when trying to remove a remote entry");
+        await to.remove(job.path, synced);
       }
 
-      await to.remove(job.path, synced);
-    }
+      let updatedMeta: EntrySyncMetadata | undefined;
+      await (await this.getSyncMetadataStorage()).update(job.path, meta => {
+        if (meta && meta.synced === synced) {
+          updatedMeta = { ...meta, synced: accepted || undefined, action: undefined, diff: undefined };
+        } else {
+          updatedMeta = meta;
+        }
+        return updatedMeta;
+      });
 
-    let updatedMeta: EntrySyncMetadata | undefined;
-    await (await this.getSyncMetadataStorage()).update(job.path, meta => {
-      if (meta && meta?.synced === synced) {
-        updatedMeta = { ...meta, synced: accepted || undefined, action: undefined, diff: undefined };
-      } else {
-        console.error("Race condition: sync metadata changed after while job was performing: " + job.path.normalized);
-        updatedMeta = meta;
+      // update actualDiff with new sync metadata
+      if (updatedMeta) {
+        this.actualDiff = this.actualDiff.filter(d => !d.path.isEqual(job.path));
       }
-      return updatedMeta;
-    });
-
-    // update actualDiff with new sync metadata
-    if (updatedMeta) {
-      this.actualDiff = this.actualDiff.filter(d => !d.path.isEqual(job.path));
+    } finally {
+      this.activeJobPaths.delete(job.path.normalized);
     }
   }
 

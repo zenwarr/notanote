@@ -1,8 +1,7 @@
-import { Button } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { EntryCompareData } from "@sync/EntryCompareData";
-import { isCleanLocalDiff, isCleanRemoteDiff, isConflictingDiff, SyncDiffType } from "@sync/Sync";
-import { ReactNode, useCallback } from "react";
+import { SyncDiffType } from "@sync/Sync";
+import { useCallback } from "react";
 import { useLoad } from "../useLoad";
 import { LoadGuard } from "../utils/LoadGuard";
 
@@ -20,31 +19,6 @@ export function DiffCompare(props: DiffCompareProps) {
   const local = getText(props.data.local);
   const remote = getText(props.data.remote);
 
-  let originalIsLocal = true;
-  let originalTitle: ReactNode = "", modifiedTitle: ReactNode = "";
-  if (!props.diffType || isConflictingDiff(props.diffType)) {
-    originalTitle = <span>
-      Local &nbsp;
-      <Button variant={ "outlined" } size={ "small" } onClick={ props.onAcceptLocal }>
-        Accept
-      </Button>
-    </span>;
-    modifiedTitle = <span>
-      Remote &nbsp;
-      <Button variant={ "outlined" } size={ "small" } onClick={ props.onAcceptRemote }>
-        Accept
-      </Button>
-    </span>;
-    originalIsLocal = false;
-  } else if (props.diffType && isCleanLocalDiff(props.diffType)) {
-    originalTitle = "Original (remote)";
-    modifiedTitle = "Modified (local)";
-    originalIsLocal = false;
-  } else if (props.diffType && isCleanRemoteDiff(props.diffType)) {
-    originalTitle = "Original (local)";
-    modifiedTitle = "Modified (remote)";
-  }
-
   const diffEditor = useLoad(useCallback(() => import("../monaco/MonacoDiff"), []));
 
   if (local === false || remote === false) {
@@ -55,10 +29,10 @@ export function DiffCompare(props: DiffCompareProps) {
 
   return <LoadGuard loadState={ diffEditor }>
     { diffEditor => <diffEditor.MonacoDiff className={ classes.editor }
-                                           original={ originalIsLocal ? local : remote }
-                                           modified={ originalIsLocal ? remote : local }
-                                           originalTitle={ originalTitle }
-                                           modifiedTitle={ modifiedTitle }/> }
+                                           original={ local }
+                                           modified={ remote }
+                                           originalTitle={ "Local" }
+                                           modifiedTitle={ "Remote" }/> }
   </LoadGuard>
 }
 

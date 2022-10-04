@@ -218,3 +218,15 @@ it("no false conflicts on initial update", async () => {
   expect(d.sync.actualDiff.length).toEqual(1);
   expect(d.sync.actualDiff[0]!.diff).toEqual(SyncDiffType.LocalUpdate);
 });
+
+
+it("initial sync", async () => {
+  const d = await prepare();
+
+  await write(d.local, "/file.txt", "hello, world!");
+  await write(d.remote, "/file.txt", "hello, world!");
+
+  await d.sync.updateDiff();
+  expect(d.sync.actualDiff).toHaveLength(0);
+});
+

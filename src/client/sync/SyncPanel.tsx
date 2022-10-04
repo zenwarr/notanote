@@ -20,7 +20,7 @@ export const SyncPanel = mobx.observer(() => {
   return <Box>
     <Box display={ "flex" } justifyContent={ "space-between" } alignItems={ "center" } mb={ 1 }>
       <span>
-        Last successful sync: { syncDate }
+        Last successful sync: { syncDate } &nbsp;
 
         {
             sw.updatingDiff && <CircularProgress size={ 10 }/>

@@ -20,7 +20,7 @@ export function DiffTreeNode(props: DiffTreeNodeProps) {
 
   const d = props.diff;
 
-  const isAccepted = d && d.syncMetadata?.accepted === d.actual && !(d.syncMetadata?.accepted == null && d.actual == null);
+  const isAccepted = d && d.syncMetadata?.accepted === d.actual;
 
   const itemClassName = cn({
     [classes.new]: d && (d.diff === SyncDiffType.LocalCreate || d.diff === SyncDiffType.ConflictingCreate),
@@ -102,13 +102,12 @@ const useStyles = makeStyles(theme => ({
 function getConflictText(diff: SyncDiffType | undefined): string | undefined {
   switch (diff) {
     case SyncDiffType.ConflictingUpdate:
-      return "Updated remotely";
     case SyncDiffType.ConflictingCreate:
-      return "Created remotely";
+      return "Updated both remotely and locally";
     case SyncDiffType.ConflictingLocalRemove:
-      return "Updated remotely";
+      return "Updated remotely, but removed locally";
     case SyncDiffType.ConflictingRemoteRemove:
-      return "Removed remotely";
+      return "Removed remotely, but updated locally";
     default:
       return undefined;
   }
