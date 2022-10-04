@@ -3,5 +3,9 @@ import { StoragePath } from "@storage/storage-path";
 
 
 export function shouldPathBeSynced(path: StoragePath) {
-  return !(path.inside(SpecialPath.SyncDir, true) || path.inside(SpecialPath.Git, true));
+  if (path.inside(SpecialPath.SyncDir, true) || path.inside(SpecialPath.Git, true)) {
+    return false;
+  }
+
+  return !path.parts.some(x => x === "node_modules");
 }

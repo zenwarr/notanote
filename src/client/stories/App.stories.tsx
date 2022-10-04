@@ -8,7 +8,7 @@ import { App } from "../App";
 import { AudioRecord } from "../audio/AudioRecord";
 import { ErrorDisplay } from "../error-boundary/ErrorDisplay";
 import { Palette } from "../palette/Palette";
-import { transformScriptText } from "../plugin/PluginManager";
+import { processScriptText } from "../plugin/PluginManager";
 import { AppConfigurationGuard } from "../storage-config/AppConfigurationGuard";
 import { StorageConfigView } from "../storage-config/StorageConfigView";
 import { StorageConfig } from "../storage/StorageProvider";
@@ -116,11 +116,11 @@ export const Script = () => {
 
   useEffect(() => {
     (async () => {
-      const r = await transformScriptText("index.tsx", `
+      const r = await processScriptText("index.tsx", `
       import * as React from "react";
       console.log(React.render);
       export const X = { a: "b" };
-      `);
+      `, true);
       setCompiled(r.code);
       console.log("imported: ", r.imports);
     })();

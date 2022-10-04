@@ -1,12 +1,12 @@
 import * as babel from "@babel/core";
+import { EntryStorage, StorageError, StorageErrorCode } from "@storage/entry-storage";
+import { resolveImport } from "@storage/resolve-import";
 import { SpecialPath } from "@storage/special-path";
-import { EntryStorage } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
-import { ContentIdentity, getContentIdentity, getContentIdentityForData } from "@sync/ContentIdentity";
+import { ContentIdentity, getContentIdentityForData } from "@sync/ContentIdentity";
 import * as React from "react";
-import { Document, DocumentEditorStateAdapter } from "../document/Document";
-import { setupPluginDeps } from "./SetupPluginDeps";
 import "react-data-grid/lib/styles.css";
+import { Document, DocumentEditorStateAdapter } from "../document/Document";
 
 
 export interface EditorProps {
@@ -27,7 +27,7 @@ export interface PluginMeta {
 export class PluginManager {
   constructor(storage: EntryStorage) {
     this.storage = storage;
-    setupPluginDeps();
+    setupPluginEnv();
   }
 
 
@@ -109,108 +109,112 @@ export class PluginManager {
 
 
   private async loadPlugin(name: string, loadSpec: PluginLoadSpec): Promise<PluginExport> {
-    const cached = this.loadedPlugins.get(name);
-    if (cached != null) {
-      if (await filesChanged(this.storage, cached.files)) {
-        this.loadedPlugins.delete(name);
-      } else {
-        return cached.plugin;
-      }
-    }
-
     if (typeof loadSpec === "function") {
       const plugin = new loadSpec();
-      this.loadedPlugins.set(name, {
-        plugin,
-        files: {}
-      });
+      this.loadedPlugins[name] = plugin;
       return plugin;
     }
 
-    let scriptSourceBuf = await this.storage.read(loadSpec);
-    const { code, imports } = await transformScriptText(loadSpec.basename, scriptSourceBuf.toString());
-    const loaded = await this.loadScript(code, imports);
-
-    this.loadedPlugins.set(name, {
-      plugin: loaded,
-      files: {
-        [loadSpec.toString()]: getContentIdentityForData(scriptSourceBuf)
-      }
-    });
-    return loaded;
+    const plugin = await this.loadScript<PluginExport>(loadSpec, true);
+    this.loadedPlugins[name] = plugin;
+    return plugin;
   }
 
 
-  private async loadScript(scriptText: string, imports: string[]): Promise<PluginExport> {
-    const pluginExport: any = {};
-
-    async function importModule(module: string): Promise<unknown> {
-      switch (module) {
-        case "react":
-          return await import("react");
-        case "mobx":
-          return await import("mobx");
-        case "mobx-react-lite":
-          return await import("mobx-react-lite");
-        case "date-fns":
-          return await import("date-fns");
-        case "@mui/material":
-          return await import("@mui/material");
-        case "csv":
-          return await import("csv");
-        case "react-data-grid":
-          return await import("react-data-grid");
-        case "@mui/x-date-pickers":
-          return await import("@mui/x-date-pickers");
-        case "nuclear":
-          return await import("./PluginApi");
-        default:
-          throw new Error("Cannot require module " + module);
+  private async loadScript<ExportType = unknown>(path: StoragePath, transform: boolean): Promise<ExportType> {
+    let scriptSourceBuf: Buffer;
+    try {
+      scriptSourceBuf = await this.storage.read(path);
+    } catch (err) {
+      if (err instanceof StorageError && err.code === StorageErrorCode.NotExists) {
+        const e: any = new Error();
+        e.code = "MODULE_NOT_FOUND";
+        throw e;
+      } else {
+        throw err;
       }
     }
 
+    const actualIdentity = getContentIdentityForData(scriptSourceBuf);
+
+    const cached = this.loadedScripts[path.normalized];
+    if (cached != null) {
+      if (actualIdentity !== cached.identity) {
+        delete this.loadedScripts[path.normalized];
+      } else {
+        return cached.exports as ExportType;
+      }
+    }
+
+    const { code, imports } = await processScriptText(path.basename, scriptSourceBuf.toString(), transform);
+    const exp = await this.loadParsedScript(path, code, imports);
+
+    this.loadedScripts[path.normalized] = {
+      exports: exp,
+      identity: actualIdentity
+    };
+
+    return exp as ExportType;
+  }
+
+
+  private async resolveAndLoad(from: StoragePath, spec: string): Promise<unknown> {
+    const path = await resolveImport(this.storage, from, spec, {
+      extensions: [ "js", "jsx", "ts", "tsx" ]
+    });
+
+    if (!path) {
+      const e: any = new Error(`Module not found: ${ spec }, loading from ${ from.normalized }`);
+      e.code = "MODULE_NOT_FOUND";
+      throw e;
+    }
+
+    return this.loadScript(path, path.parts.some(x => x === "node_modules"));
+  }
+
+
+  private async loadParsedScript<ExportType = unknown>(source: StoragePath, scriptText: string, imports: string[]): Promise<ExportType> {
     await Promise.all(imports.map(async (module) => {
-      this.cachedImports[module] = this.cachedImports[module] || await importModule(module);
+      let resolved: unknown = this.cachedImports[module] || await importModule(module);
+      if (!resolved) {
+        resolved = await this.resolveAndLoad(source, module);
+      }
+
+      this.cachedImports[module] = resolved;
     }));
 
-    new Function("require", "exports", scriptText)((mod: string) => {
+    const mod: any = {};
+    const exp: any = {};
+    new Function("require", "module", "exports", scriptText)((mod: string) => {
       if (!this.cachedImports[mod]) {
-        throw new Error("Cannot require module " + mod);
+        throw new Error(`Cannot import module ${ mod } from ${ source.normalized }`);
       }
 
       return this.cachedImports[mod];
-    }, pluginExport);
-    return pluginExport;
+    }, mod, exp);
+
+    return mod.exports ? await mod.exports : exp;
   }
 
 
   private readonly plugins: PluginMeta[] = [];
-  private readonly loadedPlugins = new Map<string, LoadedPluginData>();
+  private readonly loadedPlugins: Record<string, PluginExport> = {};
+  private readonly loadedScripts: Record<string, { identity: ContentIdentity, exports: unknown }> = {};
   private readonly cachedImports: Record<string, unknown> = {};
 }
 
 
-async function filesChanged(storage: EntryStorage, files: Record<string, ContentIdentity>): Promise<boolean> {
-  const results = await Promise.all(Object.values(files).map(async ([ path, prev ]) => {
-    const actual = await getContentIdentity(storage.get(new StoragePath(path)));
-    return actual !== prev;
-  }));
-
-  return results.some(x => !!x);
-}
-
-
-export async function transformScriptText(filename: string, scriptText: string): Promise<{ code: string, imports: string[] }> {
+export async function processScriptText(filename: string, scriptText: string, transform: boolean): Promise<{ code: string, imports: string[] }> {
   const imports: string[] = [];
 
-  const r = await babel.transformAsync(scriptText, {
+  const r = await (transform ? babel.transformAsync : babel.parseAsync)(scriptText, {
     filename,
     comments: false,
     presets: [ require("@babel/preset-react"), require("@babel/preset-typescript") ],
     plugins: [
-      [require("@babel/plugin-transform-modules-commonjs").default, {
+      [ require("@babel/plugin-transform-modules-commonjs").default, {
         importInterop: "none",
-      }],
+      } ],
       {
         visitor: {
           ImportDeclaration: path => {
@@ -218,17 +222,27 @@ export async function transformScriptText(filename: string, scriptText: string):
             if (!imports.includes(importPath)) {
               imports.push(importPath);
             }
-          }
+          },
+          // CallExpression: path => {
+          //   let func = path.node.callee;
+          //   let arg = path.node.arguments[0];
+          //   if (func.type === "Identifier" && func.name === "require" && arg.type === "StringLiteral") {
+          //     let importPath = arg.value;
+          //     if (!imports.includes(importPath)) {
+          //       imports.push(importPath);
+          //     }
+          //   }
+          // }
         }
       }
     ]
   });
 
-  if (!r || !r.code) {
+  if (!r || (transform && !(r as any).code)) {
     throw new Error("Compilation failed: babel returned no result");
   }
 
-  return { code: r?.code, imports };
+  return { code: transform ? (r as any)?.code : scriptText, imports };
 }
 
 
@@ -245,4 +259,43 @@ export interface PluginExport {
       stateAdapter?: new (doc: Document, initialContent: Buffer) => DocumentEditorStateAdapter;
     }
   };
+}
+
+
+const PLUGIN_MODULES: Record<string, () => Promise<unknown>> = {
+  "react": () => import("react"),
+  "mobx": () => import("mobx"),
+  "mobx-react-lite": () => import("mobx-react-lite"),
+  "date-fns": () => import("date-fns"),
+  "@mui/material": () => import("@mui/material"),
+  "csv": () => import("csv"),
+  "react-data-grid": () => import("react-data-grid"),
+  "@mui/x-date-pickers": () => import("@mui/x-date-pickers"),
+  "nuclear": () => import("./PluginApi"),
+};
+
+
+async function importModule(module: string) {
+  const loader = PLUGIN_MODULES[module];
+  if (loader) {
+    return await loader();
+  }
+
+  return undefined;
+}
+
+
+function setupPluginEnv() {
+  const modules = {};
+  for (const mod of Object.keys(PLUGIN_MODULES)) {
+    Object.defineProperty(modules, mod, {
+      get: () => PLUGIN_MODULES[mod](),
+    });
+  }
+
+  (window as any).nuclear = {
+    modules
+  };
+
+  (window as any).React = React;
 }

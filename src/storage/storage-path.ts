@@ -18,6 +18,11 @@ export class StoragePath {
   }
 
 
+  get extension(): string | undefined {
+    return p.extname(this.normalized) || undefined;
+  }
+
+
   child(childPath: string): StoragePath {
     return new StoragePath(p.join(this._normalized, childPath));
   }
