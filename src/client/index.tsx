@@ -1,3 +1,4 @@
+import "setup-env";
 import { createRoot } from "react-dom/client";
 import { configure } from "mobx";
 import { Workbox } from "workbox-window";
