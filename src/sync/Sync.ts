@@ -342,7 +342,7 @@ export class Sync {
     const toDelete: SyncMetadataMap = {};
     // iterate over keys and remove those that are not in allPaths
     for (const key of Object.keys(meta)) {
-      if (!allPaths.has(key)) {
+      if (!allPaths.has(key) && new StoragePath(key).inside(start)) {
         const value = meta[key]!;
         if (value.accepted && value.accepted !== value.synced) {
           console.log(`Accepted state is lost: ${ key } (accepted identity is ${ value.accepted })`);
