@@ -55,3 +55,12 @@ export function shouldReadFromLocalToAccept(syncMetadata: EntrySyncMetadata): bo
 export function isAccepted(d: SyncDiffEntry): boolean {
   return d.syncMetadata != null && d.syncMetadata.accepted === d.actual;
 }
+
+
+/**
+ * Returns true if this entry should be processed as a job
+ * @param d
+ */
+export function isActionable(d: SyncDiffEntry): boolean {
+  return d.syncMetadata != null && d.syncMetadata.action != null && d.syncMetadata.diff != null;
+}

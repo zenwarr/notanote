@@ -1,6 +1,6 @@
 import { makeStyles } from "@mui/styles";
 import { StoragePath } from "@storage/storage-path";
-import { isAccepted, isAcceptedStateLost, SyncDiffEntry } from "@sync/SyncDiffEntry";
+import { isAcceptedStateLost, isActionable, SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { isCleanRemoteDiff, isConflictingDiff, SyncDiffType } from "@sync/SyncDiffType";
 import cn from "classnames";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -20,8 +20,8 @@ export function DiffTreeNode(props: DiffTreeNodeProps) {
 
   const d = props.diff;
 
-  const accepted = d && isAccepted(d);
-  const lost = d && isAcceptedStateLost(d)
+  const actionable = d && isActionable(d);
+  const lost = d && isAcceptedStateLost(d);
 
   const itemClassName = cn({
     [classes.new]: d && (d.diff === SyncDiffType.LocalCreate || d.diff === SyncDiffType.ConflictingCreate),
@@ -65,7 +65,8 @@ export function DiffTreeNode(props: DiffTreeNodeProps) {
     }
 
     {
-      accepted && <Tooltip title={ lost ? "Change is accepted, but the state was lost" : "Change is accepted and is going to be applied soon" }>
+        actionable &&
+      <Tooltip title={ lost ? "Change is accepted, but the state was lost" : "Change is accepted and is going to be applied soon" }>
         <CheckIcon color={ lost ? "error" : "success" } className={ classes.acceptIcon }/>
       </Tooltip>
     }
