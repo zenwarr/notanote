@@ -1,5 +1,5 @@
 import { CreateNewFolderOutlined, DeleteForever, PostAddOutlined } from "@mui/icons-material";
-import { Box, IconButton } from "@mui/material";
+import { Alert, Box, CircularProgress, IconButton } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import { StorageEntryType } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
@@ -106,6 +106,18 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 
   function onMenuClose() {
     setMenuState(undefined);
+  }
+
+  if (cw.storage.memoryInitError) {
+    return <Box p={ 2 }>
+      <Alert severity={ "error" }>Error initialing storage: { cw.storage.memoryInitError }</Alert>
+    </Box>;
+  }
+
+  if (!cw.storage.memoryInited) {
+    return <Box display={ "flex" } alignItems={ "center" } justifyContent={ "center" } height={ 300 }>
+      <CircularProgress/>
+    </Box>;
   }
 
   return <>

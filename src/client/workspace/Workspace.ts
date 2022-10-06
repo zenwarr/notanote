@@ -52,21 +52,11 @@ export class Workspace {
   loadError: string | undefined;
 
 
-  async init() {
+  async load() {
     try {
-      // todo: failing on this step can lead to damaging data
-      const start = performance.now();
-
-      await this.storage.initWithRemoteOutline();
-      const storageInitEnd = performance.now();
-
       await this.plugins.discoverPlugins();
-      const pluginDiscoverEnd = performance.now();
 
       await WorkspaceSettingsProvider.instance.init();
-      const workspaceSettingsInitEnd = performance.now();
-
-      console.log(`Init perf: storage: ${ storageInitEnd.valueOf() - start.valueOf() }, plugins: ${ pluginDiscoverEnd.valueOf() - storageInitEnd.valueOf() }, workspace: ${ workspaceSettingsInitEnd.valueOf() - pluginDiscoverEnd.valueOf() }`);
 
       this.loading = false;
     } catch (error: any) {
@@ -77,6 +67,8 @@ export class Workspace {
 
     // run and forget
     setTimeout(async () => {
+      await this.storage.initWithRemoteOutline();
+
       try {
         await this.sync?.updateDiff(StoragePath.root);
       } catch (e: any) {

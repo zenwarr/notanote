@@ -114,7 +114,7 @@ export class AndroidFileStorage extends EntryStorage {
   async writeOrCreate(path: StoragePath, content: Buffer): Promise<void> {
     const entry = await this.getEntry(path, true);
     if (entry && entry.isDirectory) {
-      throw new StorageError(StorageErrorCode.DirectoryWrite, path, "Cannot write to a directory");
+      throw new StorageError(StorageErrorCode.NotFile, path, "Cannot write to a directory");
     }
 
     return new Promise((resolve, reject) => {

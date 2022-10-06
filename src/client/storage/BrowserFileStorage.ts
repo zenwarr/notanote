@@ -217,7 +217,7 @@ export class BrowserFileStorage extends EntryStorage {
     }
 
     if ((handles.child && handles.child.kind !== "file") || !handles.parent) {
-      throw new StorageError(StorageErrorCode.DirectoryWrite, path, "Cannot write to a directory");
+      throw new StorageError(StorageErrorCode.NotFile, path, "Cannot write to a directory");
     }
 
     if (!handles.child) {

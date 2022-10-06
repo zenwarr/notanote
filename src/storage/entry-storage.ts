@@ -144,9 +144,9 @@ export enum StorageErrorCode {
   NotFile = "NOT_FILE",
   AlreadyExists = "ALREADY_EXISTS",
   InvalidStructure = "INVALID_STRUCTURE",
-  DirectoryWrite = "DIRECTORY_WRITE",
   NoPermissions = "NO_PERMISSIONS",
   NotSupported = "NOT_SUPPORTED",
+  NotReady = "NOT_READY",
   Unknown = "UNKNOWN"
 }
 

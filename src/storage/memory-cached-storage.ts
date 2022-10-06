@@ -1,6 +1,7 @@
 import { StorageEntryPointer, StorageEntryStats, EntryStorage, StorageError, StorageErrorCode } from "./entry-storage";
 import { StoragePath } from "./storage-path";
 import { MemoryStorage } from "./memory-storage";
+import * as mobx from "mobx";
 
 
 /**
@@ -10,21 +11,33 @@ export class MemoryCachedStorage extends EntryStorage {
   constructor(remoteStorage: EntryStorage) {
     super();
     this.remote = remoteStorage;
+    mobx.makeObservable(this, {
+      memoryInited: mobx.observable,
+      memoryInitError: mobx.observable
+    });
   }
 
 
   async initWithRemoteOutline() {
-    const treeOutline = await this.remote.loadOutline();
-    if (!treeOutline) {
-      throw new Error(`Failed to load storage entries: loadAll returns undefined`);
-    }
+    try {
+      const treeOutline = await this.remote.loadOutline();
+      if (!treeOutline) {
+        throw new Error(`Failed to load storage entries: loadAll returns undefined`);
+      }
 
-    this.memory.setData(treeOutline);
+      this.memory.setData(treeOutline);
+      this.memoryInited = true;
+    } catch (err: any) {
+      this.memoryInitError = err.message || "Unknown error";
+      throw err
+    }
   }
 
 
   readonly remote: EntryStorage;
   readonly memory = new MemoryStorage();
+  memoryInited = false;
+  memoryInitError: string | undefined = undefined
 
 
   getMemoryData(path: StoragePath) {
@@ -33,6 +46,10 @@ export class MemoryCachedStorage extends EntryStorage {
 
 
   override async createDir(path: StoragePath): Promise<void> {
+    if (!this.memoryInited) {
+      throw new StorageError(StorageErrorCode.NotReady, path, "Memory storage not initialized");
+    }
+
     await this.remote.createDir(path);
     await this.memory.createDir(path);
   }
@@ -44,17 +61,30 @@ export class MemoryCachedStorage extends EntryStorage {
 
 
   override async children(path: StoragePath): Promise<StorageEntryPointer[]> {
-    const cachedChildren = await this.memory.children(path);
-    return cachedChildren.map(p => new StorageEntryPointer(p.path, this));
+    if (this.memoryInited) {
+      const cachedChildren = await this.memory.children(path);
+      return cachedChildren.map(p => new StorageEntryPointer(p.path, this));
+    } else {
+      const children = await this.remote.children(path);
+      return children.map(p => new StorageEntryPointer(p.path, this));
+    }
   }
 
 
   override async exists(path: StoragePath): Promise<boolean> {
-    return this.memory.exists(path);
+    if (this.memoryInited) {
+      return this.memory.exists(path);
+    } else {
+      return this.remote.exists(path);
+    }
   }
 
 
   override async read(path: StoragePath): Promise<Buffer> {
+    if (!this.memoryInited) {
+      return this.remote.read(path);
+    }
+
     const cached = await this.memory.getDataAtPath(path);
     if (!cached) {
       throw new StorageError(StorageErrorCode.NotExists, path, `File does not exist`);
@@ -73,17 +103,29 @@ export class MemoryCachedStorage extends EntryStorage {
 
 
   override async remove(path: StoragePath): Promise<void> {
+    if (!this.memoryInited) {
+      throw new StorageError(StorageErrorCode.NotReady, path, "Memory storage not initialized");
+    }
+
     await this.remote.remove(path);
     await this.memory.remove(path);
   }
 
 
   override async stats(path: StoragePath): Promise<StorageEntryStats> {
-    return this.memory.stats(path);
+    if (this.memoryInited) {
+      return this.memory.stats(path);
+    } else {
+      return this.remote.stats(path);
+    }
   }
 
 
   override async writeOrCreate(path: StoragePath, content: Buffer): Promise<void> {
+    if (!this.memoryInited) {
+      throw new StorageError(StorageErrorCode.NotReady, path, "Memory storage not initialized");
+    }
+
     await this.remote.writeOrCreate(path, content);
     await this.memory.writeOrCreate(path, content);
   }

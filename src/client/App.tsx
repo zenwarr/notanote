@@ -28,8 +28,7 @@ export const App = observer(() => {
   const appTheme = useAppThemeContext();
 
   useEffect(() => {
-    Workspace.instance.init().then(() => {
-    }).catch(err => console.error(err));
+    Workspace.instance.load();
   }, []);
 
   function onMobileEntrySelected(path: StoragePath) {
