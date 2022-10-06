@@ -6,6 +6,8 @@ function runShortcutAction(e: KeyboardEvent) {
   if (e.code === "KeyP" && e.ctrlKey) {
     e.preventDefault();
     togglePalette(e.altKey ? PaletteMode.Command : PaletteMode.File);
+  } else if (e.code === "KeyS" && e.ctrlKey) {
+    e.preventDefault();
   }
 }
 
