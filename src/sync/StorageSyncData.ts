@@ -2,7 +2,7 @@ import { tryParseJson } from "@common/utils/tryParse";
 import { SpecialPath } from "@storage/special-path";
 import { EntryStorage, StorageEntryPointer, StorageError, StorageErrorCode } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
-import { SyncDiffType } from "@sync/Sync";
+import { SyncDiffType } from "@sync/SyncDiffType";
 import { DiffAction, EntrySyncMetadata, mergeMetadataMaps, SyncMetadataMap, SyncMetadataStorage } from "@sync/SyncMetadataStorage";
 import * as uuid from "uuid";
 

@@ -1,7 +1,7 @@
 import { makeStyles } from "@mui/styles";
 import { StoragePath } from "@storage/storage-path";
-import { isConflictingDiff, SyncDiffType, isCleanRemoteDiff } from "@sync/Sync";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
+import { isCleanRemoteDiff, isConflictingDiff, SyncDiffType } from "@sync/SyncDiffType";
 import cn from "classnames";
 import DownloadIcon from "@mui/icons-material/Download";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";

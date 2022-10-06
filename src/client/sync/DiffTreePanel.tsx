@@ -1,7 +1,7 @@
 import { Button, Stack } from "@mui/material";
 import { StoragePath } from "@storage/storage-path";
-import { isConflictingDiff } from "@sync/Sync";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
+import { isConflictingDiff } from "@sync/SyncDiffType";
 import { DiffAction } from "@sync/SyncMetadataStorage";
 import { useState } from "react";
 import { Workspace } from "../workspace/Workspace";

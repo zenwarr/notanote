@@ -23,6 +23,7 @@ export interface SyncJobSource {
 
 
 const ERROR_RETRY_DELAY = luxon.Duration.fromObject({ second: 15 });
+const NORMAL_BACKOFF_DELAY = luxon.Duration.fromObject({ second: 5 });
 const SYNC_JOB_IDLE_TIMEOUT = luxon.Duration.fromObject({ second: 5 });
 
 
@@ -45,10 +46,10 @@ export class SyncJobRunner {
           return false;
         }
 
-        const lastErrorTime = this.lastErrorsForPaths.get(jobPath.normalized);
+        const backoff = this.backoff.get(jobPath.normalized);
 
         // if last error was some time ago, don't run this job
-        if (lastErrorTime && luxon.DateTime.fromJSDate(lastErrorTime).plus(ERROR_RETRY_DELAY).toMillis() > Date.now()) {
+        if (backoff && backoff.valueOf() > new Date().valueOf()) {
           return false;
         }
 
@@ -70,7 +71,7 @@ export class SyncJobRunner {
       const nextJobs = await this.getNextJobs();
       for (let q = 0; q < nextJobs.length; ++q) {
         promiseMap.set(nextJobs[q]!.path.normalized, (async () => {
-          await this.runJob(nextJobs[q]!)
+          await this.runJob(nextJobs[q]!);
           return nextJobs[q]!;
         })());
       }
@@ -94,25 +95,32 @@ export class SyncJobRunner {
 
 
   private async runJob(job: SyncJob) {
+    let backoffDelay: luxon.Duration;
     try {
       this.runningJobs.push(job);
       this.lockedPaths.add(job.path.normalized);
       await this.syncSource.doJob(job);
       this.lastSuccessfulJobDone = new Date();
       this.errors = this.errors.filter(e => !e.path.isEqual(job.path));
-      this.lastErrorsForPaths.delete(job.path.normalized);
+      backoffDelay = ERROR_RETRY_DELAY;
     } catch (error) {
+      console.error(`Error running job ${job.path.normalized}`, error);
+
       this.errors = this.errors.filter(e => !e.path.isEqual(job.path));
       this.errors.push({
         path: job.path,
         error: error as Error,
         date: new Date()
       });
-      this.lastErrorsForPaths.set(job.path.normalized, new Date());
+      backoffDelay = NORMAL_BACKOFF_DELAY;
     }
 
     this.runningJobs = this.runningJobs.filter(j => !j.path.isEqual(job.path));
     this.lockedPaths.delete(job.path.normalized);
+
+    this.backoff.set(job.path.normalized, luxon.DateTime.now().plus(backoffDelay).toJSDate());
+
+    // todo: clean old records from backoff map
   }
 
 
@@ -121,7 +129,7 @@ export class SyncJobRunner {
   lastSuccessfulJobDone: Date | undefined = undefined;
 
   private readonly lockedPaths = new Set<string>();
-  private readonly lastErrorsForPaths = new Map<string, Date>();
+  private readonly backoff = new Map<string, Date>();
   private readonly syncSource: SyncJobSource;
   isWorking = false;
 }

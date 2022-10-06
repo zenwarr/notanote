@@ -1,7 +1,7 @@
 import { Stack, Box } from "@mui/material";
 import { StoragePath } from "@storage/storage-path";
-import { SyncDiffType } from "@sync/Sync";
 import { SyncDiffEntry } from "@sync/SyncDiffEntry";
+import { SyncDiffType } from "@sync/SyncDiffType";
 import { DiffAction } from "@sync/SyncMetadataStorage";
 import { useEffect, useState } from "react";
 import { App } from "../App";

@@ -3,7 +3,8 @@ import { MapKV } from "@storage/map-kv";
 import { EntryStorage } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
 import { StorageSyncData, StorageSyncConfig } from "@sync/StorageSyncData";
-import { Sync, SyncDiffType } from "@sync/Sync";
+import { Sync } from "@sync/Sync";
+import { SyncDiffType } from "@sync/SyncDiffType";
 import { SyncTarget } from "@sync/SyncTarget";
 import { DiffAction } from "@sync/SyncMetadataStorage";
 import { SyncJobRunner } from "@sync/SyncJobRunner";
@@ -143,9 +144,8 @@ it("modification after accepting", async () => {
   expect(await d.local.exists(new StoragePath("file.txt"))).toEqual(false);
   expect(await d.remote.exists(new StoragePath("file.txt"))).toEqual(false);
 
-  expect(d.sync.actualDiff).toHaveLength(1);
-  expect(d.runner.errors).toHaveLength(1);
-  expect(d.runner.errors[0]!.path.normalized).toEqual("/file.txt");
+  expect(d.sync.actualDiff).toHaveLength(0);
+  expect(d.runner.errors).toHaveLength(0);
 
   await d.sync.updateDiff();
 
@@ -167,9 +167,8 @@ it("local modification after accepting", async () => {
   expect(await d.local.exists(new StoragePath("file.txt"))).toEqual(false);
   expect(await d.remote.exists(new StoragePath("file.txt"))).toEqual(false);
 
-  expect(d.sync.actualDiff).toHaveLength(1);
-  expect(d.runner.errors).toHaveLength(1);
-  expect(d.runner.errors[0]!.path.normalized).toEqual("/file.txt");
+  expect(d.sync.actualDiff).toHaveLength(0);
+  expect(d.runner.errors).toHaveLength(0);
 
   await d.sync.updateDiff();
 
@@ -230,3 +229,15 @@ it("initial sync", async () => {
   expect(d.sync.actualDiff).toHaveLength(0);
 });
 
+
+it("updating file after accepting does not break", async () => {
+  const d = await prepare();
+
+  await write(d.local, "/file.txt", "hello, world!");
+  await d.sync.updateDiff();
+  await d.sync.acceptMulti(d.sync.actualDiff);
+
+  await write(d.local, "/file.txt", "hello, world updated!");
+
+  await d.runner.run(true);
+});

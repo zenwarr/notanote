@@ -1,68 +1,21 @@
 import { patternMatches } from "@common/utils/patterns";
-import { timeout } from "@common/utils/timeout";
+import { EntryStorage, StorageError, StorageErrorCode } from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
 import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
 import { shouldPathBeSynced } from "@sync/Ignore";
 import { DiffHandleRule, StorageSyncData } from "@sync/StorageSyncData";
-import { StorageError, StorageErrorCode, EntryStorage } from "@storage/entry-storage";
-import { StoragePath } from "@storage/storage-path";
-import { SyncTargetProvider } from "@sync/SyncTargetProvider";
-import { SyncTarget } from "@sync/SyncTarget";
-import { SyncDiffEntry } from "@sync/SyncDiffEntry";
+import { isAcceptedStateLost, shouldReadFromLocalToAccept, SyncDiffEntry } from "@sync/SyncDiffEntry";
+import { isCleanLocalDiff, isCleanRemoteDiff, isConflictingDiff, SyncDiffType } from "@sync/SyncDiffType";
 import { SyncOutlineEntry } from "@sync/SyncEntry";
+import { SyncTarget } from "@sync/SyncTarget";
+import { SyncTargetProvider } from "@sync/SyncTargetProvider";
 import { walkEntriesDownToTop } from "@sync/WalkEntriesDownToTop";
+import assert from "assert";
+import { Mutex } from "async-mutex";
 import * as mobx from "mobx";
 import { ContentIdentity, DirContentIdentity, getContentIdentity, getContentIdentityForData } from "./ContentIdentity";
 import { EntryCompareData } from "./EntryCompareData";
-import { DiffAction, EntrySyncMetadata, SyncMetadataMap, SyncMetadataStorage, walkSyncMetadataTopDown } from "./SyncMetadataStorage";
-import { Mutex } from "async-mutex";
-
-
-export enum SyncDiffType {
-  LocalCreate = "local_create",
-  RemoteCreate = "remote_create",
-  ConflictingCreate = "conflicting_create",
-  LocalUpdate = "local_update",
-  RemoteUpdate = "remote_update",
-  ConflictingUpdate = "conflicting_update",
-  LocalRemove = "local_remove",
-  RemoteRemove = "remote_remove",
-  ConflictingLocalRemove = "conflicting_local_remove",
-  ConflictingRemoteRemove = "conflicting_remote_remove",
-}
-
-
-export function isConflictingDiff(diff: SyncDiffType): boolean {
-  const conflictingTypes: SyncDiffType[] = [
-    SyncDiffType.ConflictingCreate,
-    SyncDiffType.ConflictingUpdate,
-    SyncDiffType.ConflictingLocalRemove,
-    SyncDiffType.ConflictingRemoteRemove,
-  ];
-
-  return conflictingTypes.includes(diff);
-}
-
-
-export function isCleanLocalDiff(diff: SyncDiffType): boolean {
-  const localTypes: SyncDiffType[] = [
-    SyncDiffType.LocalUpdate,
-    SyncDiffType.LocalRemove,
-    SyncDiffType.LocalCreate,
-  ];
-
-  return localTypes.includes(diff);
-}
-
-
-export function isCleanRemoteDiff(diff: SyncDiffType): boolean {
-  const cleanRemoteTypes: SyncDiffType[] = [
-    SyncDiffType.RemoteCreate,
-    SyncDiffType.RemoteUpdate,
-    SyncDiffType.RemoteRemove,
-  ];
-
-  return cleanRemoteTypes.includes(diff);
-}
+import { DiffAction, EntrySyncMetadata, SyncMetadataMap, SyncMetadataStorage } from "./SyncMetadataStorage";
 
 
 export interface SyncJob {
@@ -210,7 +163,7 @@ export class Sync {
   async accept(diff: Omit<SyncDiffEntry, "syncMetadata">, action: DiffAction) {
     const release = await this.lock.acquire();
     try {
-      await this.acceptInsideLock(diff, action)
+      await this.acceptInsideLock(diff, action);
     } finally {
       release();
     }
@@ -315,7 +268,7 @@ export class Sync {
 
     this.updatingDiff = true;
     try {
-      const outline = await this.loadOutline(start)
+      const outline = await this.loadOutline(start);
 
       const release = await this.lock.acquire();
       try {
@@ -408,10 +361,20 @@ export class Sync {
 
     const result: SyncJob[] = [];
 
-    const metadata = await (await this.getSyncMetadataStorage()).get();
-    for (const [ path, entry ] of walkSyncMetadataTopDown(metadata)) {
-      if (entry.synced !== entry.accepted && !this.activeJobPaths.has(path.normalized) && (!filter || filter(path))) {
-        result.push({ path, syncMetadata: entry });
+    // todo: walk order
+    for (const diff of this.actualDiff) {
+      if (!diff.syncMetadata || !diff.syncMetadata.action || !diff.syncMetadata.diff) {
+        continue;
+      }
+
+      const isSynced = diff.syncMetadata.accepted === diff.syncMetadata.synced;
+      const isLost = isAcceptedStateLost(diff);
+      assert(isLost != null, "isAcceptedStateLost should not return undefined");
+
+      const isWorkingOn = this.activeJobPaths.has(diff.path.normalized);
+
+      if (!isSynced && !isLost && !isWorkingOn && (!filter || filter(diff.path))) {
+        result.push({ path: diff.path, syncMetadata: diff.syncMetadata });
         if (result.length >= count) {
           break;
         }
@@ -433,19 +396,11 @@ export class Sync {
 
     this.activeJobPaths.add(job.path.normalized);
     try {
-      const action = job.syncMetadata.action;
+      const readLocal = shouldReadFromLocalToAccept(job.syncMetadata);
+      assert(readLocal != null, "shouldReadFromLocalToAccept should not return undefined");
 
-      let to: SyncTargetProvider, from: SyncTargetProvider;
-      if (isConflictingDiff(job.syncMetadata.diff)) {
-        to = action === DiffAction.AcceptLocal ? this.syncTarget : this.localSyncTarget;
-        from = action === DiffAction.AcceptLocal ? this.localSyncTarget : this.syncTarget;
-      } else if (isCleanLocalDiff(job.syncMetadata.diff)) {
-        to = this.syncTarget;
-        from = this.localSyncTarget;
-      } else {
-        to = this.localSyncTarget;
-        from = this.syncTarget;
-      }
+      const to = readLocal ? this.syncTarget : this.localSyncTarget;
+      const from = readLocal ? this.localSyncTarget : this.syncTarget;
 
       let accepted = job.syncMetadata.accepted;
       let synced = job.syncMetadata.synced;
@@ -453,12 +408,26 @@ export class Sync {
         if (accepted === DirContentIdentity) {
           await this.syncTarget.createDir(job.path, synced);
         } else {
-          const data = await from.read(job.path);
+          let data: Buffer;
+
+          try {
+            data = await from.read(job.path);
+          } catch (err) {
+            if (err instanceof StorageError && err.code === StorageErrorCode.NotExists) {
+              await this.onIdentityChange(job.path, undefined, readLocal);
+              return;
+            } else if (err instanceof StorageError && err.code === StorageErrorCode.NotFile) {
+              await this.onIdentityChange(job.path, DirContentIdentity, readLocal);
+              return;
+            } else {
+              throw err;
+            }
+          }
 
           // after async read accepted state could have been changed, so we should check it again
-          const contentIdentity = getContentIdentityForData(data);
-          if (contentIdentity !== accepted) {
-            // just do nothing, this job should be re-run later
+          const actual = getContentIdentityForData(data);
+          if (actual !== accepted) {
+            await this.onIdentityChange(job.path, actual, readLocal);
             return;
           }
 
@@ -472,19 +441,24 @@ export class Sync {
         await to.remove(job.path, synced);
       }
 
-      let updatedMeta: EntrySyncMetadata | undefined;
-      await (await this.getSyncMetadataStorage()).update(job.path, meta => {
-        if (meta && meta.synced === synced) {
-          updatedMeta = { ...meta, synced: accepted || undefined, action: undefined, diff: undefined };
-        } else {
-          updatedMeta = meta;
-        }
-        return updatedMeta;
-      });
+      const release = await this.lock.acquire();
+      try {
+        let updatedMeta: EntrySyncMetadata | undefined;
+        await (await this.getSyncMetadataStorage()).update(job.path, meta => {
+          if (meta && meta.synced === synced) {
+            updatedMeta = { ...meta, synced: accepted || undefined, action: undefined, diff: undefined };
+          } else {
+            updatedMeta = meta;
+          }
+          return updatedMeta;
+        });
 
-      // update actualDiff with new sync metadata
-      if (updatedMeta) {
-        this.actualDiff = this.actualDiff.filter(d => !d.path.isEqual(job.path));
+        // update actualDiff with new sync metadata
+        if (updatedMeta) {
+          this.actualDiff = this.actualDiff.filter(d => !d.path.isEqual(job.path));
+        }
+      } finally {
+        release();
       }
     } finally {
       this.activeJobPaths.delete(job.path.normalized);
@@ -576,6 +550,48 @@ export class Sync {
 
   private async loadOutline(start: StoragePath) {
     return this.syncTarget.getOutline(start);
+  }
+
+
+  /**
+   * Should not be called with locked mutex.
+   * Updates diff entry when entry identity changes (on local or remote)
+   */
+  private async onIdentityChange(path: StoragePath, newIdentity: ContentIdentity | undefined, isLocal: boolean) {
+    const release = await this.lock.acquire();
+
+    try {
+      const diff = this.actualDiff.find(d => d.path.isEqual(path));
+      if (!diff) {
+        return;
+      }
+
+      let shouldRecompute = false;
+      if (isLocal && diff.actual !== newIdentity) {
+        diff.actual = newIdentity;
+        shouldRecompute = true;
+      } else if (!isLocal && diff.remote !== newIdentity) {
+        diff.remote = newIdentity;
+        shouldRecompute = true;
+      }
+
+      if (shouldRecompute) {
+        const diffType = this.getEntryIdentityDiff(diff.actual, diff.syncMetadata?.synced, diff.remote);
+        if (diffType) {
+          diff.diff = diffType;
+          await this.handleDiff([ diff ]);
+        } else {
+          this.actualDiff = this.actualDiff.filter(d => !d.path.isEqual(path));
+
+          const sm = await this.getSyncMetadataStorage();
+          await sm.setMulti({
+            [path.normalized]: undefined
+          });
+        }
+      }
+    } finally {
+      release();
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 import { makeStyles } from "@mui/styles";
 import { EntryCompareData } from "@sync/EntryCompareData";
-import { SyncDiffType } from "@sync/Sync";
+import { SyncDiffType } from "@sync/SyncDiffType";
 import { useCallback } from "react";
 import { useLoad } from "../useLoad";
 import { LoadGuard } from "../utils/LoadGuard";
