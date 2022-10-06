@@ -55,10 +55,18 @@ export class Workspace {
   async init() {
     try {
       // todo: failing on this step can lead to damaging data
+      const start = performance.now();
+
       await this.storage.initWithRemoteOutline();
+      const storageInitEnd = performance.now();
 
       await this.plugins.discoverPlugins();
+      const pluginDiscoverEnd = performance.now();
+
       await WorkspaceSettingsProvider.instance.init();
+      const workspaceSettingsInitEnd = performance.now();
+
+      console.log(`Init perf: storage: ${ storageInitEnd.valueOf() - start.valueOf() }, plugins: ${ pluginDiscoverEnd.valueOf() - storageInitEnd.valueOf() }, workspace: ${ workspaceSettingsInitEnd.valueOf() - pluginDiscoverEnd.valueOf() }`);
 
       this.loading = false;
     } catch (error: any) {
