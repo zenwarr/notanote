@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { ipcRenderer, contextBridge } from "electron";
+import { ipcRenderer, contextBridge, shell } from "electron";
 import { EventEmitter } from "events";
 
 ////////////////////////////////////////////////////////
@@ -94,4 +94,5 @@ contextBridge.exposeInMainWorld("process", {
   env: {},
   cwd: process.cwd
 }); // for babel to work
+contextBridge.exposeInMainWorld("openExternalLink", url => shell.openExternal(url))
 ////////////////////////////////////////////////////////

@@ -91,7 +91,7 @@ export const App = observer(() => {
 
 export function FileViewRoute() {
   const loc = useLocation();
-  const entryPath = loc.pathname.startsWith("/f/") ? decodeURIComponent(loc.pathname.substring("/f".length)) : undefined;
+  const entryPath = loc.pathname.startsWith("/f/") ? loc.pathname.substring("/f".length) : undefined;
 
   useEffect(() => {
     Workspace.instance.selectedEntry = entryPath ? new StoragePath(entryPath) : undefined;
