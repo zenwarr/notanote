@@ -1,6 +1,6 @@
 import { makeStyles } from "@mui/styles";
 import { StoragePath } from "@storage/storage-path";
-import { SyncDiffEntry } from "@sync/SyncDiffEntry";
+import { isAccepted, isAcceptedStateLost, SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { isCleanRemoteDiff, isConflictingDiff, SyncDiffType } from "@sync/SyncDiffType";
 import cn from "classnames";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -20,7 +20,8 @@ export function DiffTreeNode(props: DiffTreeNodeProps) {
 
   const d = props.diff;
 
-  const isAccepted = d && d.syncMetadata?.accepted === d.actual;
+  const accepted = d && isAccepted(d);
+  const lost = d && isAcceptedStateLost(d)
 
   const itemClassName = cn({
     [classes.new]: d && (d.diff === SyncDiffType.LocalCreate || d.diff === SyncDiffType.ConflictingCreate),
@@ -43,34 +44,32 @@ export function DiffTreeNode(props: DiffTreeNodeProps) {
     [classes.removed]: d && d.diff === SyncDiffType.ConflictingRemoteRemove
   });
 
-  return <Tooltip title={ <pre>{ JSON.stringify(d, undefined, 2) }</pre> }>
-    <span>
-      <span className={ itemClassName }>
-        { props.path.isEqual(StoragePath.root) ? "<root>" : props.path.basename }
-      </span>
-
-      {
-          isCleanRemote && <span>
-          <DownloadIcon className={ remoteIconClassName }/>
-        </span>
-      }
-
-      {
-          isConflict && <span>
-          <VerticalAlignCenterIcon color={ "error" } className={ classes.icon }/>
-          <span className={ conflictTextClass }>
-            { getConflictText(d?.diff) }
-          </span>
-        </span>
-      }
-
-      {
-          isAccepted && <Tooltip title={ "Change is accepted and is going to be applied soon" }>
-          <CheckIcon color={ "success" } className={ classes.acceptIcon }/>
-        </Tooltip>
-      }
+  return <span>
+    <span className={ itemClassName }>
+      { props.path.isEqual(StoragePath.root) ? "<root>" : props.path.basename }
     </span>
-  </Tooltip>;
+
+    {
+        isCleanRemote && <span>
+        <DownloadIcon className={ remoteIconClassName }/>
+      </span>
+    }
+
+    {
+        isConflict && <span>
+        <VerticalAlignCenterIcon color={ "error" } className={ classes.icon }/>
+        <span className={ conflictTextClass }>
+          { getConflictText(d?.diff) }
+        </span>
+      </span>
+    }
+
+    {
+      accepted && <Tooltip title={ lost ? "Change is accepted, but the state was lost" : "Change is accepted and is going to be applied soon" }>
+        <CheckIcon color={ lost ? "error" : "success" } className={ classes.acceptIcon }/>
+      </Tooltip>
+    }
+  </span>;
 }
 
 

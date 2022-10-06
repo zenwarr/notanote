@@ -50,3 +50,8 @@ export function shouldReadFromLocalToAccept(syncMetadata: EntrySyncMetadata): bo
     return action === DiffAction.AcceptRemote;
   }
 }
+
+
+export function isAccepted(d: SyncDiffEntry): boolean {
+  return d.syncMetadata != null && d.syncMetadata.accepted === d.actual;
+}
