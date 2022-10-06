@@ -1,16 +1,17 @@
 import { useLoad } from "./useLoad";
 import * as React from "react";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Document } from "./document/Document";
 import { observer } from "mobx-react-lite";
 import { Workspace } from "./workspace/Workspace";
 import { useWindowTitle } from "./useWindowTitle";
 import { CircularProgress } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { EditorProps } from "./plugin/PluginManager";
+import { EditorProps } from "./plugin/plugin-manager";
 import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
 import { StoragePath } from "@storage/storage-path";
 import { DocumentEditorProvider } from "./document/DocumentEditorProvider";
+import { EditorContext, EditorCtxData } from "editor/editor-context";
 
 
 export type FileViewProps = {
@@ -66,10 +67,14 @@ export function FileView(props: FileViewProps) {
     return editorProvider.getComponent(contentLoad.data);
   }, [ contentLoad.data?.settings.editor?.name, contentLoad.isLoaded ]));
 
+  const editorCtx: EditorCtxData = useMemo(() => ({
+    entryPath: props.entryPath,
+  }), [ props.entryPath ]);
+
   if (contentLoad.loadError) {
     return <div className={ classes.error }>
       Error loading "{ props.entryPath.normalized }": { contentLoad.loadError }
-    </div>
+    </div>;
   }
 
   if (!contentLoad.isLoaded || !componentLoad.isLoaded || !componentLoad.data) {
@@ -79,7 +84,9 @@ export function FileView(props: FileViewProps) {
   }
 
   return <ErrorBoundary>
-    <componentLoad.data doc={ contentLoad.data } className={ props.className }/>
+    <EditorContext.Provider value={ editorCtx }>
+      <componentLoad.data doc={ contentLoad.data } className={ props.className }/>
+    </EditorContext.Provider>
   </ErrorBoundary>;
 }
 

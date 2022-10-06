@@ -8,7 +8,7 @@ import { App } from "../App";
 import { AudioRecord } from "../audio/AudioRecord";
 import { ErrorDisplay } from "../error-boundary/ErrorDisplay";
 import { Palette } from "../palette/Palette";
-import { processScriptText } from "../plugin/PluginManager";
+import { processScriptText } from "../plugin/plugin-manager";
 import { AppConfigurationGuard } from "../storage-config/AppConfigurationGuard";
 import { StorageConfigView } from "../storage-config/StorageConfigView";
 import { StorageConfig } from "../storage/StorageProvider";

@@ -5,7 +5,7 @@ import { EditorView } from "@codemirror/view";
 import { useCurrentThemeIsDark } from "../Theme";
 import { CodeEditorStateAdapter } from "./CodeEditorState";
 import assert from "assert";
-import { setEditorVars } from "../editor/EditorVars";
+import { setEditorVars } from "../editor/editor-vars";
 
 
 export type CodeEditorProps = {

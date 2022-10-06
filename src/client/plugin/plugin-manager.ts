@@ -271,7 +271,7 @@ const PLUGIN_MODULES: Record<string, () => Promise<unknown>> = {
   "csv": () => import("csv"),
   "react-data-grid": () => import("react-data-grid"),
   "@mui/x-date-pickers": () => import("@mui/x-date-pickers"),
-  "nuclear": () => import("./PluginApi"),
+  "nuclear": () => import("./plugin-api"),
 };
 
 

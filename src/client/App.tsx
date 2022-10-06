@@ -3,7 +3,7 @@ import makeStyles from "@mui/styles/makeStyles";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { WorkspaceView } from "./workspace/WorkspaceView";
-import { ConnectedFileView } from "./FileView";
+import { ConnectedFileView } from "./file-view";
 import { Header } from "./Header";
 import { usePreventClose } from "./usePreventClose";
 import { useEffect, useState } from "react";

@@ -10,7 +10,7 @@ import { SyncDiffEntry } from "@sync/SyncDiffEntry";
 import { DiffAction } from "@sync/SyncMetadataStorage";
 import { SyncJobRunner } from "@sync/SyncJobRunner";
 import { makeObservable, observable } from "mobx";
-import { PluginManager } from "../plugin/PluginManager";
+import { PluginManager } from "../plugin/plugin-manager";
 import { RecentDocStorage } from "../RecentDocStorage";
 
 

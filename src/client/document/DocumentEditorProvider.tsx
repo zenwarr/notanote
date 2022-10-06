@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Document, DocumentEditorStateAdapter } from "./Document";
-import { PluginManager } from "../plugin/PluginManager";
+import { PluginManager } from "../plugin/plugin-manager";
 import { ReadonlyStateAdapter } from "./ReadonlyStateAdapter";
 
 

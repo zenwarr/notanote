@@ -3,6 +3,7 @@ import { StoragePath } from "@storage/storage-path";
 import * as React from "react";
 import { useMemo } from "react";
 import * as router from "react-router-dom";
+import { useEditorContext } from "../editor/editor-context";
 import { getPlatform, Platform } from "../platform/getPlatform";
 import { getFileRoutePath } from "../workspace/routing";
 
@@ -13,9 +14,17 @@ declare global {
 
 
 export function Link(props: React.PropsWithChildren<{ to: string | StoragePath, className?: string }>) {
-  const path = useMemo(() => getFileRoutePath(props.to), [ props.to ]);
+  const ctx = useEditorContext();
+  const path = useMemo(() => {
+    let to = props.to;
+    if (typeof to === "string") {
+      to = to.startsWith("/") ? new StoragePath(to) : ctx.entryPath.child(to);
+    }
 
-  return <router.Link to={ path } className={ props.className }>
+    return getFileRoutePath(to);
+  }, [ props.to, ctx.entryPath ]);
+
+  return <router.Link to={ path } className={ props.className } title={ path }>
     { props.children }
   </router.Link>;
 }
@@ -29,7 +38,7 @@ export function ExternalLink(props: React.PropsWithChildren<{ href: string, clas
     }
   }
 
-  return <a href={ props.href } target={ "_blank" } className={ props.className } onClick={ open }>
+  return <a href={ props.href } target={ "_blank" } className={ props.className } onClick={ open } title={ props.href }>
     <ArrowOutwardIcon style={ { fontSize: "1em" } }/>
     { props.children }
   </a>;
@@ -37,3 +46,4 @@ export function ExternalLink(props: React.PropsWithChildren<{ href: string, clas
 
 
 export { useCurrentThemeIsDark } from "../Theme";
+export { useEditorContext };
