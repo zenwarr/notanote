@@ -109,7 +109,8 @@ export default async function initApiRoutes(app: FastifyInstance) {
     const path = req.query.path;
 
     const worker = new SyncTarget(s.storage);
-    return worker.getOutline(new StoragePath(path));
+    const outline = await worker.getOutline(new StoragePath(path));
+    return outline || [];
   });
 
 
