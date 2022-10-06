@@ -84,15 +84,30 @@ export function* workspaceTreeWalker(root: StorageEntryData, expanded: string[])
     return;
   }
 
-  for (const child of roots) {
+  for (const child of sortedChildren(roots)) {
     yield createEntry(child, 0);
   }
 
   while (true) {
     let yielded = yield;
 
-    for (const child of yielded.data.extra.children || []) {
+    for (const child of sortedChildren(yielded.data.extra.children || [])) {
       yield createEntry(child, yielded.data.level + 1);
     }
   }
+}
+
+
+function sortedChildren(children: StorageEntryData[]): StorageEntryData[] {
+  return [ ...children ].sort((a, b) => {
+    if (a.stats.isDirectory && !b.stats.isDirectory) {
+      return -1;
+    }
+
+    if (!a.stats.isDirectory && b.stats.isDirectory) {
+      return 1;
+    }
+
+    return a.path.basename.localeCompare(b.path.basename);
+  });
 }
