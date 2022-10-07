@@ -29,7 +29,7 @@ export class MemoryCachedStorage extends EntryStorage {
       this.memoryInited = true;
     } catch (err: any) {
       this.memoryInitError = err.message || "Unknown error";
-      throw err
+      throw err;
     }
   }
 
@@ -37,7 +37,7 @@ export class MemoryCachedStorage extends EntryStorage {
   readonly remote: EntryStorage;
   readonly memory = new MemoryStorage();
   memoryInited = false;
-  memoryInitError: string | undefined = undefined
+  memoryInitError: string | undefined = undefined;
 
 
   getMemoryData(path: StoragePath) {
@@ -81,24 +81,7 @@ export class MemoryCachedStorage extends EntryStorage {
 
 
   override async read(path: StoragePath): Promise<Buffer> {
-    if (!this.memoryInited) {
-      return this.remote.read(path);
-    }
-
-    const cached = await this.memory.getDataAtPath(path);
-    if (!cached) {
-      throw new StorageError(StorageErrorCode.NotExists, path, `File does not exist`);
-    }
-
-    if (cached.stats.isDirectory) {
-      throw new StorageError(StorageErrorCode.NotFile, path, `Not a file`);
-    }
-
-    if (cached.content == null) {
-      cached.content = await this.remote.read(path);
-    }
-
-    return cached.content;
+    return this.remote.read(path);
   }
 
 
