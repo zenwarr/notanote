@@ -26,7 +26,7 @@ export function isAcceptedStateLost(diff: SyncDiffEntry): boolean | undefined {
     return undefined;
   }
 
-  return readLocal && diff.actual !== diff.syncMetadata.accepted;
+  return readLocal ? diff.actual !== diff.syncMetadata.accepted : diff.remote !== diff.syncMetadata.accepted;
 }
 
 
