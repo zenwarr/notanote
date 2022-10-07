@@ -4,13 +4,8 @@ import * as React from "react";
 import { useMemo } from "react";
 import * as router from "react-router-dom";
 import { useEditorContext } from "../editor/editor-context";
-import { getPlatform, Platform } from "../platform/getPlatform";
+import { getPlatform, Platform } from "../platform/get-platform";
 import { getFileRoutePath } from "../workspace/routing";
-
-
-declare global {
-  function openExternalLink(url: string): Promise<void>;
-}
 
 
 export function Link(props: React.PropsWithChildren<{ to: string | StoragePath, className?: string }>) {
@@ -34,7 +29,7 @@ export function ExternalLink(props: React.PropsWithChildren<{ href: string, clas
   function open(e: React.MouseEvent) {
     if (getPlatform() === Platform.Electron) {
       e.preventDefault();
-      openExternalLink(props.href);
+      electronUtils.openExternalLink(props.href);
     }
   }
 

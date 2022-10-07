@@ -89,10 +89,12 @@ contextBridge.exposeInMainWorld("CapacitorCustomPlatform", {
 
 // todo: expose only limited API
 contextBridge.exposeInMainWorld("fs", require("fs"));
-contextBridge.exposeInMainWorld("chooseDirectory", () => ipcRenderer.invoke("chooseDirectory"));
 contextBridge.exposeInMainWorld("process", {
   env: {},
   cwd: process.cwd
 }); // for babel to work
-contextBridge.exposeInMainWorld("openExternalLink", url => shell.openExternal(url))
+contextBridge.exposeInMainWorld("electronUtils", {
+  openExternalLink: url => shell.openExternal(url),
+  chooseDirectory: () => ipcRenderer.invoke("chooseDirectory")
+})
 ////////////////////////////////////////////////////////

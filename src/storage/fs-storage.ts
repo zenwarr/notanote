@@ -2,7 +2,7 @@ import { uint8ArrayToBuffer } from "@common/utils/uint8ArrayToBuffer";
 import { EntryStorage, StorageEntryPointer, StorageEntryStats, StorageError, StorageErrorCode } from "@storage/entry-storage";
 import { joinNestedPathSecure, StoragePath } from "@storage/storage-path";
 import * as fs from "fs";
-import { getPlatform, Platform } from "../client/platform/getPlatform";
+import { getPlatform, Platform } from "../client/platform/get-platform";
 
 
 const IGNORED_FILES = [ ".git" ];

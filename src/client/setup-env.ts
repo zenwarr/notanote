@@ -1,4 +1,4 @@
-import { getPlatform, Platform } from "./platform/getPlatform";
+import { getPlatform, Platform } from "./platform/get-platform";
 
 
 if (getPlatform() === Platform.Android) {

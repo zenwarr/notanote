@@ -4,11 +4,6 @@ import { StorageProviderConfigEditorProps, StorageProviderManager } from "../sto
 import { useState } from "react";
 
 
-declare global {
-  const chooseDirectory: () => Promise<{ cancelled: boolean, filePaths: string[] }>;
-}
-
-
 interface NodeFsStorageConfig {
   path: string;
 }
@@ -20,7 +15,7 @@ export function NodeFsConfigEditor(props: StorageProviderConfigEditorProps<NodeF
   async function onClick() {
     setSelecting(true);
     try {
-      const r = await chooseDirectory();
+      const r = await electronUtils.chooseDirectory();
       if (r.cancelled || r.filePaths.length < 1) {
         return;
       }
