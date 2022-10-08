@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import * as path from "path";
-import { Workspace } from "./workspace/Workspace";
+import { Workspace } from "./workspace/workspace";
 import { autorun } from "mobx";
 
 

@@ -1,4 +1,4 @@
-import { Workspace } from "../workspace/Workspace";
+import { Workspace } from "../workspace/workspace";
 
 
 export async function reloadEditor() {

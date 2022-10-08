@@ -1,7 +1,7 @@
 import { StoragePath } from "@storage/storage-path";
 import * as mobx from "mobx-react-lite";
 import { formatRelative } from "date-fns";
-import { Workspace } from "../workspace/Workspace";
+import { Workspace } from "../workspace/workspace";
 import { Grid, Box, Paper, Typography, Stack, Button, CircularProgress } from "@mui/material";
 import { DiffTree } from "./DiffTree";
 import { SyncJobs } from "./SyncJobs";

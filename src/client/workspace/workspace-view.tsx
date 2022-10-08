@@ -9,11 +9,11 @@ import * as React from "react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { getFileRoutePath } from "./routing";
-import { Workspace } from "./Workspace";
+import { Workspace } from "./workspace";
 import { CreateEntryDialog } from "../CreateEntryDialog";
 import { ContainerWithSizeDetection } from "../utils/ContainerWithSizeDetection";
-import { TreeMenu } from "./TreeMenu";
-import { WorkspaceTree } from "./WorkspaceTree";
+import { WorkspaceTreeMenu } from "./workspace-tree-menu";
+import { WorkspaceTree } from "./workspace-tree";
 
 
 export interface WorkspaceViewProps {
@@ -157,9 +157,9 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
       }
     </ContainerWithSizeDetection>
 
-    <TreeMenu open={ menuState != null } onClose={ () => setMenuState(undefined) }
-              entry={ menuEntryPath ? cw.storage.get(menuEntryPath) : undefined }
-              x={ menuState?.x } y={ menuState?.y }/>
+    <WorkspaceTreeMenu open={ menuState != null } onClose={ () => setMenuState(undefined) }
+                       entry={ menuEntryPath ? cw.storage.get(menuEntryPath) : undefined }
+                       x={ menuState?.x } y={ menuState?.y }/>
   </>;
 });
 

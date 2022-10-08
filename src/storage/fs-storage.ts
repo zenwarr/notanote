@@ -108,8 +108,8 @@ export class FsStorage extends EntryStorage {
       return {
         isDirectory: isDir(stats),
         size: isDir(stats) ? undefined : stats.size,
-        createTs: Math.floor(stats.birthtimeMs),
-        updateTs: Math.floor(stats.mtimeMs)
+        createTs: stats.birthtimeMs ? Math.floor(stats.birthtimeMs) : undefined,
+        updateTs: stats.mtimeMs ? Math.floor(stats.mtimeMs) : undefined
       };
     } catch (err: any) {
       if (err.code === "ENOENT") {

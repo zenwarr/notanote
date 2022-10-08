@@ -2,7 +2,7 @@ import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider"
 import { Mutex } from "async-mutex";
 import * as _ from "lodash";
 import { FileSettings } from "@common/Settings";
-import { Workspace } from "../workspace/Workspace";
+import { Workspace } from "../workspace/workspace";
 import { StorageEntryPointer } from "@storage/entry-storage";
 import { DocumentEditorProvider } from "./DocumentEditorProvider";
 

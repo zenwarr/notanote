@@ -1,12 +1,12 @@
 import { Divider, ListItemIcon, Menu, MenuItem } from "@mui/material";
 import { CreateNewFolderOutlined, DeleteForever, PostAddOutlined } from "@mui/icons-material";
 import * as React from "react";
-import { PropertiesDialog } from "./PropertiesDialog";
+import { PropertiesDialog } from "./properties-dialog";
 import { useState } from "react";
 import { StorageEntryPointer } from "@storage/entry-storage";
 
 
-export interface TreeMenuProps {
+export interface WorkspaceTreeMenuProps {
   open: boolean;
   onClose: () => void;
   entry: StorageEntryPointer | undefined;
@@ -15,7 +15,7 @@ export interface TreeMenuProps {
 }
 
 
-export function TreeMenu(props: TreeMenuProps) {
+export function WorkspaceTreeMenu(props: WorkspaceTreeMenuProps) {
   const [ propertiesDialogOpen, setPropertiesDialogOpen ] = useState(false);
 
   return <React.Fragment>

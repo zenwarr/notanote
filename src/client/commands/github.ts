@@ -1,6 +1,6 @@
 import { Backend } from "../backend/Backend";
 import { WorkspaceBackend } from "../backend/WorkspaceBackend";
-import { Workspace } from "../workspace/Workspace";
+import { Workspace } from "../workspace/workspace";
 
 
 export async function initGithub() {
