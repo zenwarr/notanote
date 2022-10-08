@@ -8,9 +8,9 @@ import { ProfileHeader } from "./ProfileHeader";
 import MenuIcon from "@mui/icons-material/Menu";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
-import { PaletteMode, togglePalette } from "./palette/PaletteProvider";
+import { PaletteMode, togglePalette } from "./palette/palette-provider";
 import CallToActionIcon from "@mui/icons-material/CallToAction";
-import { CommandStatus } from "./commands/CommandStatus";
+import { CommandStatus } from "./commands/command-status";
 
 
 export interface HeaderProps {

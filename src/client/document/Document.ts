@@ -1,4 +1,5 @@
 import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
+import { Mutex } from "async-mutex";
 import * as _ from "lodash";
 import { FileSettings } from "@common/Settings";
 import { Workspace } from "../workspace/Workspace";
@@ -15,7 +16,19 @@ export class Document {
   constructor(entry: StorageEntryPointer, settings: FileSettings) {
     this.entry = entry;
     this.settings = settings;
-    this.onChangesDebounced = _.debounce(this.onChangesAsync.bind(this), 500);
+    this.onChangesDebounced = _.debounce(this.save.bind(this), 500);
+  }
+
+
+  async close() {
+    const release = await Document.docsLock.acquire();
+
+    try {
+      await this.save();
+      Document.docs.delete(this.entry.path.normalized);
+    } finally {
+      release();
+    }
   }
 
 
@@ -40,23 +53,32 @@ export class Document {
 
 
   onChanges() {
-    this.onChangesDebounced()?.catch(error => console.error("onChanges failed", error))
+    this.onChangesDebounced()?.catch(error => console.error("onChanges failed", error));
   }
 
 
-  private async onChangesAsync() {
+  private async save() {
     await this.entry.writeOrCreate(await this.contentToBuffer());
     Workspace.instance.scheduleDiffUpdate(this.entry.path);
   }
 
 
   static async create(ep: StorageEntryPointer): Promise<Document> {
-    const document = new Document(ep, WorkspaceSettingsProvider.instance.getSettingsForPath(ep.path));
-    const content = await ep.read();
+    const release = await this.docsLock.acquire();
 
-    const editorProvider = new DocumentEditorProvider(Workspace.instance.plugins);
-    document.setEditorStateAdapter(await editorProvider.getStateAdapter(document, content));
-    return document;
+    try {
+      const document = new Document(ep, WorkspaceSettingsProvider.instance.getSettingsForPath(ep.path));
+      const content = await ep.read();
+
+      const editorProvider = new DocumentEditorProvider(Workspace.instance.plugins);
+      document.setEditorStateAdapter(await editorProvider.getStateAdapter(document, content));
+
+      this.docs.set(ep.path.normalized, document);
+
+      return document;
+    } finally {
+      release();
+    }
   }
 
 
@@ -64,4 +86,6 @@ export class Document {
   readonly entry: StorageEntryPointer;
   readonly settings: FileSettings;
   private adapter: DocumentEditorStateAdapter | undefined;
+  private static docs = new Map<string, Document>();
+  private static docsLock = new Mutex();
 }

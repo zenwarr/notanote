@@ -2,9 +2,9 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { getFileRoutePath } from "../workspace/routing";
-import { Palette, PaletteCompleter } from "./Palette";
-import { filePaletteCompleter } from "./PaletteCompleter";
-import { CommandManager, commandPaletteCompleter } from "../commands/CommandManager";
+import { Palette, PaletteCompleter } from "./palette";
+import { filePaletteCompleter } from "./palette-completer";
+import { CommandManager, commandPaletteCompleter } from "../commands/command-manager";
 import { StoragePath } from "@storage/storage-path";
 
 

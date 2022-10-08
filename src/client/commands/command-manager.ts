@@ -1,60 +1,13 @@
 import * as mobx from "mobx";
-import { Backend } from "../backend/Backend";
-import { WorkspaceBackend } from "../backend/WorkspaceBackend";
-import { Workspace } from "../workspace/Workspace";
-import { PaletteOption } from "../palette/Palette";
 import * as nanoid from "nanoid";
+import { PaletteOption } from "../palette/palette";
+import { COMMANDS } from "./builtin-commands";
 
 
 export interface Command {
   name: string;
   description: string;
   action: () => Promise<void>;
-}
-
-
-const COMMANDS: Command[] = [
-  {
-    name: "version.show",
-    description: "Show version",
-    action: showVersion
-  },
-  {
-    name: "github.init",
-    description: "Init GitHub integration",
-    action: initGithub
-  },
-  {
-    name: "github.push",
-    description: "Push changes to GitHub",
-    action: pushGithub
-  }
-];
-
-
-async function showVersion() {
-  const version = require("../../package.json").version;
-  alert(`Client application version: ${ version }`);
-}
-
-
-async function initGithub() {
-  const email = prompt("your email", "user@example.com");
-  if (!email) {
-    return;
-  }
-
-  const remote = prompt("remote", "git@github.com:user/repository.git");
-  if (!remote) {
-    return;
-  }
-
-  await Backend.get(WorkspaceBackend).initGithub(Workspace.instance.remoteStorageName, email, remote);
-}
-
-
-async function pushGithub() {
-  await Backend.get(WorkspaceBackend).githubPush(Workspace.instance.remoteStorageName);
 }
 
 

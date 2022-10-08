@@ -1,6 +1,6 @@
 import { useLoad } from "./useLoad";
 import * as React from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { Document } from "./document/Document";
 import { observer } from "mobx-react-lite";
 import { Workspace } from "./workspace/Workspace";
@@ -48,13 +48,15 @@ function applyGlobalDocSettings(doc: Document) {
 }
 
 
-export function FileView(props: FileViewProps) {
+export const FileView = observer((props: FileViewProps) => {
   const classes = useStyles();
+  const cw = Workspace.instance;
+
   const contentLoad = useLoad(useCallback(async () => {
     const doc = await Document.create(Workspace.instance.storage.get(props.entryPath));
     applyGlobalDocSettings(doc);
     return doc;
-  }, [ props.entryPath ]), {
+  }, [ props.entryPath, cw.editorReloadTrigger ]), {
     onError: err => console.error(`Failed to load file ${ props.entryPath.normalized }`, err),
   });
 
@@ -70,6 +72,14 @@ export function FileView(props: FileViewProps) {
   const editorCtx: EditorCtxData = useMemo(() => ({
     entryPath: props.entryPath,
   }), [ props.entryPath ]);
+
+  useEffect(() => {
+    return () => {
+      if (contentLoad.data) {
+        contentLoad.data.close(); // not handling intentionally
+      }
+    }
+  }, [ contentLoad.data ]);
 
   if (contentLoad.loadError) {
     return <div className={ classes.error }>
@@ -88,7 +98,7 @@ export function FileView(props: FileViewProps) {
       <componentLoad.data doc={ contentLoad.data } className={ props.className }/>
     </EditorContext.Provider>
   </ErrorBoundary>;
-}
+});
 
 
 export interface ConnectedFileViewProps {

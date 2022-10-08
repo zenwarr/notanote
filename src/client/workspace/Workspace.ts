@@ -20,7 +20,8 @@ export class Workspace {
       loading: observable,
       loadError: observable,
       _selectedEntry: observable,
-      _selectedFile: observable
+      _selectedFile: observable,
+      editorReloadTrigger: observable
     } as any);
 
     const lastOpenedDoc = RecentDocStorage.instance.getLastOpenedDoc();
@@ -181,6 +182,11 @@ export class Workspace {
   }
 
 
+  triggerEditorReload() {
+    this.editorReloadTrigger++;
+  }
+
+
   private _selectedEntry: StoragePath | undefined = undefined;
   private _selectedFile: StoragePath | undefined = undefined;
   storage: MemoryCachedStorage;
@@ -188,6 +194,7 @@ export class Workspace {
   sync: Sync | undefined;
   syncJobRunner: SyncJobRunner | undefined;
   plugins: PluginManager;
+  editorReloadTrigger = 0;
 
 
   static get instance() {

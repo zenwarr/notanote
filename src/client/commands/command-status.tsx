@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { CommandManager } from "./CommandManager";
+import { CommandManager } from "./command-manager";
 import { makeStyles } from "@mui/styles";
 
 

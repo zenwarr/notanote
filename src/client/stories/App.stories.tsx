@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { App } from "../App";
 import { AudioRecord } from "../audio/AudioRecord";
 import { ErrorDisplay } from "../error-boundary/ErrorDisplay";
-import { Palette } from "../palette/Palette";
+import { Palette } from "../palette/palette";
 import { processScriptText } from "../plugin/plugin-manager";
 import { AppConfigurationGuard } from "../storage-config/AppConfigurationGuard";
 import { StorageConfigView } from "../storage-config/StorageConfigView";
