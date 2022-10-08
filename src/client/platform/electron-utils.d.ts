@@ -3,6 +3,8 @@ declare global {
     chooseDirectory(): Promise<{ cancelled: boolean, filePaths: string[] }>;
 
     openExternalLink(url: string): Promise<void>;
+
+    selfUpdate(): Promise<void>;
   }
 
   const electronUtils: ElectronUtils;

@@ -95,6 +95,7 @@ contextBridge.exposeInMainWorld("process", {
 }); // for babel to work
 contextBridge.exposeInMainWorld("electronUtils", {
   openExternalLink: url => shell.openExternal(url),
-  chooseDirectory: () => ipcRenderer.invoke("chooseDirectory")
+  chooseDirectory: () => ipcRenderer.invoke("chooseDirectory"),
+  selfUpdate: () => ipcRenderer.invoke("selfUpdate"),
 })
 ////////////////////////////////////////////////////////
