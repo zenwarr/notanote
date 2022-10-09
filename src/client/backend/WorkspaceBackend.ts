@@ -8,13 +8,16 @@ export class WorkspaceBackend {
       json: {
         email,
         remote
-      }
+      },
+      timeout: false
     }).json();
   }
 
 
   async githubPush(storageId: string): Promise<void> {
-    await ky.post(`/api/storages/${storageId}/github/push`).json();
+    await ky.post(`/api/storages/${storageId}/github/push`, {
+      timeout: false
+    }).json();
   }
 }
 

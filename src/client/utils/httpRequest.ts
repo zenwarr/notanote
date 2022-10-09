@@ -8,7 +8,8 @@ import { StoragePath } from "@storage/storage-path";
 export async function httpRequest(url: string, options: ky.Options): Promise<Response> {
   const r = await kyDefault(url, {
     ...options,
-    throwHttpErrors: false
+    throwHttpErrors: false,
+    timeout: false
   });
 
   if (r.ok) {
