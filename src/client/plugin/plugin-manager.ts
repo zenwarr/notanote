@@ -3,7 +3,7 @@ import { EntryStorage, StorageError, StorageErrorCode } from "@storage/entry-sto
 import { resolveImport } from "@storage/resolve-import";
 import { SpecialPath } from "@storage/special-path";
 import { StoragePath } from "@storage/storage-path";
-import { ContentIdentity, getContentIdentityForData } from "@sync/ContentIdentity";
+import { ContentIdentity, getContentIdentityForData } from "@sync/content-identity";
 import * as React from "react";
 import "react-data-grid/lib/styles.css";
 import { Document, DocumentEditorStateAdapter } from "../document/Document";

@@ -3,12 +3,12 @@ import { StorageEntryData } from "@storage/storage-entry-data";
 import { MemoryCachedStorage } from "@storage/memory-cached-storage";
 import { EntryStorage, StorageEntryType } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
-import { Sync } from "@sync/Sync";
-import { isConflictingDiff } from "@sync/SyncDiffType";
-import { SyncTargetProvider } from "@sync/SyncTargetProvider";
-import { SyncDiffEntry } from "@sync/SyncDiffEntry";
-import { DiffAction } from "@sync/SyncMetadataStorage";
-import { SyncJobRunner } from "@sync/SyncJobRunner";
+import { Sync } from "@sync/sync";
+import { isConflictingDiff } from "@sync/sync-diff-type";
+import { SyncTargetProvider } from "@sync/sync-target-provider";
+import { SyncDiffEntry } from "@sync/sync-diff-entry";
+import { DiffAction } from "@sync/sync-metadata-storage";
+import { SyncJobRunner } from "@sync/sync-job-runner";
 import { makeObservable, observable } from "mobx";
 import { PluginManager } from "../plugin/plugin-manager";
 import { RecentDocStorage } from "../RecentDocStorage";
@@ -72,7 +72,7 @@ export class Workspace {
 
       try {
         await this.sync?.updateDiff(StoragePath.root);
-      } catch (e: any) {
+      } catch (e) {
         console.error("Failed to update diff: ", e);
       }
 
@@ -138,7 +138,7 @@ export class Workspace {
 
 
   async acceptChangeTree(path: StoragePath, diff: SyncDiffEntry[]) {
-    let syncDiffEntries = diff.filter(e => e.path.inside(path, true) && !isConflictingDiff(e.diff));
+    let syncDiffEntries = diff.filter(e => e.path.inside(path, true) && !isConflictingDiff(e.type));
     await this.sync?.acceptMulti(syncDiffEntries);
   }
 

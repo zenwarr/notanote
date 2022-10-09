@@ -23,7 +23,7 @@ export class FsStorage extends EntryStorage {
     try {
       await fs.promises.mkdir(realPath, { recursive: true });
     } catch (err: any) {
-      if (err?.code === "EEXIST") {
+      if (getErrCode(err) === "EEXIST") {
         throw new StorageError(StorageErrorCode.AlreadyExists, path, "Directory already exists");
       } else {
         throw new StorageError(StorageErrorCode.Unknown, path, err?.message || "Unknown error");
@@ -46,12 +46,13 @@ export class FsStorage extends EntryStorage {
     try {
       const entries = await fs.promises.readdir(this.toAbsolutePath(path));
       return entries
-        .filter(e => !IGNORED_FILES.includes(e))
-        .map(entry => new StorageEntryPointer(path.child(entry), this));
+      .filter(e => !IGNORED_FILES.includes(e))
+      .map(entry => new StorageEntryPointer(path.child(entry), this));
     } catch (err: any) {
-      if (err.code === "ENOENT") {
+      let code = getErrCode(err);
+      if (code === "ENOENT") {
         throw new StorageError(StorageErrorCode.NotExists, path, "Path does not exist");
-      } else if (err.code === "ENOTDIR") {
+      } else if (code === "ENOTDIR") {
         throw new StorageError(StorageErrorCode.NotDirectory, path, "Not a directory");
       } else {
         throw new StorageError(StorageErrorCode.Unknown, path, err?.message || "Unknown error");
@@ -69,9 +70,10 @@ export class FsStorage extends EntryStorage {
         return data;
       }
     } catch (err: any) {
-      if (err.code === "EISDIR") {
+      let code = getErrCode(err);
+      if (code === "EISDIR") {
         throw new StorageError(StorageErrorCode.NotFile, path, "Cannot read a directory");
-      } else if (err.code === "ENOENT") {
+      } else if (code === "ENOENT") {
         throw new StorageError(StorageErrorCode.NotExists, path, "File does not exist");
       } else {
         throw new StorageError(StorageErrorCode.Unknown, path, err?.message || "Unknown error");
@@ -92,8 +94,9 @@ export class FsStorage extends EntryStorage {
         await fs.promises.rm(absPath);
       }
     } catch (err: any) {
-      if (err?.code === "ENOENT") {
-        throw new StorageError(StorageErrorCode.NotExists, path, "File or directory does not exist");
+      let code = getErrCode(err);
+      if (code === "ENOENT") {
+        return;
       } else {
         throw new StorageError(StorageErrorCode.Unknown, path, err?.message || "Unknown error");
       }
@@ -112,7 +115,8 @@ export class FsStorage extends EntryStorage {
         updateTs: stats.mtimeMs ? Math.floor(stats.mtimeMs) : undefined
       };
     } catch (err: any) {
-      if (err.code === "ENOENT") {
+      let code = getErrCode(err);
+      if (code === "ENOENT") {
         throw new StorageError(StorageErrorCode.NotExists, path, "Path does not exist");
       } else {
         throw err;
@@ -148,5 +152,24 @@ async function asyncExists(file: string) {
 
 // when working in browser, proxified electron fs has no methods on stats object
 function isDir(stats: fs.Stats) {
-  return (BigInt(stats.mode) & BigInt(fs.constants.S_IFMT)) === BigInt(fs.constants.S_IFDIR)
+  return (BigInt(stats.mode) & BigInt(fs.constants.S_IFMT)) === BigInt(fs.constants.S_IFDIR);
+}
+
+
+function getErrCode(err: any): string | undefined {
+  if (!err || typeof err !== "object") {
+    return undefined;
+  }
+
+  if (typeof err.code == "string") {
+    return err.code;
+  } else {
+    // Electron exposed objects throw errors without code property
+    const parts = err.message.split(":");
+    if (parts.length > 1) {
+      return parts[0];
+    }
+  }
+
+  return undefined;
 }

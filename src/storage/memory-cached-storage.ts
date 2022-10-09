@@ -105,11 +105,6 @@ export class MemoryCachedStorage extends EntryStorage {
 
 
   override async writeOrCreate(path: StoragePath, content: Buffer): Promise<void> {
-    if (!this.memoryInited) {
-      throw new StorageError(StorageErrorCode.NotReady, path, "Memory storage not initialized");
-    }
-
     await this.remote.writeOrCreate(path, content);
-    await this.memory.writeOrCreate(path, content);
   }
 }

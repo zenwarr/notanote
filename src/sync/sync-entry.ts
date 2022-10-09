@@ -1,6 +1,6 @@
 import { StorageEntryStats } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
-import { ContentIdentity } from "./ContentIdentity";
+import { ContentIdentity } from "./content-identity";
 
 
 export interface SyncOutlineEntry {

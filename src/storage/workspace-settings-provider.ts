@@ -1,7 +1,7 @@
 import { patternMatches } from "@common/utils/patterns";
 import { EntryStorage, StorageErrorCode } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
-import { StorageSyncConfig } from "@sync/StorageSyncData";
+import { StorageSyncConfig } from "@sync/storage-sync-data";
 import { FileSettings } from "@common/Settings";
 import { tryParseJson } from "@common/utils/tryParse";
 import { SpecialPath } from "@storage/special-path";

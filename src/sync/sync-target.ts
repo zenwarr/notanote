@@ -1,10 +1,10 @@
 import { StorageEntryStats, StorageError, StorageErrorCode, EntryStorage } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
-import { ContentIdentity, DirContentIdentity, getContentIdentity } from "@sync/ContentIdentity";
-import { shouldPathBeSynced } from "@sync/Ignore";
-import { SyncTargetProvider } from "@sync/SyncTargetProvider";
-import { StorageSyncData } from "@sync/StorageSyncData";
-import { SyncOutlineEntry } from "@sync/SyncEntry";
+import { ContentIdentity, DirContentIdentity, getContentIdentity } from "@sync/content-identity";
+import { shouldPathBeSynced } from "@sync/ignore";
+import { SyncTargetProvider } from "@sync/sync-target-provider";
+import { StorageSyncData } from "@sync/storage-sync-data";
+import { SyncOutlineEntry } from "@sync/sync-entry";
 
 
 export class SyncTarget implements SyncTargetProvider {

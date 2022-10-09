@@ -1,12 +1,13 @@
 import { makeStyles } from "@mui/styles";
 import { StoragePath } from "@storage/storage-path";
-import { isAcceptedStateLost, isActionable, SyncDiffEntry } from "@sync/SyncDiffEntry";
-import { isCleanRemoteDiff, isConflictingDiff, SyncDiffType } from "@sync/SyncDiffType";
+import { isAcceptedStateLost, isActionable, SyncDiffEntry } from "@sync/sync-diff-entry";
+import { isCleanRemoteDiff, isConflictingDiff, SyncDiffType } from "@sync/sync-diff-type";
 import cn from "classnames";
 import DownloadIcon from "@mui/icons-material/Download";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import CheckIcon from "@mui/icons-material/Check";
 import { Tooltip } from "@mui/material";
+import * as mobx from "mobx";
 
 
 export type DiffTreeNodeProps = {
@@ -24,53 +25,55 @@ export function DiffTreeNode(props: DiffTreeNodeProps) {
   const lost = d && isAcceptedStateLost(d);
 
   const itemClassName = cn({
-    [classes.new]: d && (d.diff === SyncDiffType.LocalCreate || d.diff === SyncDiffType.ConflictingCreate),
-    [classes.updated]: d && (d.diff === SyncDiffType.LocalUpdate || d.diff === SyncDiffType.ConflictingUpdate || d.diff === SyncDiffType.ConflictingRemoteRemove),
-    [classes.removed]: d && (d.diff === SyncDiffType.LocalRemove || d.diff === SyncDiffType.ConflictingLocalRemove),
-    [classes.missing]: d && d.actual == null && !(d.diff === SyncDiffType.LocalRemove || d.diff === SyncDiffType.ConflictingLocalRemove)
+    [classes.new]: d && (d.type === SyncDiffType.LocalCreate || d.type === SyncDiffType.ConflictingCreate),
+    [classes.updated]: d && (d.type === SyncDiffType.LocalUpdate || d.type === SyncDiffType.ConflictingUpdate || d.type === SyncDiffType.ConflictingRemoteRemove),
+    [classes.removed]: d && (d.type === SyncDiffType.LocalRemove || d.type === SyncDiffType.ConflictingLocalRemove),
+    [classes.missing]: d && d.actual == null && !(d.type === SyncDiffType.LocalRemove || d.type === SyncDiffType.ConflictingLocalRemove)
   });
 
-  const isCleanRemote = d && isCleanRemoteDiff(d.diff);
+  const isCleanRemote = d && isCleanRemoteDiff(d.type);
   const remoteIconClassName = cn(classes.icon, {
-    [classes.new]: d && d.diff === SyncDiffType.RemoteCreate,
-    [classes.updated]: d && d.diff === SyncDiffType.RemoteUpdate,
-    [classes.removed]: d && d.diff === SyncDiffType.RemoteRemove
+    [classes.new]: d && d.type === SyncDiffType.RemoteCreate,
+    [classes.updated]: d && d.type === SyncDiffType.RemoteUpdate,
+    [classes.removed]: d && d.type === SyncDiffType.RemoteRemove
   });
 
-  const isConflict = d && isConflictingDiff(d.diff);
+  const isConflict = d && isConflictingDiff(d.type);
   const conflictTextClass = cn({
-    [classes.new]: d && d.diff === SyncDiffType.ConflictingCreate,
-    [classes.updated]: d && (d.diff === SyncDiffType.ConflictingUpdate || d.diff === SyncDiffType.ConflictingLocalRemove),
-    [classes.removed]: d && d.diff === SyncDiffType.ConflictingRemoteRemove
+    [classes.new]: d && d.type === SyncDiffType.ConflictingCreate,
+    [classes.updated]: d && (d.type === SyncDiffType.ConflictingUpdate || d.type === SyncDiffType.ConflictingLocalRemove),
+    [classes.removed]: d && d.type === SyncDiffType.ConflictingRemoteRemove
   });
 
-  return <span>
-    <span className={ itemClassName }>
-      { props.path.isEqual(StoragePath.root) ? "<root>" : props.path.basename }
-    </span>
-
-    {
-        isCleanRemote && <span>
-        <DownloadIcon className={ remoteIconClassName }/>
+  return <Tooltip title={ <pre>{ JSON.stringify(mobx.toJS(props.diff), null, 2) }</pre> }>
+    <span>
+      <span className={ itemClassName }>
+        { props.path.isEqual(StoragePath.root) ? "<root>" : props.path.basename }
       </span>
-    }
 
-    {
-        isConflict && <span>
-        <VerticalAlignCenterIcon color={ "error" } className={ classes.icon }/>
-        <span className={ conflictTextClass }>
-          { getConflictText(d?.diff) }
+      {
+          isCleanRemote && <span>
+          <DownloadIcon className={ remoteIconClassName }/>
         </span>
-      </span>
-    }
+      }
 
-    {
-        actionable &&
-      <Tooltip title={ lost ? "Change is accepted, but the state was lost" : "Change is accepted and is going to be applied soon" }>
-        <CheckIcon color={ lost ? "error" : "success" } className={ classes.acceptIcon }/>
-      </Tooltip>
-    }
-  </span>;
+      {
+          isConflict && <span>
+          <VerticalAlignCenterIcon color={ "error" } className={ classes.icon }/>
+          <span className={ conflictTextClass }>
+            { getConflictText(d?.type) }
+          </span>
+        </span>
+      }
+
+      {
+          actionable &&
+        <Tooltip title={ lost ? "Change is accepted, but the state was lost" : "Change is accepted and is going to be applied soon" }>
+          <CheckIcon color={ lost ? "error" : "success" } className={ classes.acceptIcon }/>
+        </Tooltip>
+      }
+    </span>
+  </Tooltip>;
 }
 
 

@@ -1,5 +1,5 @@
 import { Dialog } from "@mui/material";
-import { SyncJobRunnerError } from "@sync/SyncJobRunner";
+import { SyncJobRunnerError } from "@sync/sync-job-runner";
 import * as mobx from "mobx-react-lite";
 import { useState } from "react";
 import { Workspace } from "../workspace/workspace";

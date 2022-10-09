@@ -1,8 +1,8 @@
 import { ErrorCode, LogicError } from "@common/errors";
 import { StoragePath } from "@storage/storage-path";
-import { ContentIdentity } from "@sync/ContentIdentity";
-import { SyncTarget } from "@sync/SyncTarget";
-import { StorageSyncData } from "@sync/StorageSyncData";
+import { ContentIdentity } from "@sync/content-identity";
+import { SyncTarget } from "@sync/sync-target";
+import { StorageSyncData } from "@sync/storage-sync-data";
 import { FastifyInstance, FastifyRequest } from "fastify";
 import S from "fluent-json-schema";
 import * as fs from "fs";

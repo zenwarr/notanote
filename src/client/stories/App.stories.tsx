@@ -1,8 +1,8 @@
 import { Stack, Box } from "@mui/material";
 import { StoragePath } from "@storage/storage-path";
-import { SyncDiffEntry } from "@sync/SyncDiffEntry";
-import { SyncDiffType } from "@sync/SyncDiffType";
-import { DiffAction } from "@sync/SyncMetadataStorage";
+import { SyncDiffEntry } from "@sync/sync-diff-entry";
+import { SyncDiffType } from "@sync/sync-diff-type";
+import { DiffAction } from "@sync/sync-metadata-storage";
 import { useEffect, useState } from "react";
 import { App } from "../App";
 import { AudioRecord } from "../audio/AudioRecord";
@@ -31,7 +31,7 @@ export const error = () => <ErrorDisplay error={ new Error("Something bad") }/>;
 function createDiff(diff: SyncDiffType, accepted = false): SyncDiffEntry {
   return {
     path: new StoragePath("demo"),
-    diff,
+    type: diff,
     actual: "actual",
     remote: "remote",
     syncMetadata: {

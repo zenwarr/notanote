@@ -1,8 +1,8 @@
 import { Button, Stack } from "@mui/material";
 import { StoragePath } from "@storage/storage-path";
-import { SyncDiffEntry } from "@sync/SyncDiffEntry";
-import { isConflictingDiff } from "@sync/SyncDiffType";
-import { DiffAction } from "@sync/SyncMetadataStorage";
+import { SyncDiffEntry } from "@sync/sync-diff-entry";
+import { isConflictingDiff } from "@sync/sync-diff-type";
+import { DiffAction } from "@sync/sync-metadata-storage";
 import { useState } from "react";
 import { Workspace } from "../workspace/workspace";
 import { FullScreenDialog } from "../utils/FullScreenDialog";
@@ -19,7 +19,7 @@ export function DiffTreePanel(props: DiffTreePanelProps) {
   const isDisabled = props.selectedPath == null;
   const [ diffModalActive, setDiffModalActive ] = useState(false);
   const d = props.allDiffs.find(d => props.selectedPath && d.path.isEqual(props.selectedPath));
-  const isConflict = d != null && isConflictingDiff(d.diff);
+  const isConflict = d != null && isConflictingDiff(d.type);
 
   async function accept() {
     if (!props.selectedPath) {
@@ -65,7 +65,7 @@ export function DiffTreePanel(props: DiffTreePanelProps) {
 
     <FullScreenDialog title={ `Diff: ${ props.selectedPath?.normalized }` } open={ diffModalActive }
                       onClose={ () => setDiffModalActive(false) }>
-      <DiffCompareLoader path={ props.selectedPath } diffType={ d?.diff }
+      <DiffCompareLoader path={ props.selectedPath } diffType={ d?.type }
                          onAcceptLocal={ () => resolve(DiffAction.AcceptLocal) }
                          onAcceptRemote={ () => resolve(DiffAction.AcceptRemote) }/>
     </FullScreenDialog>

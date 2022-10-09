@@ -1,5 +1,5 @@
 import { Alert, Box, CircularProgress } from "@mui/material";
-import { SyncTargetProvider } from "@sync/SyncTargetProvider";
+import { SyncTargetProvider } from "@sync/sync-target-provider";
 import { useEffect, useMemo, useState } from "react";
 import { App } from "../App";
 import { Workspace } from "../workspace/workspace";

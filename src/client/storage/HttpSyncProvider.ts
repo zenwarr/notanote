@@ -1,8 +1,8 @@
 import { StoragePath } from "@storage/storage-path";
-import { ContentIdentity } from "@sync/ContentIdentity";
-import { SyncTargetProvider } from "@sync/SyncTargetProvider";
+import { ContentIdentity } from "@sync/content-identity";
+import { SyncTargetProvider } from "@sync/sync-target-provider";
 import * as bson from "bson";
-import { SyncOutlineEntry } from "@sync/SyncEntry";
+import { SyncOutlineEntry } from "@sync/sync-entry";
 import { httpRequest } from "utils/httpRequest";
 
 

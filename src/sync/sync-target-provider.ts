@@ -1,6 +1,6 @@
 import { StoragePath } from "@storage/storage-path";
-import { ContentIdentity } from "@sync/ContentIdentity";
-import { SyncOutlineEntry } from "@sync/SyncEntry";
+import { ContentIdentity } from "@sync/content-identity";
+import { SyncOutlineEntry } from "@sync/sync-entry";
 
 
 export interface SyncTargetProvider {

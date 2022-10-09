@@ -60,7 +60,8 @@ export abstract class EntryStorage {
   /**
    * This method should remove a file or a directory at given path.
    * If removing a directory, all its children should be removed recursively.
-   * Removing a directory can fail partially, in which case an error should be thrown
+   * Removing a directory can fail partially, in which case an error should be thrown.
+   * If trying to remove a non-existing entry, this method should not throw any errors.
    */
   abstract remove(path: StoragePath): Promise<void>;
 

@@ -1,7 +1,7 @@
+import { SyncDiffEntry } from "@sync/sync-diff-entry";
 import * as mobx from "mobx";
 import * as luxon from "luxon";
 import { StoragePath } from "@storage/storage-path";
-import { SyncJob } from "@sync/Sync";
 import { timeout } from "@common/utils/timeout";
 
 
@@ -16,9 +16,9 @@ export interface SyncJobRunnerError {
 
 
 export interface SyncJobSource {
-  getJobs(count: number, filter?: (path: StoragePath) => boolean): Promise<SyncJob[]>;
+  getJobs(count: number, filter?: (path: StoragePath) => boolean): Promise<SyncDiffEntry[]>;
 
-  doJob(job: SyncJob): Promise<void>;
+  doJob(job: SyncDiffEntry): Promise<void>;
 }
 
 
@@ -63,7 +63,7 @@ export class SyncJobRunner {
 
 
   async run(breakOnEmpty = false): Promise<void> {
-    const promiseMap = new Map<string, Promise<SyncJob>>();
+    const promiseMap = new Map<string, Promise<SyncDiffEntry>>();
 
     while (true) {
       this.isWorking = true;
@@ -94,7 +94,7 @@ export class SyncJobRunner {
   }
 
 
-  private async runJob(job: SyncJob) {
+  private async runJob(job: SyncDiffEntry) {
     let backoffDelay: luxon.Duration;
     try {
       this.runningJobs.push(job);
@@ -124,7 +124,7 @@ export class SyncJobRunner {
   }
 
 
-  runningJobs: SyncJob[] = [];
+  runningJobs: SyncDiffEntry[] = [];
   errors: SyncJobRunnerError[] = [];
   lastSuccessfulJobDone: Date | undefined = undefined;
 

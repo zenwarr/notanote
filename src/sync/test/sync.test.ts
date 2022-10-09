@@ -2,12 +2,12 @@ import { KVEntryStorage } from "@storage/kv-entry-storage";
 import { MapKV } from "@storage/map-kv";
 import { EntryStorage } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
-import { StorageSyncData, StorageSyncConfig } from "@sync/StorageSyncData";
-import { Sync } from "@sync/Sync";
-import { SyncDiffType } from "@sync/SyncDiffType";
-import { SyncTarget } from "@sync/SyncTarget";
-import { DiffAction } from "@sync/SyncMetadataStorage";
-import { SyncJobRunner } from "@sync/SyncJobRunner";
+import { StorageSyncData, StorageSyncConfig } from "@sync/storage-sync-data";
+import { Sync } from "@sync/sync";
+import { SyncDiffType } from "@sync/sync-diff-type";
+import { SyncTarget } from "@sync/sync-target";
+import { DiffAction } from "@sync/sync-metadata-storage";
+import { SyncJobRunner } from "@sync/sync-job-runner";
 
 
 async function prepare(config?: StorageSyncConfig) {
@@ -61,7 +61,7 @@ it("local file changed", async () => {
 
   await d.sync.updateDiff();
   expect(d.sync.actualDiff).toHaveLength(1);
-  expect(d.sync.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
+  expect(d.sync.actualDiff[0]!.type).toEqual(SyncDiffType.ConflictingCreate);
 });
 
 
@@ -71,7 +71,7 @@ it("initializing from remote storage", async () => {
   await d.sync.updateDiff();
 
   expect(d.sync.actualDiff).toHaveLength(1);
-  expect(d.sync.actualDiff[0]!.diff).toEqual(SyncDiffType.RemoteCreate);
+  expect(d.sync.actualDiff[0]!.type).toEqual(SyncDiffType.RemoteCreate);
 
   await d.sync.acceptMulti(d.sync.actualDiff);
   await d.runner.run(true);
@@ -91,7 +91,7 @@ it("resolving conflict by accepting local changes", async () => {
   await d.sync.updateDiff();
 
   expect(d.sync.actualDiff).toHaveLength(1);
-  expect(d.sync.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
+  expect(d.sync.actualDiff[0]!.type).toEqual(SyncDiffType.ConflictingCreate);
 
   await d.sync.accept(d.sync.actualDiff[0]!, DiffAction.AcceptLocal);
   await d.runner.run(true);
@@ -114,7 +114,7 @@ it("resolving conflict by accepting remote changes", async () => {
   await d.sync.updateDiff();
 
   expect(d.sync.actualDiff).toHaveLength(1);
-  expect(d.sync.actualDiff[0]!.diff).toEqual(SyncDiffType.ConflictingCreate);
+  expect(d.sync.actualDiff[0]!.type).toEqual(SyncDiffType.ConflictingCreate);
 
   await d.sync.accept(d.sync.actualDiff[0]!, DiffAction.AcceptRemote);
   await d.runner.run(true);
@@ -215,7 +215,7 @@ it("no false conflicts on initial update", async () => {
 
   await d.sync.updateDiff();
   expect(d.sync.actualDiff.length).toEqual(1);
-  expect(d.sync.actualDiff[0]!.diff).toEqual(SyncDiffType.LocalUpdate);
+  expect(d.sync.actualDiff[0]!.type).toEqual(SyncDiffType.LocalUpdate);
 });
 
 
@@ -239,5 +239,23 @@ it("updating file after accepting does not break", async () => {
 
   await write(d.local, "/file.txt", "hello, world updated!");
 
+  await d.runner.run(true);
+});
+
+
+it("adding new directory with files", async () => {
+  const d = await prepare({
+    storageId: "test",
+    diffRules: [
+      {
+        diff: [ SyncDiffType.LocalCreate, SyncDiffType.LocalUpdate, SyncDiffType.RemoteCreate, SyncDiffType.RemoteUpdate ],
+        action: DiffAction.AcceptAuto,
+      }
+    ]
+  });
+
+  await write(d.local, "/file.txt", "hello, world!");
+  await write(d.remote, "/file.txt", "hello, world!");
+  await d.sync.updateDiff();
   await d.runner.run(true);
 });

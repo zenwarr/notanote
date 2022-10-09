@@ -184,7 +184,7 @@ export class BrowserFileStorage extends EntryStorage {
   override async remove(path: StoragePath): Promise<void> {
     const handles = await this.getHandle(path);
     if (!handles) {
-      throw new StorageError(StorageErrorCode.NotExists, path, "File does not exist");
+      return;
     }
 
     if (!handles.parent) {

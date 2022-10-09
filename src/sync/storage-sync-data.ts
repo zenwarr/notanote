@@ -2,8 +2,8 @@ import { tryParseJson } from "@common/utils/tryParse";
 import { SpecialPath } from "@storage/special-path";
 import { EntryStorage, StorageEntryPointer, StorageError, StorageErrorCode } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
-import { SyncDiffType } from "@sync/SyncDiffType";
-import { DiffAction, EntrySyncMetadata, mergeMetadataMaps, SyncMetadataMap, SyncMetadataStorage } from "@sync/SyncMetadataStorage";
+import { SyncDiffType } from "@sync/sync-diff-type";
+import { DiffAction, EntrySyncMetadata, mergeMetadataMaps, SyncMetadataMap, SyncMetadataStorage } from "@sync/sync-metadata-storage";
 import * as uuid from "uuid";
 
 
@@ -103,18 +103,7 @@ export class SyncMetadataStorageImpl implements SyncMetadataStorage {
   }
 
 
-  async set(path: StoragePath, meta: EntrySyncMetadata | undefined): Promise<void> {
-    const d = await this.get();
-    if (!meta) {
-      delete d[path.normalized];
-    }
-
-    d[path.normalized] = meta;
-    await this.save(d);
-  }
-
-
-  async update(path: StoragePath, updater: (d: EntrySyncMetadata | undefined) => EntrySyncMetadata | undefined): Promise<void> {
+  async updateSingle(path: StoragePath, updater: (d: EntrySyncMetadata | undefined) => EntrySyncMetadata | undefined): Promise<void> {
     const d = await this.get();
     const updated = updater(d[path.normalized]);
     if (updated) {

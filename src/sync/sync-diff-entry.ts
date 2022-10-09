@@ -1,12 +1,12 @@
 import { StoragePath } from "@storage/storage-path";
-import { ContentIdentity } from "@sync/ContentIdentity";
-import { isCleanLocalDiff, isConflictingDiff, SyncDiffType } from "@sync/SyncDiffType";
-import { DiffAction, EntrySyncMetadata } from "@sync/SyncMetadataStorage";
+import { ContentIdentity } from "@sync/content-identity";
+import { isCleanLocalDiff, isConflictingDiff, SyncDiffType } from "@sync/sync-diff-type";
+import { DiffAction, EntrySyncMetadata } from "@sync/sync-metadata-storage";
 
 
 export interface SyncDiffEntry {
   path: StoragePath;
-  diff: SyncDiffType;
+  type: SyncDiffType;
   actual: ContentIdentity | undefined;
   remote: ContentIdentity | undefined;
   syncMetadata: EntrySyncMetadata | undefined;

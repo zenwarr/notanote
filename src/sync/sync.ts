@@ -2,26 +2,20 @@ import { patternMatches } from "@common/utils/patterns";
 import { EntryStorage, StorageError, StorageErrorCode } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
 import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
-import { shouldPathBeSynced } from "@sync/Ignore";
-import { DiffHandleRule, StorageSyncData } from "@sync/StorageSyncData";
-import { isAcceptedStateLost, shouldReadFromLocalToAccept, SyncDiffEntry } from "@sync/SyncDiffEntry";
-import { isCleanLocalDiff, isCleanRemoteDiff, isConflictingDiff, SyncDiffType } from "@sync/SyncDiffType";
-import { SyncOutlineEntry } from "@sync/SyncEntry";
-import { SyncTarget } from "@sync/SyncTarget";
-import { SyncTargetProvider } from "@sync/SyncTargetProvider";
-import { walkEntriesDownToTop } from "@sync/WalkEntriesDownToTop";
+import { shouldPathBeSynced } from "@sync/ignore";
+import { DiffHandleRule, StorageSyncData } from "@sync/storage-sync-data";
+import { shouldReadFromLocalToAccept, SyncDiffEntry } from "@sync/sync-diff-entry";
+import { isCleanLocalDiff, isCleanRemoteDiff, isConflictingDiff, SyncDiffType } from "@sync/sync-diff-type";
+import { SyncOutlineEntry } from "@sync/sync-entry";
+import { SyncTarget } from "@sync/sync-target";
+import { SyncTargetProvider } from "@sync/sync-target-provider";
+import { walkEntriesDownToTop } from "@sync/walk-entries-down-to-top";
 import assert from "assert";
 import { Mutex } from "async-mutex";
 import * as mobx from "mobx";
-import { ContentIdentity, DirContentIdentity, getContentIdentity, getContentIdentityForData } from "./ContentIdentity";
-import { EntryCompareData } from "./EntryCompareData";
-import { DiffAction, EntrySyncMetadata, SyncMetadataMap, SyncMetadataStorage } from "./SyncMetadataStorage";
-
-
-export interface SyncJob {
-  path: StoragePath;
-  syncMetadata: EntrySyncMetadata;
-}
+import { ContentIdentity, DirContentIdentity, getContentIdentity, getContentIdentityForData } from "./content-identity";
+import { EntryCompareData } from "./entry-compare-data";
+import { DiffAction, EntrySyncMetadata, SyncMetadataMap, SyncMetadataStorage } from "./sync-metadata-storage";
 
 
 export class Sync {
@@ -32,9 +26,9 @@ export class Sync {
     this.localSyncTarget = new SyncTarget(this.storage);
     mobx.makeObservable(this, {
       actualDiff: mobx.observable,
-      mergeDiff: mobx.action,
       conflictCount: mobx.computed,
-      updatingDiff: mobx.observable
+      updatingDiff: mobx.observable,
+      mergeDiffsIntoActual: mobx.action
     } as any);
   }
 
@@ -58,7 +52,7 @@ export class Sync {
   get conflictCount() {
     let count = 0;
     for (const diff of this.actualDiff) {
-      if (isConflictingDiff(diff.diff)) {
+      if (isConflictingDiff(diff.type)) {
         ++count;
       }
     }
@@ -108,7 +102,7 @@ export class Sync {
   /**
    * Returns difference between local and remote state.
    */
-  private async getDiff(remoteOutline: SyncOutlineEntry | undefined, start: StoragePath) {
+  private async getDiffs(remoteOutline: SyncOutlineEntry | undefined, start: StoragePath) {
     const allPaths = new Map<string, SyncOutlineEntry | undefined>();
 
     // walking through the remote outline top-down
@@ -125,7 +119,7 @@ export class Sync {
       }
     }
 
-    await this.cleanMetadata(start, allPaths);
+    await this.removeMetadataExcept(start, allPaths);
 
     let metadataStorage = await this.getSyncMetadataStorage();
     let metadata = await metadataStorage.get();
@@ -142,7 +136,6 @@ export class Sync {
       }
     }
 
-    metadata = await metadataStorage.get();
     const updatedMeta: SyncMetadataMap = {};
     for (const [ path, actual ] of nonConflicting.entries()) {
       if (!(path in metadata)) {
@@ -160,7 +153,7 @@ export class Sync {
   }
 
 
-  async accept(diff: Omit<SyncDiffEntry, "syncMetadata">, action: DiffAction) {
+  async accept(diff: SyncDiffEntry, action: DiffAction) {
     const release = await this.lock.acquire();
     try {
       await this.acceptInsideLock(diff, action);
@@ -170,30 +163,27 @@ export class Sync {
   }
 
 
-  private async acceptInsideLock(diff: Omit<SyncDiffEntry, "syncMetadata">, action: DiffAction) {
-    if (action === DiffAction.AcceptAuto && isConflictingDiff(diff.diff)) {
+  private async acceptInsideLock(diff: SyncDiffEntry, action: DiffAction) {
+    if (action === DiffAction.AcceptAuto && isConflictingDiff(diff.type)) {
       throw new Error("Cannot resolve conflicting diff with DiffAction.AcceptAuto");
-    } else if (!isConflictingDiff(diff.diff) && (action === DiffAction.AcceptLocal || action === DiffAction.AcceptRemote)) {
+    } else if (!isConflictingDiff(diff.type) && (action === DiffAction.AcceptLocal || action === DiffAction.AcceptRemote)) {
       throw new Error("Cannot resolve clean diff with DiffAction.AcceptLocal or DiffAction.AcceptRemote");
     }
 
     let updatedMeta: EntrySyncMetadata | undefined;
-    await (await this.getSyncMetadataStorage()).update(diff.path, meta => {
+    await (await this.getSyncMetadataStorage()).updateSingle(diff.path, meta => {
       updatedMeta = {
         synced: meta?.synced,
         accepted: getAcceptedContentIdentity(diff, action),
         action: action,
-        diff: diff.diff
+        diff: diff.type
       };
+
       return updatedMeta;
     });
 
     if (updatedMeta) {
-      for (const diff of this.actualDiff) {
-        if (diff.path.isEqual(diff.path)) {
-          diff.syncMetadata = updatedMeta!;
-        }
-      }
+      diff.syncMetadata = updatedMeta;
     }
   }
 
@@ -201,7 +191,8 @@ export class Sync {
   async acceptMulti(entries: Omit<SyncDiffEntry, "syncMetadata">[]): Promise<void> {
     const release = await this.lock.acquire();
     try {
-      const meta = await (await this.getSyncMetadataStorage()).get();
+      const sm = await this.getSyncMetadataStorage();
+      const meta = await sm.get();
       const result: SyncMetadataMap = {};
       const updatedMeta = new Map<string, EntrySyncMetadata>();
 
@@ -210,13 +201,13 @@ export class Sync {
         if (entryMeta) {
           entryMeta.accepted = getAcceptedContentIdentity(entryDiff, DiffAction.AcceptAuto);
           entryMeta.action = DiffAction.AcceptAuto;
-          entryMeta.diff = entryDiff.diff;
+          entryMeta.diff = entryDiff.type;
         } else {
           entryMeta = {
             accepted: getAcceptedContentIdentity(entryDiff, DiffAction.AcceptAuto),
             synced: undefined,
             action: DiffAction.AcceptAuto,
-            diff: entryDiff.diff
+            diff: entryDiff.type
           };
         }
 
@@ -224,7 +215,7 @@ export class Sync {
         updatedMeta.set(entryDiff.path.normalized, entryMeta);
       }
 
-      await (await this.getSyncMetadataStorage()).setMulti(result);
+      await sm.setMulti(result);
 
       for (const diff of this.actualDiff) {
         const updatedEntryMeta = updatedMeta.get(diff.path.normalized);
@@ -272,9 +263,9 @@ export class Sync {
 
       const release = await this.lock.acquire();
       try {
-        const diff = await this.getDiff(outline, start);
-        this.mergeDiff(start, diff);
-        await this.handleDiff(diff);
+        const diffs = await this.getDiffs(outline, start);
+        await this.handleDiffs(diffs);
+        this.mergeDiffsIntoActual(start, diffs);
       } finally {
         release();
       }
@@ -288,16 +279,15 @@ export class Sync {
    * Removes keys from the metadata map that are not present in the allPaths map.
    * This is required before calculating diff because metadata map can have keys for previously accepted, but deleted entries.
    */
-  private async cleanMetadata(start: StoragePath, allPaths: Map<string, SyncOutlineEntry | undefined>) {
+  private async removeMetadataExcept(start: StoragePath, exceptPaths: Map<string, SyncOutlineEntry | undefined>) {
     const sm = await this.getSyncMetadataStorage();
     const meta = await sm.get();
 
     const toDelete: SyncMetadataMap = {};
     // iterate over keys and remove those that are not in allPaths
-    for (const key of Object.keys(meta)) {
-      if (!allPaths.has(key) && new StoragePath(key).inside(start)) {
-        const value = meta[key]!;
-        if (value.accepted && value.accepted !== value.synced) {
+    for (const [ key, value ] of Object.entries(meta)) {
+      if (!exceptPaths.has(key) && new StoragePath(key).inside(start)) {
+        if (value && value.accepted && value.accepted !== value.synced) {
           console.log(`Accepted state is lost: ${ key } (accepted identity is ${ value.accepted })`);
         }
 
@@ -306,21 +296,23 @@ export class Sync {
     }
 
     await sm.setMulti(toDelete);
+
+    this.actualDiff = this.actualDiff.filter(diff => !(diff.path.normalized in toDelete));
   }
 
 
-  private mergeDiff(start: StoragePath, diff: SyncDiffEntry[]): void {
-    for (const d of diff) {
+  private mergeDiffsIntoActual(start: StoragePath, diffs: SyncDiffEntry[]): void {
+    for (const d of diffs) {
       this.actualDiff = this.actualDiff.filter(e => !e.path.isEqual(d.path));
       this.actualDiff.push(d);
     }
 
     // remove entries that are under start path but not in new diff
-    this.actualDiff = this.actualDiff.filter(e => !e.path.inside(start) || diff.some(d => d.path.isEqual(e.path)));
+    this.actualDiff = this.actualDiff.filter(e => !e.path.inside(start) || diffs.some(d => d.path.isEqual(e.path)));
   }
 
 
-  private async handleDiff(diffs: SyncDiffEntry[]): Promise<void> {
+  private async handleDiffs(diffs: SyncDiffEntry[]): Promise<void> {
     for (const diff of diffs) {
       const rule = await this.findDiffHandleRule(diff);
       if (rule) {
@@ -332,7 +324,7 @@ export class Sync {
 
   private async findDiffHandleRule(diff: SyncDiffEntry): Promise<DiffHandleRule | undefined> {
     function diffRuleMatches(diffRule: SyncDiffType | SyncDiffType[]) {
-      return Array.isArray(diffRule) ? diffRule.includes(diff.diff) : diffRule === diff.diff;
+      return Array.isArray(diffRule) ? diffRule.includes(diff.type) : diffRule === diff.type;
     }
 
     const rules = await this.getDiffHandleRules();
@@ -354,44 +346,46 @@ export class Sync {
   }
 
 
-  async getJobs(count: number, filter?: (job: StoragePath) => boolean): Promise<SyncJob[]> {
+  async getJobs(count: number, filter?: (job: StoragePath) => boolean): Promise<SyncDiffEntry[]> {
     if (count <= 0) {
       return [];
     }
 
-    const result: SyncJob[] = [];
+    const result: SyncDiffEntry[] = [];
 
     // todo: walk order
-    for (const diff of this.actualDiff) {
-      if (!diff.syncMetadata || !diff.syncMetadata.action || !diff.syncMetadata.diff) {
-        continue;
-      }
+    const release = await this.lock.acquire();
+    try {
+      for (const diff of this.actualDiff) {
+        if (!diff.syncMetadata || !diff.syncMetadata.action || !diff.syncMetadata.diff) {
+          continue;
+        }
 
-      const isSynced = diff.syncMetadata.accepted === diff.syncMetadata.synced;
-      const isLost = isAcceptedStateLost(diff);
-      assert(isLost != null, "isAcceptedStateLost should not return undefined");
+        const isSynced = diff.syncMetadata.accepted === diff.syncMetadata.synced;
+        const isWorkingOn = this.activeJobPaths.has(diff.path.normalized);
 
-      const isWorkingOn = this.activeJobPaths.has(diff.path.normalized);
-
-      if (!isSynced && !isLost && !isWorkingOn && (!filter || filter(diff.path))) {
-        result.push({ path: diff.path, syncMetadata: diff.syncMetadata });
-        if (result.length >= count) {
-          break;
+        if (!isSynced && !isWorkingOn && (!filter || filter(diff.path))) {
+          result.push(diff);
+          if (result.length >= count) {
+            break;
+          }
         }
       }
-    }
 
-    return result;
+      return result;
+    } finally {
+      release();
+    }
   }
 
 
-  async doJob(job: SyncJob): Promise<void> {
+  async doJob(job: SyncDiffEntry): Promise<void> {
     if (this.activeJobPaths.has(job.path.normalized)) {
       throw new Error("Job for given path is already active");
     }
 
-    if (!job.syncMetadata.diff) {
-      throw new Error("Invariant error: job without diff");
+    if (!job.syncMetadata || !job.syncMetadata.action || !job.syncMetadata.diff) {
+      throw new Error("Invariant error: malformed job");
     }
 
     this.activeJobPaths.add(job.path.normalized);
@@ -444,7 +438,7 @@ export class Sync {
       const release = await this.lock.acquire();
       try {
         let updatedMeta: EntrySyncMetadata | undefined;
-        await (await this.getSyncMetadataStorage()).update(job.path, meta => {
+        await (await this.getSyncMetadataStorage()).updateSingle(job.path, meta => {
           if (meta && meta.synced === synced) {
             updatedMeta = { ...meta, synced: accepted || undefined, action: undefined, diff: undefined };
           } else {
@@ -466,7 +460,7 @@ export class Sync {
   }
 
 
-  private getEntryIdentityDiff(local: ContentIdentity | undefined, synced: ContentIdentity | undefined | false, remote: ContentIdentity | undefined): SyncDiffType | undefined {
+  private getDiffType(local: ContentIdentity | undefined, synced: ContentIdentity | undefined | false, remote: ContentIdentity | undefined): SyncDiffType | undefined {
     if (local && remote) {
       // both local and remote exists
       if (!synced) {
@@ -536,13 +530,12 @@ export class Sync {
     }
 
     const meta = metadataMap[path.normalized];
-    const synced = meta?.synced;
     const actual = await getContentIdentity(this.storage.get(path));
 
-    const actualDiff = this.getEntryIdentityDiff(actual, synced, remote?.identity);
+    const diffType = this.getDiffType(actual, meta?.synced, remote?.identity);
 
     return {
-      diff: actualDiff && { path, diff: actualDiff, actual, remote: remote?.identity, syncMetadata: meta! },
+      diff: diffType && { path, type: diffType, actual, remote: remote?.identity, syncMetadata: meta },
       actual
     };
   }
@@ -576,10 +569,10 @@ export class Sync {
       }
 
       if (shouldRecompute) {
-        const diffType = this.getEntryIdentityDiff(diff.actual, diff.syncMetadata?.synced, diff.remote);
+        const diffType = this.getDiffType(diff.actual, diff.syncMetadata?.synced, diff.remote);
         if (diffType) {
-          diff.diff = diffType;
-          await this.handleDiff([ diff ]);
+          diff.type = diffType;
+          await this.handleDiffs([ diff ]);
         } else {
           this.actualDiff = this.actualDiff.filter(d => !d.path.isEqual(path));
 
@@ -606,9 +599,9 @@ function* walkOutlineEntries(outline: SyncOutlineEntry, startPath: StoragePath):
 
 
 function getAcceptedContentIdentity(diff: Omit<SyncDiffEntry, "syncMetadata">, action: DiffAction): ContentIdentity | undefined {
-  if ((action === DiffAction.AcceptAuto && isCleanRemoteDiff(diff.diff)) || action === DiffAction.AcceptRemote) {
+  if ((action === DiffAction.AcceptAuto && isCleanRemoteDiff(diff.type)) || action === DiffAction.AcceptRemote) {
     return diff.remote;
-  } else if ((action === DiffAction.AcceptAuto && isCleanLocalDiff(diff.diff)) || action == DiffAction.AcceptLocal) {
+  } else if ((action === DiffAction.AcceptAuto && isCleanLocalDiff(diff.type)) || action == DiffAction.AcceptLocal) {
     return diff.actual;
   } else {
     throw new Error("Invariant error: getAcceptedContentIdentity called with invalid action");

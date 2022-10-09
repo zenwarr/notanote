@@ -1,5 +1,5 @@
 import { EntryStorage } from "@storage/entry-storage";
-import { SyncTargetProvider } from "@sync/SyncTargetProvider";
+import { SyncTargetProvider } from "@sync/sync-target-provider";
 import * as React from "react";
 
 
