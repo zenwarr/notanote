@@ -64,3 +64,22 @@ export function isAccepted(d: SyncDiffEntry): boolean {
 export function isActionable(d: SyncDiffEntry): boolean {
   return d.syncMetadata != null && d.syncMetadata.action != null && d.syncMetadata.diff != null;
 }
+
+
+export function* walkSyncDiffEntriesDownToTop(entries: SyncDiffEntry[]): Generator<SyncDiffEntry> {
+  const levels = new Map<number, SyncDiffEntry[]>();
+  for (const entry of entries) {
+    const level = entry.path.parts.length;
+    const levelEntries = levels.get(level) || [];
+    levelEntries.push(entry);
+    levels.set(level, levelEntries);
+  }
+
+  const levelsSorted = [ ...levels.keys() ].sort((a, b) => b - a);
+  for (const level of levelsSorted) {
+    const levelEntries = levels.get(level)!;
+    for (const entry of levelEntries) {
+      yield entry;
+    }
+  }
+}

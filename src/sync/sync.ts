@@ -4,7 +4,7 @@ import { StoragePath } from "@storage/storage-path";
 import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
 import { shouldPathBeSynced } from "@sync/ignore";
 import { DiffHandleRule, StorageSyncData } from "@sync/storage-sync-data";
-import { shouldReadFromLocalToAccept, SyncDiffEntry } from "@sync/sync-diff-entry";
+import { shouldReadFromLocalToAccept, SyncDiffEntry, walkSyncDiffEntriesDownToTop } from "@sync/sync-diff-entry";
 import { isCleanLocalDiff, isCleanRemoteDiff, isConflictingDiff, SyncDiffType } from "@sync/sync-diff-type";
 import { SyncOutlineEntry } from "@sync/sync-entry";
 import { SyncTarget } from "@sync/sync-target";
@@ -353,10 +353,9 @@ export class Sync {
 
     const result: SyncDiffEntry[] = [];
 
-    // todo: walk order
     const release = await this.lock.acquire();
     try {
-      for (const diff of this.actualDiff) {
+      for (const diff of walkSyncDiffEntriesDownToTop(this.actualDiff)) {
         if (!diff.syncMetadata || !diff.syncMetadata.action || !diff.syncMetadata.diff) {
           continue;
         }
