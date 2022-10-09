@@ -1,8 +1,8 @@
 {
   "name": "nuclear-notes",
-  "version": "0.0.107",
+  "version": "0.0.108",
   "private": true,
-  "description": "An Amazing Capacitor App",
+  "description": "Note application",
   "author": {
     "name": "",
     "email": ""
