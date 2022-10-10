@@ -1,7 +1,7 @@
 {
   "appId": "com.nuclear-notes.app",
   "directories": {
-    "buildResources": "resources"
+    "buildResources": "assets"
   },
   "files": [
     "assets/**/*",
@@ -24,9 +24,8 @@
   "linux": {
     "target": [
       "AppImage"
-    ]
-  },
-  "appImage": {
+    ],
+    "icon": "icon512x512.png",
     "category": "Utility",
     "desktop": {
       "Name": "Nuclear Notes"

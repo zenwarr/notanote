@@ -99,7 +99,7 @@ export class ElectronCapacitorApp {
   }
 
   async init(): Promise<void> {
-    const icon = nativeImage.createFromPath(join(app.getAppPath(), 'assets', 'icon.png'));
+    const icon = nativeImage.createFromPath(join(app.getAppPath(), 'assets', 'icon512x512.png'));
     this.mainWindowState = windowStateKeeper({
       defaultWidth: 1000,
       defaultHeight: 800,
