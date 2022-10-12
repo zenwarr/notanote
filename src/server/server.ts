@@ -2,9 +2,7 @@ import { StorageError } from "@storage/entry-storage";
 import fastify from "fastify";
 import path from "path";
 import fastifyFormBody from "@fastify/formbody";
-import fastifyView from "@fastify/view";
 import fastifyCors from "@fastify/cors";
-import hbs from "handlebars";
 import * as bson from "bson";
 import fastifyStatic from "@fastify/static";
 import { configureAuth } from "./auth";
@@ -12,8 +10,6 @@ import { getStatusCodeForError, LogicError } from "@common/errors";
 
 
 export async function startApp() {
-  hbs.registerHelper("json", ctx => JSON.stringify(ctx));
-
   const app = fastify({
     logger: {
       level: "warn"
@@ -21,12 +17,6 @@ export async function startApp() {
   });
 
   app.register(fastifyFormBody);
-  app.register(fastifyView, {
-    engine: {
-      handlebars: hbs
-    },
-    root: path.join(__dirname, "../views")
-  });
   app.register(fastifyStatic, {
     root: path.join(__dirname, "../static")
   });
