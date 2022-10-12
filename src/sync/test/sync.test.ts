@@ -8,10 +8,13 @@ import { SyncDiffType } from "@sync/sync-diff-type";
 import { SyncTarget } from "@sync/sync-target";
 import { DiffAction } from "@sync/sync-metadata-storage";
 import { SyncJobRunner } from "@sync/sync-job-runner";
+import * as mobx from "mobx";
+import * as luxon from "luxon";
 
 
 async function prepare(config?: StorageSyncConfig) {
   const local = new KVEntryStorage(new MapKV());
+  const alt = new KVEntryStorage(new MapKV());
 
   const sd = new StorageSyncData(local);
   await sd.initStorage();
@@ -19,19 +22,33 @@ async function prepare(config?: StorageSyncConfig) {
     await sd.setConfig(config);
   }
 
+  const altSd = new StorageSyncData(alt);
+  await altSd.initStorage();
+  if (config) {
+    await altSd.setConfig(config);
+  }
+
   const remote = new KVEntryStorage(new MapKV());
   const target = new SyncTarget(remote);
 
-  const source = new Sync(local, target);
+  const sync = new Sync(local, target);
+  const runner = new SyncJobRunner(sync, { normalBackoffDelay: luxon.Duration.fromMillis(1) });
 
-  const runner = new SyncJobRunner(source);
+  const altSync = new Sync(alt, target);
+  const altRunner = new SyncJobRunner(altSync, { normalBackoffDelay: luxon.Duration.fromMillis(1) });
 
-  return { local, remote, sync: source, runner };
+  return { local, remote, sync, runner, alt, altSync, altRunner };
 }
 
 
 async function write(storage: EntryStorage, path: string, data: string) {
   await storage.writeOrCreate(new StoragePath(path), Buffer.from(data));
+}
+
+
+async function readString(storage: EntryStorage, path: string) {
+  const d = await storage.read(new StoragePath(path));
+  return d.toString();
 }
 
 
@@ -258,4 +275,42 @@ it("adding new directory with files", async () => {
   await write(d.remote, "/file.txt", "hello, world!");
   await d.sync.updateDiff();
   await d.runner.run(true);
+});
+
+
+it("trying to remove", async () => {
+  const d = await prepare({
+    storageId: "test",
+    diffRules: [
+      {
+        diff: [ SyncDiffType.LocalCreate, SyncDiffType.LocalUpdate, SyncDiffType.RemoteCreate, SyncDiffType.RemoteUpdate ],
+        action: DiffAction.AcceptAuto,
+      }
+    ]
+  });
+
+  await write(d.local, "/file.txt", "hello, world!");
+
+  await d.sync.updateDiff();
+  await d.runner.run(true);
+
+  await d.altSync.updateDiff();
+  await d.altRunner.run(true);
+
+  expect(await readString(d.local, "/file.txt")).toEqual("hello, world!");
+  expect(await readString(d.remote, "/file.txt")).toEqual("hello, world!");
+  expect(await readString(d.alt, "/file.txt")).toEqual("hello, world!");
+
+  await d.local.remove(new StoragePath("/file.txt"));
+  await d.sync.updateDiff();
+  await d.sync.acceptMulti(d.sync.actualDiff);
+  await d.runner.run(true);
+
+  await d.altSync.updateDiff();
+  await d.altSync.acceptMulti(d.altSync.actualDiff);
+  await d.altRunner.run(true);
+
+  expect(await d.local.exists(new StoragePath("/file.txt"))).toEqual(false);
+  expect(await d.remote.exists(new StoragePath("/file.txt"))).toEqual(false);
+  expect(await d.alt.exists(new StoragePath("/file.txt"))).toEqual(false);
 });
