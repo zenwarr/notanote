@@ -2,7 +2,7 @@ import { Box } from "@mui/material";
 import * as monaco from "monaco-editor";
 import { ReactNode, useEffect, useLayoutEffect, useRef } from "react";
 import { useCurrentThemeIsDark } from "../theme/theme";
-import { defineTheme } from "./Theme";
+import { configureMonaco } from "./configure";
 
 
 export type MonacoDiffProps = {
@@ -19,7 +19,7 @@ export function MonacoDiff(props: MonacoDiffProps) {
   const isDarkTheme = useCurrentThemeIsDark();
 
   useEffect(() => {
-    defineTheme();
+    configureMonaco();
     monaco.editor.setTheme(isDarkTheme ? "pure-dark" : "vs");
 
     const originalModel = monaco.editor.createModel(

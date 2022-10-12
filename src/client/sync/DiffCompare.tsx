@@ -19,7 +19,7 @@ export function DiffCompare(props: DiffCompareProps) {
   const local = getText(props.data.local);
   const remote = getText(props.data.remote);
 
-  const diffEditor = useLoad(useCallback(() => import("../monaco/MonacoDiff"), []));
+  const diffEditor = useLoad(useCallback(() => import("../monaco/monaco-diff"), []));
 
   if (local === false || remote === false) {
     return <div>

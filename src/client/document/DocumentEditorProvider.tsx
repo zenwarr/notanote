@@ -76,7 +76,7 @@ export class DocumentEditorProvider {
 
 
   async loadMonaco(): Promise<LazyEditorModule> {
-    const [ editor, state ] = await Promise.all([ import("../monaco/MonacoEditor"), import("../monaco/MonacoEditorStateAdapter") ]);
+    const [ editor, state ] = await Promise.all([ import("../monaco/monaco-editor"), import("../monaco/monaco-editor-state-adapter") ]);
     return {
       editor: editor.MonacoEditor,
       state: state.MonacoEditorStateAdapter

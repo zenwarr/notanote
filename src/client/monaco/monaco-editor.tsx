@@ -4,8 +4,8 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import { Document } from "../document/Document";
 import { getStoredEditorState, storeEditorState } from "../editor/store-state";
 import { useCurrentThemeIsDark } from "../theme/theme";
-import { MonacoEditorStateAdapter } from "./MonacoEditorStateAdapter";
-import { defineTheme } from "./Theme";
+import { MonacoEditorStateAdapter } from "./monaco-editor-state-adapter";
+import { configureMonaco } from "./configure";
 
 
 export interface MonacoEditorProps {
@@ -34,7 +34,7 @@ export function MonacoEditor(props: MonacoEditorProps) {
   const isDarkTheme = useCurrentThemeIsDark();
 
   useEffect(() => {
-    defineTheme();
+    configureMonaco();
     monaco.editor.setTheme(isDarkTheme ? "pure-dark" : "vs");
 
     let fontSize = props.doc.settings.fontSize;

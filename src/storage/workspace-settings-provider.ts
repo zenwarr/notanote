@@ -5,6 +5,7 @@ import { StorageSyncConfig } from "@sync/storage-sync-data";
 import { FileSettings } from "@common/Settings";
 import { tryParseJson } from "@common/utils/tryParse";
 import { SpecialPath } from "@storage/special-path";
+import { workspaceSettingsSchema } from "../client/monaco/workspace-settings-schema";
 import { ThemeConfig } from "../client/theme/theme-config";
 
 
@@ -80,6 +81,9 @@ export class WorkspaceSettingsProvider {
 
     WorkspaceSettingsProvider._instance = new WorkspaceSettingsProvider(fs);
   }
+
+
+  static readonly schema = workspaceSettingsSchema;
 
 
   settings: WorkspaceSettings | undefined;
