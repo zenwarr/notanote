@@ -22,14 +22,20 @@ export interface SyncJobSource {
 }
 
 
-const ERROR_RETRY_DELAY = luxon.Duration.fromObject({ second: 15 });
+const ERROR_BACKOFF_DELAY = luxon.Duration.fromObject({ second: 15 });
 const NORMAL_BACKOFF_DELAY = luxon.Duration.fromObject({ second: 5 });
 const SYNC_JOB_IDLE_TIMEOUT = luxon.Duration.fromObject({ second: 5 });
 
 
+export interface SyncJobRunnerOptions {
+  normalBackoffDelay?: luxon.Duration;
+}
+
+
 export class SyncJobRunner {
-  constructor(source: SyncJobSource) {
+  constructor(source: SyncJobSource, options?: SyncJobRunnerOptions) {
     this.syncSource = source;
+    this.options = options;
     mobx.makeObservable(this, {
       runningJobs: mobx.observable,
       errors: mobx.observable,
@@ -102,7 +108,7 @@ export class SyncJobRunner {
       await this.syncSource.doJob(job);
       this.lastSuccessfulJobDone = new Date();
       this.errors = this.errors.filter(e => !e.path.isEqual(job.path));
-      backoffDelay = ERROR_RETRY_DELAY;
+      backoffDelay = this.options?.normalBackoffDelay ?? NORMAL_BACKOFF_DELAY;
     } catch (error) {
       console.error(`Error running job ${job.path.normalized}`, error);
 
@@ -112,7 +118,7 @@ export class SyncJobRunner {
         error: error as Error,
         date: new Date()
       });
-      backoffDelay = NORMAL_BACKOFF_DELAY;
+      backoffDelay = ERROR_BACKOFF_DELAY;
     }
 
     this.runningJobs = this.runningJobs.filter(j => !j.path.isEqual(job.path));
@@ -131,5 +137,6 @@ export class SyncJobRunner {
   private readonly lockedPaths = new Set<string>();
   private readonly backoff = new Map<string, Date>();
   private readonly syncSource: SyncJobSource;
+  private readonly options: SyncJobRunnerOptions | undefined;
   isWorking = false;
 }
