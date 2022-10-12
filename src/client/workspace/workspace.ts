@@ -12,6 +12,7 @@ import { SyncJobRunner } from "@sync/sync-job-runner";
 import { makeObservable, observable } from "mobx";
 import { PluginManager } from "../plugin/plugin-manager";
 import { RecentDocStorage } from "../RecentDocStorage";
+import { getFileRoutePath } from "./routing";
 
 
 export class Workspace {
@@ -19,17 +20,9 @@ export class Workspace {
     makeObservable(this, {
       loading: observable,
       loadError: observable,
-      _selectedEntry: observable,
-      _selectedFile: observable,
+      _openedPath: observable,
       editorReloadTrigger: observable
     } as any);
-
-    const lastOpenedDoc = RecentDocStorage.instance.getLastOpenedDoc();
-    if (lastOpenedDoc) {
-      const lastOpenedDocPath = new StoragePath(lastOpenedDoc);
-      this._selectedEntry = lastOpenedDocPath;
-      this._selectedFile = lastOpenedDocPath;
-    }
 
     this.storage = new MemoryCachedStorage(storage);
     this.remoteStorageName = storageName;
@@ -115,18 +108,18 @@ export class Workspace {
     this.scheduleDiffUpdate(entry.path);
 
     if (type === "file") {
-      this.selectedEntry = path;
+      this.navigateToPath(path);
     }
   }
 
 
   async remove(path: StoragePath) {
-    if (this.selectedEntry && path.isEqual(this.selectedEntry)) {
+    if (this.openedPath && path.isEqual(this.openedPath)) {
       const parentPath = path.parentDir;
       if (parentPath.isEqual(StoragePath.root)) {
-        this.selectedEntry = undefined;
+        this.navigateToPath(undefined);
       } else {
-        this.selectedEntry = parentPath;
+        this.navigateToPath(parentPath);
       }
     }
 
@@ -148,28 +141,30 @@ export class Workspace {
   }
 
 
-  get selectedEntry() {
-    return this._selectedEntry;
+  get openedPath() {
+    return this._openedPath;
   }
 
 
-  set selectedEntry(path: StoragePath | undefined) {
-    this._selectedEntry = path;
-
-    if (path == null) {
-      this._selectedFile = undefined;
+  navigateToPath(path: StoragePath | undefined): void {
+    if (path) {
+      this.navigator?.(getFileRoutePath(path));
     } else {
-      const entry = this.storage.getMemoryData(path);
-      if (entry && !entry.stats.isDirectory) {
-        this._selectedFile = path;
-        RecentDocStorage.instance.saveLastOpenedDoc(path.normalized);
-      }
+      this.navigator?.("/");
     }
   }
 
 
-  get selectedFile() {
-    return this._selectedFile;
+  onNavigate(path: StoragePath | undefined) {
+    if (path == null) {
+      this._openedPath = undefined;
+    } else {
+      const entry = this.storage.getMemoryData(path);
+      if (entry && !entry.stats.isDirectory) {
+        this._openedPath = path;
+        RecentDocStorage.instance.saveLastOpenedDoc(path.normalized);
+      }
+    }
   }
 
 
@@ -187,14 +182,29 @@ export class Workspace {
   }
 
 
-  private _selectedEntry: StoragePath | undefined = undefined;
-  private _selectedFile: StoragePath | undefined = undefined;
+  setNavigator(navigator: undefined | ((path: string) => void)) {
+    console.log("set navigator");
+
+    this.navigator = navigator;
+
+    const lastOpenedDoc = RecentDocStorage.instance.getLastOpenedDoc();
+    if (lastOpenedDoc) {
+      const lastOpenedDocPath = new StoragePath(lastOpenedDoc);
+      this._openedPath = lastOpenedDocPath;
+      this.navigateToPath(lastOpenedDocPath);
+    }
+  }
+
+
+  private _openedPath: StoragePath | undefined = undefined;
   storage: MemoryCachedStorage;
-  private static _instance: Workspace | undefined;
   sync: Sync | undefined;
   syncJobRunner: SyncJobRunner | undefined;
   plugins: PluginManager;
   editorReloadTrigger = 0;
+  navigator: undefined | ((path: string) => void);
+
+  private static _instance: Workspace | undefined;
 
 
   static get instance() {

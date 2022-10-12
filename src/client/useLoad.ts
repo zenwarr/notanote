@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 export type LoadState<T> = {
   isLoaded: false;
   loading: boolean;
-  loadError: string | undefined;
+  loadError: Error | undefined;
   data: undefined | T;
 } | {
   isLoaded: true;
@@ -70,11 +70,9 @@ export function useLoad<T>(load: () => Promise<T>, onErrorOrOptions?: UseLoadOpt
       }
     }, error => {
       if (stillActive) {
-        const loadError: string = error.message || "Unknown error";
-
         setState(prev => ({
           loading: false,
-          loadError,
+          loadError: error,
           data: dropOldData ? undefined : prev.data,
           isLoaded: false
         }));
@@ -83,7 +81,9 @@ export function useLoad<T>(load: () => Promise<T>, onErrorOrOptions?: UseLoadOpt
           onError(error);
         } else {
           console.error(error);
-          alert(`Failed to load: ${ loadError }`);
+
+          const loadErrorText: string = error.message || "Unknown error";
+          alert(`Failed to load: ${ loadErrorText }`);
         }
       }
     });

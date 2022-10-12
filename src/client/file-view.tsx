@@ -1,17 +1,18 @@
-import { useLoad } from "./useLoad";
+import { Button, CircularProgress } from "@mui/material";
+import { makeStyles } from "@mui/styles";
+import { StorageError, StorageErrorCode } from "@storage/entry-storage";
+import { StoragePath } from "@storage/storage-path";
+import { EditorContext, EditorCtxData } from "editor/editor-context";
+import { observer } from "mobx-react-lite";
 import * as React from "react";
 import { useCallback, useEffect, useMemo } from "react";
 import { Document } from "./document/Document";
-import { observer } from "mobx-react-lite";
-import { Workspace } from "./workspace/workspace";
-import { useWindowTitle } from "./useWindowTitle";
-import { CircularProgress } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import { EditorProps } from "./plugin/plugin-manager";
-import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
-import { StoragePath } from "@storage/storage-path";
 import { DocumentEditorProvider } from "./document/DocumentEditorProvider";
-import { EditorContext, EditorCtxData } from "editor/editor-context";
+import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
+import { EditorProps } from "./plugin/plugin-manager";
+import { useLoad } from "./useLoad";
+import { useWindowTitle } from "./useWindowTitle";
+import { Workspace } from "./workspace/workspace";
 
 
 export type FileViewProps = {
@@ -60,6 +61,14 @@ export const FileView = observer((props: FileViewProps) => {
     onError: err => console.error(`Failed to load file ${ props.entryPath.normalized }`, err),
   });
 
+  useEffect(() => {
+    return () => {
+      if (contentLoad.data) {
+        contentLoad.data.close(); // not handling intentionally
+      }
+    };
+  }, [ contentLoad.data, cw.editorReloadTrigger ]);
+
   const componentLoad = useLoad<React.ComponentType<EditorProps> | undefined>(useCallback(async () => {
     if (!contentLoad.isLoaded) {
       return undefined;
@@ -73,18 +82,19 @@ export const FileView = observer((props: FileViewProps) => {
     entryPath: props.entryPath,
   }), [ props.entryPath ]);
 
-  useEffect(() => {
-    return () => {
-      if (contentLoad.data) {
-        contentLoad.data.close(); // not handling intentionally
-      }
-    }
-  }, [ contentLoad.data ]);
-
   if (contentLoad.loadError) {
-    return <div className={ classes.error }>
-      Error loading "{ props.entryPath.normalized }": { contentLoad.loadError }
-    </div>;
+    if (contentLoad.loadError instanceof StorageError && contentLoad.loadError.code === StorageErrorCode.NotExists) {
+      return <div className={ classes.error }>
+        File { props.entryPath.normalized } not exists
+        <Button variant={ "contained" }>
+          Create
+        </Button>
+      </div>;
+    } else {
+      return <div className={ classes.error }>
+        { `Error loading "${ props.entryPath.normalized }": ${ contentLoad.loadError }` }
+      </div>;
+    }
   }
 
   if (!contentLoad.isLoaded || !componentLoad.isLoaded || !componentLoad.data) {
@@ -107,12 +117,11 @@ export interface ConnectedFileViewProps {
 
 
 export const ConnectedFileView = observer((props: ConnectedFileViewProps) => {
-  const ws = Workspace.instance;
-  const openedDoc = ws.selectedFile ? ws.storage.get(ws.selectedFile) : undefined;
+  const openedPath = Workspace.instance.openedPath;
 
-  useWindowTitle(openedDoc?.path.normalized);
+  useWindowTitle(openedPath?.normalized);
 
-  return openedDoc ? <FileView entryPath={ openedDoc.path } className={ props.className }/> : null;
+  return openedPath ? <FileView entryPath={ openedPath } className={ props.className }/> : null;
 });
 
 

@@ -7,8 +7,6 @@ import cn from "classnames";
 import { observer } from "mobx-react-lite";
 import * as React from "react";
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router";
-import { getFileRoutePath } from "./routing";
 import { Workspace } from "./workspace";
 import { CreateEntryDialog } from "../CreateEntryDialog";
 import { ContainerWithSizeDetection } from "../utils/ContainerWithSizeDetection";
@@ -60,21 +58,20 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const [ entryDialogOpened, setEntryDialogOpened ] = useState(false);
   const createOptions = useRef<CreateOptions | undefined>(undefined);
 
-  const navigate = useNavigate();
   const classes = useStyles();
 
   function onSelect(path: StoragePath) {
-    navigate(getFileRoutePath(path));
+    cw.navigateToPath(path);
     props.onFileSelected?.(path);
   }
 
   function createFile() {
-    createOptions.current = getCreateOptions(cw.selectedEntry, StorageEntryType.File);
+    createOptions.current = getCreateOptions(cw.openedPath, StorageEntryType.File);
     setEntryDialogOpened(true);
   }
 
   function createFolder() {
-    createOptions.current = getCreateOptions(cw.selectedEntry, StorageEntryType.Dir);
+    createOptions.current = getCreateOptions(cw.openedPath, StorageEntryType.Dir);
     setEntryDialogOpened(true);
   }
 
@@ -84,11 +81,11 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   }
 
   async function remove() {
-    if (!cw.selectedEntry || !confirm("Are you sure you want to remove it?\n\n" + cw.selectedEntry)) {
+    if (!cw.openedPath || !confirm("Are you sure you want to remove it?\n\n" + cw.openedPath)) {
       return;
     }
 
-    await Workspace.instance.remove(cw.selectedEntry);
+    await Workspace.instance.remove(cw.openedPath);
   }
 
   const containerClassName = cn(classes.treeContainer, { [classes.treeContainerPadding]: props.treeWithPadding });
@@ -142,7 +139,7 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
         <IconButton
             onClick={ remove }
             title={ "Delete selected" }
-            disabled={ !cw.selectedEntry }
+            disabled={ !cw.openedPath }
             size="large">
           <DeleteForever color={ "error" }/>
         </IconButton>

@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
-import { getFileRoutePath } from "../workspace/routing";
+import { Workspace } from "../workspace/workspace";
 import { Palette, PaletteCompleter } from "./palette";
 import { filePaletteCompleter } from "./palette-completer";
 import { CommandManager, commandPaletteCompleter } from "../commands/command-manager";
@@ -19,7 +18,6 @@ let togglePaletteCb: ((mode: PaletteMode) => void) | undefined = undefined;
 
 export function PaletteProvider(props: React.PropsWithChildren<{}>) {
   const [ mode, setMode ] = useState<PaletteMode | undefined>(undefined);
-  const navigate = useNavigate();
 
   useEffect(() => {
     togglePaletteCb = (newMode: PaletteMode) => {
@@ -37,7 +35,7 @@ export function PaletteProvider(props: React.PropsWithChildren<{}>) {
 
   function onSelect(value: string) {
     if (mode === PaletteMode.File) {
-      navigate(getFileRoutePath(value));
+      Workspace.instance.navigateToPath(new StoragePath(value));
     } else if (mode === PaletteMode.Command) {
       CommandManager.instance.run(value);
     }

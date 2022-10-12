@@ -18,7 +18,7 @@ export function LoadGuard<T>(props: LoadGuardProps<T>) {
   if (props.loadState.loadError) {
     return <div className={ classes.error }>
       {
-        props.errorFormat ? props.errorFormat(props.loadState.loadError) : "Error: " + props.loadState.loadError
+        props.errorFormat ? props.errorFormat(props.loadState.loadError.message) : "Error: " + props.loadState.loadError
       }
     </div>;
   }
