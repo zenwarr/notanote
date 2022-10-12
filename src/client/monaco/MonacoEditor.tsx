@@ -51,6 +51,8 @@ export function MonacoEditor(props: MonacoEditorProps) {
       }
     });
     stateAdapter.current.model = editor.getModel();
+
+    editor.focus();
   }, []);
 
   useLayoutEffect(() => {
