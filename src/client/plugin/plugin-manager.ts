@@ -268,9 +268,11 @@ const PLUGIN_MODULES: Record<string, () => Promise<unknown>> = {
   "mobx-react-lite": () => import("mobx-react-lite"),
   "date-fns": () => import("date-fns"),
   "@mui/material": () => import("@mui/material"),
+  "@mui/styles": () => import("@mui/styles"),
   "csv": () => import("csv"),
   "react-data-grid": () => import("react-data-grid"),
   "@mui/x-date-pickers": () => import("@mui/x-date-pickers"),
+  "classnames": () => import("classnames"),
   "nuclear": () => import("./plugin-api"),
 };
 
