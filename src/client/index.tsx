@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { configure } from "mobx";
 import { Workbox } from "workbox-window";
 import { registerStorageProviders } from "./storage/StorageRegistration";
-import { AppThemeProvider } from "./Theme";
+import { AppThemeProvider } from "./theme/theme";
 import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
 import { AppConfigurationGuard } from "storage-config/AppConfigurationGuard";
 

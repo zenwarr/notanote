@@ -1,21 +1,10 @@
 import { createTheme, CssBaseline, ThemeProvider, useMediaQuery } from "@mui/material";
 import * as React from "react";
-import { useEffect, useMemo, useState } from "react";
-
-
-function useMeta(name: string, value: string | undefined) {
-  useEffect(() => {
-    const nodes = document.head.querySelectorAll(`meta[name=${ name }]`);
-    nodes.forEach(node => node.remove());
-
-    if (value != null) {
-      const node = document.createElement("meta");
-      node.setAttribute("name", name);
-      node.setAttribute("content", value);
-      document.head.appendChild(node);
-    }
-  }, [ name, value ]);
-}
+import * as mobx from "mobx-react-lite";
+import { useMemo, useState } from "react";
+import { Workspace } from "../workspace/workspace";
+import { ThemeConfig } from "./theme-config";
+import { useMeta } from "./useMeta";
 
 
 export interface AppThemeCtxData {
@@ -36,6 +25,11 @@ export function useAppThemeContext() {
 }
 
 
+function createPaletteFromThemeConfig(themeConfig: ThemeConfig | undefined) {
+  return themeConfig || {};
+}
+
+
 export function useThemeController() {
   const [ darkModeOverride, setDarkModeOverride ] = useState<boolean | undefined>();
   const systemDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
@@ -45,7 +39,8 @@ export function useThemeController() {
   const theme = useMemo(() => createTheme(
       {
         palette: {
-          mode: isDark ? "dark" : "light"
+          mode: isDark ? "dark" : "light",
+          ...(Workspace.instanceInited ? createPaletteFromThemeConfig(Workspace.instance.themeConfig) : undefined)
         },
         components: {
           MuiCssBaseline: {
@@ -57,7 +52,7 @@ export function useThemeController() {
           }
         }
       }
-  ), [ isDark ]);
+  ), [ isDark, Workspace.instanceInited ? Workspace.instance.themeConfig : undefined ]);
 
   useMeta("theme-color", theme.palette.background.default);
 
@@ -75,7 +70,7 @@ export function useCurrentThemeIsDark() {
 }
 
 
-export function AppThemeProvider(props: React.PropsWithChildren<{}>) {
+export const AppThemeProvider = mobx.observer((props: React.PropsWithChildren<{}>) => {
   const theme = useThemeController();
 
   return <ThemeProvider theme={ theme.theme }>
@@ -84,4 +79,4 @@ export function AppThemeProvider(props: React.PropsWithChildren<{}>) {
       { props.children }
     </AppThemeContext.Provider>
   </ThemeProvider>;
-}
+});

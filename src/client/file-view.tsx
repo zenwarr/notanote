@@ -135,7 +135,7 @@ const useStyles = makeStyles(theme => ({
   error: {
     padding: theme.spacing(2),
     display: "flex",
-    color: theme.palette.error.main,
+    color: theme.palette.divider,
     justifyContent: "center"
   }
 }));

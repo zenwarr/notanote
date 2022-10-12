@@ -14,7 +14,7 @@ import { Workspace } from "./workspace/workspace";
 import "./App.css";
 import { useShortcuts } from "./Shortcuts";
 import { PaletteProvider } from "./palette/palette-provider";
-import { useAppThemeContext } from "./Theme";
+import { useAppThemeContext } from "./theme/theme";
 import { StoragePath } from "@storage/storage-path";
 import { observer } from "mobx-react-lite";
 

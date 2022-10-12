@@ -5,6 +5,7 @@ import { StorageSyncConfig } from "@sync/storage-sync-data";
 import { FileSettings } from "@common/Settings";
 import { tryParseJson } from "@common/utils/tryParse";
 import { SpecialPath } from "@storage/special-path";
+import { ThemeConfig } from "../client/theme/theme-config";
 
 
 interface WorkspaceSettings {
@@ -14,6 +15,7 @@ interface WorkspaceSettings {
     settings?: FileSettings
   }[];
   sync?: Omit<StorageSyncConfig, "storageId">;
+  theme?: ThemeConfig;
 }
 
 

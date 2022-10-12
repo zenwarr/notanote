@@ -3,7 +3,7 @@ import * as monaco from "monaco-editor";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { Document } from "../document/Document";
 import { getStoredEditorState, storeEditorState } from "../editor/store-state";
-import { useCurrentThemeIsDark } from "../Theme";
+import { useCurrentThemeIsDark } from "../theme/theme";
 import { MonacoEditorStateAdapter } from "./MonacoEditorStateAdapter";
 import { defineTheme } from "./Theme";
 

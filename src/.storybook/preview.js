@@ -1,6 +1,6 @@
 import { initTestBackend } from '../client/backend/TestBackend';
 import { configure } from 'mobx';
-import { AppThemeProvider } from '../client/Theme';
+import { AppThemeProvider } from '../client/theme/theme';
 import { StorageProviderManager } from '../client/storage/StorageProvider';
 import { registerStorageProviders } from '../client/storage/StorageRegistration';
 

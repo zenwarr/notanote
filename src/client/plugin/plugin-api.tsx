@@ -42,5 +42,5 @@ export function ExternalLink(props: React.PropsWithChildren<{ href: string, clas
 }
 
 
-export { useCurrentThemeIsDark } from "../Theme";
+export { useCurrentThemeIsDark } from "../theme/theme";
 export { useEditorContext };

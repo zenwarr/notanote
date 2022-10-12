@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef} from "react";
 import { Document } from "../document/Document";
 import "./CodeEditor.css";
 import { EditorView } from "@codemirror/view";
-import { useCurrentThemeIsDark } from "../Theme";
+import { useCurrentThemeIsDark } from "../theme/theme";
 import { CodeEditorStateAdapter } from "./CodeEditorState";
 import assert from "assert";
 import { setEditorVars } from "../editor/editor-vars";

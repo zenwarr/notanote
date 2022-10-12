@@ -13,6 +13,7 @@ import { makeObservable, observable } from "mobx";
 import { PluginManager } from "../plugin/plugin-manager";
 import { RecentDocStorage } from "../RecentDocStorage";
 import { getFileRoutePath } from "./routing";
+import { ThemeConfig } from "theme/theme-config";
 
 
 export class Workspace {
@@ -21,7 +22,8 @@ export class Workspace {
       loading: observable,
       loadError: observable,
       _openedPath: observable,
-      editorReloadTrigger: observable
+      editorReloadTrigger: observable,
+      themeConfig: observable
     } as any);
 
     this.storage = new MemoryCachedStorage(storage);
@@ -51,6 +53,7 @@ export class Workspace {
       await this.plugins.discoverPlugins();
 
       await WorkspaceSettingsProvider.instance.init();
+      this.themeConfig = WorkspaceSettingsProvider.instance.settings?.theme;
 
       this.loading = false;
     } catch (error: any) {
@@ -183,8 +186,6 @@ export class Workspace {
 
 
   setNavigator(navigator: undefined | ((path: string) => void)) {
-    console.log("set navigator");
-
     this.navigator = navigator;
 
     const lastOpenedDoc = RecentDocStorage.instance.getLastOpenedDoc();
@@ -203,8 +204,14 @@ export class Workspace {
   plugins: PluginManager;
   editorReloadTrigger = 0;
   navigator: undefined | ((path: string) => void);
+  themeConfig: ThemeConfig | undefined;
 
   private static _instance: Workspace | undefined;
+
+
+  static get instanceInited() {
+    return this._instance != null;
+  }
 
 
   static get instance() {
@@ -220,3 +227,8 @@ export class Workspace {
     this._instance = new Workspace(storage, syncTarget, "default");
   }
 }
+
+
+makeObservable(Workspace, {
+  _instance: observable
+} as any);

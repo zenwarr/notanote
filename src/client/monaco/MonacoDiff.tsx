@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
 import * as monaco from "monaco-editor";
 import { ReactNode, useEffect, useLayoutEffect, useRef } from "react";
-import { useCurrentThemeIsDark } from "../Theme";
+import { useCurrentThemeIsDark } from "../theme/theme";
 import { defineTheme } from "./Theme";
 
 
