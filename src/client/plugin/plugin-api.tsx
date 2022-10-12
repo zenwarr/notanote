@@ -8,7 +8,7 @@ import { getPlatform, Platform } from "../platform/get-platform";
 import { getFileRoutePath } from "../workspace/routing";
 
 
-export function Link(props: React.PropsWithChildren<{ to: string | StoragePath, className?: string }>) {
+export function Link(props: React.PropsWithChildren<{ to: string | StoragePath, className?: string, onClick?: (e: React.MouseEvent) => void }>) {
   const ctx = useEditorContext();
   const { path, title } = useMemo(() => {
     let to = props.to;
@@ -16,21 +16,23 @@ export function Link(props: React.PropsWithChildren<{ to: string | StoragePath, 
       to = to.startsWith("/") ? new StoragePath(to) : ctx.entryPath.parentDir.child(to);
     }
 
-    return { path: getFileRoutePath(to), title: to.normalized }
+    return { path: getFileRoutePath(to), title: to.normalized };
   }, [ props.to, ctx.entryPath ]);
 
-  return <router.Link to={ path } className={ props.className } title={ title }>
+  return <router.Link to={ path } className={ props.className } title={ title } onClick={ props.onClick }>
     { props.children }
   </router.Link>;
 }
 
 
-export function ExternalLink(props: React.PropsWithChildren<{ href: string, className?: string }>) {
+export function ExternalLink(props: React.PropsWithChildren<{ href: string, className?: string, onClick?: (e: React.MouseEvent) => void }>) {
   function open(e: React.MouseEvent) {
     if (getPlatform() === Platform.Electron) {
       e.preventDefault();
       electronUtils.openExternalLink(props.href);
     }
+
+    props.onClick?.(e);
   }
 
   return <a href={ props.href } target={ "_blank" } className={ props.className } onClick={ open } title={ props.href }>
