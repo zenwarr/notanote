@@ -6,7 +6,7 @@ const KV_STORE_NAME = "kv";
 
 
 export class ClientKeyValueStore {
-  constructor(dbName: string, storeName: string) {
+  constructor(dbName: string, storeName: string = KV_STORE_NAME) {
     this.dbName = dbName;
     this.storeName = storeName;
   }

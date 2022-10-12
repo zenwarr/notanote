@@ -16,6 +16,7 @@ import {
   ViewUpdate
 } from "@codemirror/view";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
+import { getStoredEditorState, storeEditorState } from "../editor/store-state";
 import { createHighlightStyle } from "./Highlight";
 import { FileSettings } from "@common/Settings";
 import { json } from "@codemirror/lang-json";
@@ -79,29 +80,24 @@ export interface CreateEditorStateOptions {
 
 
 function getStoredSelectionForFile(entryPath: StoragePath, fileContent: string): EditorSelection | undefined {
-  const stored = localStorage.getItem("stored-selection-" + entryPath.normalized);
-  if (!stored) {
+  const stored = getStoredEditorState(entryPath, "cm");
+  if (!stored || typeof stored !== "object") {
     return undefined;
   }
 
-  try {
-    const range = JSON.parse(stored);
-    if (typeof range.anchor === "number" && range.anchor < fileContent.length) {
-      return range;
-    } else {
-      return undefined;
-    }
-  } catch (err) {
+  if (typeof (stored as any).anchor === "number" && (stored as any).anchor < fileContent.length) {
+    return stored as EditorSelection;
+  } else {
     return undefined;
   }
 }
 
 
 function storeSelectionForFile(entryPath: StoragePath, selection: EditorSelection) {
-  localStorage.setItem("stored-selection-" + entryPath.normalized, JSON.stringify({
+  storeEditorState(entryPath, "cm", {
     anchor: selection.ranges[0]?.anchor,
     head: selection.ranges[0]?.head
-  }));
+  });
 }
 
 

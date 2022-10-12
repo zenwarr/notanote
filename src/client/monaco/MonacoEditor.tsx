@@ -1,6 +1,8 @@
+import { IRange } from "monaco-editor";
 import * as monaco from "monaco-editor";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { Document } from "../document/Document";
+import { getStoredEditorState, storeEditorState } from "../editor/store-state";
 import { useCurrentThemeIsDark } from "../Theme";
 import { MonacoEditorStateAdapter } from "./MonacoEditorStateAdapter";
 import { defineTheme } from "./Theme";
@@ -52,7 +54,24 @@ export function MonacoEditor(props: MonacoEditorProps) {
     });
     stateAdapter.current.model = editor.getModel();
 
+    const storedSelection = getStoredEditorState(props.doc.entry.path, "monaco");
+    if (storedSelection) {
+      editor.setSelection(storedSelection as IRange);
+      editor.revealRangeInCenter(storedSelection as IRange);
+    }
+
     editor.focus();
+
+    editor.onDidChangeCursorSelection(e => {
+      const range: IRange = {
+        startLineNumber: e.selection.startLineNumber,
+        startColumn: e.selection.startColumn,
+        endLineNumber: e.selection.endLineNumber,
+        endColumn: e.selection.endColumn
+      };
+
+      storeEditorState(props.doc.entry.path, "monaco", range);
+    });
   }, []);
 
   useLayoutEffect(() => {
