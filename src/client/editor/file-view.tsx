@@ -1,6 +1,6 @@
 import { Box, Button, CircularProgress } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { StorageError, StorageErrorCode } from "@storage/entry-storage";
+import { StorageEntryType, StorageError, StorageErrorCode } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
 import { EditorContext, EditorCtxData } from "editor/editor-context";
 import { observer } from "mobx-react-lite";
@@ -13,6 +13,7 @@ import { useLoad } from "../useLoad";
 import { useWindowTitle } from "../useWindowTitle";
 import { useEntrySettingsInsideObserver } from "../workspace/use-entry-settings-inside-observer";
 import { Workspace } from "../workspace/workspace";
+import { CreateMissingFile } from "./create-missing-file";
 import { useGlobalEntrySettings } from "./global-entry-settings";
 
 
@@ -58,14 +59,7 @@ export const FileView = observer((props: FileViewProps) => {
 
   if (contentLoad.loadError) {
     if (contentLoad.loadError instanceof StorageError && contentLoad.loadError.code === StorageErrorCode.NotExists) {
-      return <div className={ classes.error }>
-        <Box mb={ 2 }>
-          File { props.entryPath.normalized } does not exists
-        </Box>
-        <Button variant={ "contained" }>
-          Create
-        </Button>
-      </div>;
+      return <CreateMissingFile path={ props.entryPath }/>;
     } else if (contentLoad.loadError instanceof StorageError && contentLoad.loadError.code === StorageErrorCode.NotFile) {
       return null;
     } else {
