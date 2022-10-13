@@ -174,6 +174,7 @@ export class Workspace {
       this._openedPath = undefined;
     } else {
       this._openedPath = path;
+      this.treeSelectedPath = path;
       const entry = this.storage.getMemoryData(path);
       if (entry && !entry.stats.isDirectory) {
         RecentDocStorage.instance.saveLastOpenedDoc(path.normalized);
