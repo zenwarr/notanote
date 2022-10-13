@@ -8,7 +8,7 @@ import { ReadonlyStateAdapter } from "./ReadonlyStateAdapter";
 
 
 const CM_EXTS = [ ".md", ".txt" ];
-const IMAGE_EXTS = [ ".jpg", ".jpeg", ".png", ".svg", ".gif", ".bmp", ".webp", ".ico" ];
+const IMAGE_EXTS = [ ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".ico" ];
 
 
 function shouldUseCodeMirror(filename: StoragePath): boolean {

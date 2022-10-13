@@ -1,5 +1,5 @@
 import { makeStyles } from "@mui/styles";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Box } from "@mui/material";
 import { EditorProps } from "../plugin/plugin-manager";
 import * as mobx from "mobx-react-lite";
