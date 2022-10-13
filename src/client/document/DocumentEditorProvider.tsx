@@ -7,17 +7,18 @@ import { Document, DocumentEditorStateAdapter, DocumentEditorStateAdapterConstru
 import { ReadonlyStateAdapter } from "./ReadonlyStateAdapter";
 
 
-const TEXT_EXTS = [ ".md", ".txt" ];
+const CM_EXTS = [ ".md", ".txt" ];
+const IMAGE_EXTS = [ ".jpg", ".jpeg", ".png", ".svg", ".gif", ".bmp", ".webp", ".ico" ];
 
 
-function shouldUseCodeMirror(filename: string): boolean {
+function shouldUseCodeMirror(filename: StoragePath): boolean {
   if (isMobile()) {
     // monaco-editor doesn't support Android or iOS
     return true;
   }
 
-  const ext = filename.slice(filename.lastIndexOf("."));
-  return TEXT_EXTS.indexOf(ext) >= 0;
+  const ext = filename.extension;
+  return ext != null && CM_EXTS.includes(ext);
 }
 
 
@@ -73,7 +74,10 @@ export class DocumentEditorProvider {
 
 
   private async getDefault(path: StoragePath) {
-    if (shouldUseCodeMirror(path.normalized)) {
+    const ext = path.extension;
+    if (ext && IMAGE_EXTS.includes(ext)) {
+      return this.loadImageEditor();
+    } else if (shouldUseCodeMirror(path)) {
       return this.loadCodeMirror();
     } else {
       return this.loadMonaco();
@@ -95,6 +99,15 @@ export class DocumentEditorProvider {
     return {
       editor: editor.CodeEditor,
       state: state.CodeEditorStateAdapter
+    };
+  }
+
+
+  async loadImageEditor(): Promise<LazyEditorModule> {
+    const [ editor, state ] = await Promise.all([ import("../image-editor/image-editor"), import("../image-editor/image-editor-state") ]);
+    return {
+      editor: editor.ImageEditor,
+      state: state.ImageEditorStateAdapter
     };
   }
 }
