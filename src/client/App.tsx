@@ -93,10 +93,10 @@ export const App = observer(() => {
 
 export function FileViewRoute() {
   const loc = useLocation();
-  const entryPath = loc.pathname.startsWith("/f/") ? loc.pathname.substring("/f".length) : undefined;
+  const entryPath = loc.pathname.substring("/f".length);
 
   useEffect(() => {
-    Workspace.instance.onNavigate(entryPath ? new StoragePath(entryPath) : undefined);
+    Workspace.instance.onNavigate(new StoragePath(entryPath));
   }, [ entryPath ]);
 
   return null;

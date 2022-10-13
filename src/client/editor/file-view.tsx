@@ -66,6 +66,8 @@ export const FileView = observer((props: FileViewProps) => {
           Create
         </Button>
       </div>;
+    } else if (contentLoad.loadError instanceof StorageError && contentLoad.loadError.code === StorageErrorCode.NotFile) {
+      return null;
     } else {
       return <div className={ classes.error }>
         { `Error loading "${ props.entryPath.normalized }": ${ contentLoad.loadError }` }

@@ -24,7 +24,8 @@ export class Workspace {
       loadError: observable,
       _openedPath: observable,
       editorReloadTrigger: observable,
-      themeConfig: observable
+      themeConfig: observable,
+      treeSelectedPath: observable
     } as any);
 
     this.storage = new MemoryCachedStorage(storage);
@@ -147,22 +148,34 @@ export class Workspace {
   }
 
 
+  onEntrySelect(path: StoragePath) {
+    this.treeSelectedPath = path;
+
+    const data = this.storage.getMemoryData(path);
+    if (data && data.stats.isDirectory) {
+      return;
+    }
+
+    this.navigateToPath(path);
+  }
+
+
   navigateToPath(path: StoragePath | undefined): void {
     if (path) {
       this.navigator?.(getFileRoutePath(path));
     } else {
-      this.navigator?.("/");
+      this.navigator?.(getFileRoutePath(StoragePath.root));
     }
   }
 
 
   onNavigate(path: StoragePath | undefined) {
-    if (path == null) {
+    if (path == null || path.isEqual(StoragePath.root)) {
       this._openedPath = undefined;
     } else {
+      this._openedPath = path;
       const entry = this.storage.getMemoryData(path);
       if (entry && !entry.stats.isDirectory) {
-        this._openedPath = path;
         RecentDocStorage.instance.saveLastOpenedDoc(path.normalized);
       }
     }
@@ -196,6 +209,7 @@ export class Workspace {
 
 
   private _openedPath: StoragePath | undefined = undefined;
+  treeSelectedPath: StoragePath | undefined;
   storage: MemoryCachedStorage;
   sync: Sync | undefined;
   syncJobRunner: SyncJobRunner | undefined;

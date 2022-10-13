@@ -61,17 +61,17 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   const classes = useStyles();
 
   function onSelect(path: StoragePath) {
-    cw.navigateToPath(path);
+    cw.onEntrySelect(path);
     props.onFileSelected?.(path);
   }
 
   function createFile() {
-    createOptions.current = getCreateOptions(cw.openedPath, StorageEntryType.File);
+    createOptions.current = getCreateOptions(cw.treeSelectedPath, StorageEntryType.File);
     setEntryDialogOpened(true);
   }
 
   function createFolder() {
-    createOptions.current = getCreateOptions(cw.openedPath, StorageEntryType.Dir);
+    createOptions.current = getCreateOptions(cw.treeSelectedPath, StorageEntryType.Dir);
     setEntryDialogOpened(true);
   }
 
@@ -81,11 +81,11 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
   }
 
   async function remove() {
-    if (!cw.openedPath || !confirm("Are you sure you want to remove it?\n\n" + cw.openedPath)) {
+    if (!cw.treeSelectedPath || !confirm("Are you sure you want to remove it?\n\n" + cw.treeSelectedPath)) {
       return;
     }
 
-    await Workspace.instance.remove(cw.openedPath);
+    await Workspace.instance.remove(cw.treeSelectedPath);
   }
 
   const containerClassName = cn(classes.treeContainer, { [classes.treeContainerPadding]: props.treeWithPadding });
@@ -148,7 +148,8 @@ export const WorkspaceView = observer((props: WorkspaceViewProps) => {
 
     <ContainerWithSizeDetection className={ containerClassName }>
       {
-        (width, height) => <WorkspaceTree height={ height } width={ width } onMenuOpen={ onMenuOpen }
+        (width, height) => <WorkspaceTree height={ height } width={ width }
+                                          onMenuOpen={ onMenuOpen }
                                           onSelect={ onSelect }
                                           onMenuClose={ onMenuClose }/>
       }

@@ -21,7 +21,7 @@ export const WorkspaceTree = mobx.observer((props: WorkspaceTreeProps) => {
   const cw = Workspace.instance;
   const root = cw.storage.getMemoryData(StoragePath.root);
 
-  const expand = useExpandedPaths(cw.openedPath);
+  const expand = useExpandedPaths(cw.treeSelectedPath);
 
   // we need to touch all nodes to subscribe to their changes because FixedTreeSize is not a mobx observer
   if (root) {
@@ -31,7 +31,7 @@ export const WorkspaceTree = mobx.observer((props: WorkspaceTreeProps) => {
 
   const treeCtx = useMemo<TreeCtxData>(() => ({
     openMenu: (x: number, y: number, id: string) => props.onMenuOpen?.(x, y, new StoragePath(id)),
-    selected: cw.openedPath?.normalized,
+    selected: cw.treeSelectedPath?.normalized,
     onSelect: (id: string) => {
       let path = new StoragePath(id);
       const selected = cw.storage.getMemoryData(path);
