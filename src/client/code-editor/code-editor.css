@@ -34,6 +34,7 @@
 .cm-editor .cm-content {
   margin-left: auto;
   margin-right: auto;
+  text-align: var(--editor-text-align);
 }
 
 .cm-editor .cm-selectionBackground,

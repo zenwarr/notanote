@@ -27,6 +27,7 @@ export function setEditorVars(el: HTMLElement, settings: FileSettings, isDarkThe
   el.style.setProperty("--editor-code-background-color", isDarkTheme ? "#1d1f21" : "#e1e1e1");
   el.style.setProperty("--editor-active-line-background", isDarkTheme ? "#68686855" : "#e1e1e166");
   el.style.setProperty("--editor-max-width", sizeValueToPropValue(settings.maxWidth));
+  el.style.setProperty("--editor-text-align", settings.textAlign ?? null);
 
   document.documentElement.lang = settings.lang || "en";
 }

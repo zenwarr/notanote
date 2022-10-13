@@ -17,6 +17,7 @@ export interface BlockSettings {
   paragraphSpacing?: number;
   hyphens?: string;
   textIndent?: number;
+  textAlign?: string;
 
   maxWidth?: string | number;
 }

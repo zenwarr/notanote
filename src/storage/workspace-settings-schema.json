@@ -112,6 +112,7 @@
         "paragraphSpacing": true,
         "hyphens": true,
         "textIndent": true,
+        "textAlign": true,
         "color": true,
         "maxWidth": true,
         "tabWidth": {
@@ -185,6 +186,16 @@
         "textIndent": {
           "type": "number",
           "description": "Line indentation in pixels"
+        },
+        "textAlign": {
+          "type": "string",
+          "description": "Text alignment",
+          "enum": [
+            "left",
+            "center",
+            "right",
+            "justify"
+          ]
         },
         "maxWidth": {
           "type": "number",
