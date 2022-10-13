@@ -33,6 +33,8 @@ export function setIpcHandlers(app: ElectronCapacitorApp) {
 
         if (r.response === 0) {
           await autoUpdater.downloadUpdate();
+        } else {
+          resolve();
         }
       });
 

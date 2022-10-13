@@ -18,6 +18,9 @@ export class StoragePath {
   }
 
 
+  /**
+   * Returns file extension, if exists (with leading dot, for example: .txt)
+   */
   get extension(): string | undefined {
     return p.extname(this.normalized) || undefined;
   }
