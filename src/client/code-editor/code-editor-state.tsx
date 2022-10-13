@@ -17,12 +17,12 @@ import {
 } from "@codemirror/view";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { getStoredEditorState, storeEditorState } from "../editor/store-state";
-import { createHighlightStyle } from "./Highlight";
+import { createHighlightStyle } from "./highlight";
 import { FileSettings } from "@common/Settings";
 import { json } from "@codemirror/lang-json";
 import { javascript } from "@codemirror/lang-javascript";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-import { CHECKBOX_RE} from "./ReactWidget";
+import { CHECKBOX_RE} from "./react-widget";
 import { NodeProp } from "@lezer/common";
 import { languages } from "@codemirror/language-data";
 import { format } from "date-fns";
@@ -262,10 +262,10 @@ const customKeymap: KeyBinding[] = [
 
 
 export class CodeEditorStateAdapter implements DocumentEditorStateAdapter {
-  constructor(doc: Document, initialContent: Buffer) {
+  constructor(doc: Document, initialContent: Buffer, settings: FileSettings) {
     this.doc = doc;
     const self = this;
-    this.state = createEditorState(initialContent.toString(), doc.entry.path, doc.settings, {
+    this.state = createEditorState(initialContent.toString(), doc.entry.path, settings, {
       onUpdate: upd => {
         self.state = upd.state;
         if (upd.docChanged) {

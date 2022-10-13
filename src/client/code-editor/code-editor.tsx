@@ -1,9 +1,11 @@
+import { observer } from "mobx-react-lite";
 import { useEffect, useLayoutEffect, useRef} from "react";
 import { Document } from "../document/Document";
-import "./CodeEditor.css";
+import "./code-editor.css";
 import { EditorView } from "@codemirror/view";
 import { useCurrentThemeIsDark } from "../theme/theme";
-import { CodeEditorStateAdapter } from "./CodeEditorState";
+import { useEntrySettingsInsideObserver } from "../workspace/use-entry-settings-inside-observer";
+import { CodeEditorStateAdapter } from "./code-editor-state";
 import assert from "assert";
 import { setEditorVars } from "../editor/editor-vars";
 
@@ -14,13 +16,14 @@ export type CodeEditorProps = {
 }
 
 
-export function CodeEditor(props: CodeEditorProps) {
+export const CodeEditor = observer((props: CodeEditorProps) => {
   const containerRef = useRef<any>();
   const viewRef = useRef<EditorView>();
   const isDarkTheme = useCurrentThemeIsDark();
   const stateAdapter = useRef<CodeEditorStateAdapter>(props.doc.getEditorStateAdapter() as CodeEditorStateAdapter);
   assert(stateAdapter.current instanceof CodeEditorStateAdapter);
   const editorState = stateAdapter.current.state;
+  const settings = useEntrySettingsInsideObserver(props.doc.entry.path);
 
   useEffect(() => {
     const view = new EditorView({
@@ -48,9 +51,9 @@ export function CodeEditor(props: CodeEditorProps) {
 
   useLayoutEffect(() => {
     if (containerRef.current) {
-      setEditorVars(containerRef.current, props.doc.settings, isDarkTheme);
+      setEditorVars(containerRef.current, settings, isDarkTheme);
     }
-  }, [ props.doc.settings, isDarkTheme ]);
+  }, [ settings, isDarkTheme ]);
 
   return <div ref={ containerRef } className={ props.className }/>;
-}
+});

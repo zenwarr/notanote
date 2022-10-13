@@ -1,5 +1,7 @@
+import { SpecialPath } from "@storage/special-path";
 import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
 import * as monaco from "monaco-editor";
+import { getUriFromPath } from "./get-uri";
 
 
 let inited = false;
@@ -21,11 +23,13 @@ export function configureMonaco() {
 
   monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
     validate: true,
+    schemaValidation: "error",
+    enableSchemaRequest: false,
     schemas: [
       {
-        uri: "https://nuclear-notes.com/schemas/settings.json",
-        fileMatch: [ "nuclear-file://settings.json" ],
-        schema: WorkspaceSettingsProvider.schema
+        uri: `nuclear-schema:${ SpecialPath.Settings.normalized }`,
+        fileMatch: [ getUriFromPath(SpecialPath.Settings).toString() ],
+        schema: require("@storage/workspace-settings-schema.json")
       }
     ]
   });

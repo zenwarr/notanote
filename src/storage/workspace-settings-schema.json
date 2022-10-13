@@ -1,0 +1,196 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "settings": {
+      "description": "Default settings for all files",
+      "$ref": "#/definitions/file-settings"
+    },
+    "patterns": {
+      "type": "array",
+      "description": "File-specific settings",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "files",
+          "settings"
+        ],
+        "properties": {
+          "files": {
+            "oneOf": [
+              {
+                "type": "string",
+                "description": "A single filename pattern for this rule"
+              },
+              {
+                "type": "array",
+                "description": "A list of filename patterns for this rule",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "settings": {
+            "description": "Settings that are going to be applied to files matching the pattern",
+            "$ref": "#/definitions/file-settings"
+          }
+        }
+      }
+    },
+    "sync": {
+      "type": "object",
+      "description": "Synchronization settings",
+      "additionalProperties": false,
+      "properties": {
+        "diffRules": {
+          "type": "array",
+          "description": "Rules for automatic diff handling",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "diff",
+              "action"
+            ],
+            "properties": {
+              "diff": {
+                "type": "array",
+                "description": "List of diff types that should trigger the action",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "local_create",
+                    "remote_create",
+                    "conflicting_create",
+                    "local_update",
+                    "remote_update",
+                    "conflicting_update",
+                    "local_remove",
+                    "remote_remove",
+                    "conflicting_local_remove",
+                    "conflicting_remote_remove"
+                  ]
+                }
+              },
+              "action": {
+                "description": "Action to be performed",
+                "type": "string",
+                "enum": [
+                  "accept_auto",
+                  "accept_local",
+                  "accept_remove"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Theme configuration. Currently WIP"
+    }
+  },
+  "definitions": {
+    "file-settings": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/block-settings"
+        }
+      ],
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fontFamily": true,
+        "fontSize": true,
+        "fontWeight": true,
+        "lineHeight": true,
+        "paragraphSpacing": true,
+        "hyphens": true,
+        "textIndent": true,
+        "color": true,
+        "maxWidth": true,
+        "tabWidth": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 8,
+          "description": "Tab width in spaces"
+        },
+        "lang": {
+          "type": "string",
+          "description": "Two-letter language code that specifies document language used for spellchecking and hyphenation"
+        },
+        "drawWhitespace": {
+          "type": "boolean",
+          "description": "If true, editor is going to draw whitespace characters. Default is false"
+        },
+        "remoteFonts": {
+          "type": "array",
+          "description": "List of remote fonts the editor should use. It should be Google Fonts style URL, for example: https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,900;1,400;1,900",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blocks": {
+          "type": "object",
+          "description": "Block-specific settings",
+          "patternProperties": {
+            ".*": {
+              "$ref": "#/definitions/block-settings"
+            }
+          }
+        },
+        "editor": {
+          "type": "string",
+          "description": "Custom editor to use for this file"
+        }
+      }
+    },
+    "block-settings": {
+      "type": "object",
+      "properties": {
+        "fontFamily": {
+          "type": "string",
+          "description": "Editor font"
+        },
+        "fontSize": {
+          "type": "number",
+          "description": "Editor font size"
+        },
+        "fontWeight": {
+          "type": "string",
+          "description": "Default editor font weight"
+        },
+        "lineHeight": {
+          "type": "number",
+          "description": "Editor line-height in relative units (for example, 1.6)"
+        },
+        "paragraphSpacing": {
+          "type": "number",
+          "description": "Spacing between each paragraph in pixels"
+        },
+        "hyphens": {
+          "type": "string",
+          "description": "Hyphenation mode",
+          "enum": [
+            "none",
+            "manual",
+            "auto"
+          ]
+        },
+        "textIndent": {
+          "type": "number",
+          "description": "Line indentation in pixels"
+        },
+        "maxWidth": {
+          "type": "number",
+          "description": "Maximum width of the editor in pixels"
+        }
+      }
+    }
+  }
+}

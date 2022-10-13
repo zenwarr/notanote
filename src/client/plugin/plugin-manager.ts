@@ -1,4 +1,5 @@
 import * as babel from "@babel/core";
+import { FileSettings } from "@common/Settings";
 import { EntryStorage, StorageError, StorageErrorCode } from "@storage/entry-storage";
 import { resolveImport } from "@storage/resolve-import";
 import { SpecialPath } from "@storage/special-path";
@@ -6,7 +7,7 @@ import { StoragePath } from "@storage/storage-path";
 import { ContentIdentity, getContentIdentityForData } from "@sync/content-identity";
 import * as React from "react";
 import "react-data-grid/lib/styles.css";
-import { Document, DocumentEditorStateAdapter } from "../document/Document";
+import { Document, DocumentEditorStateAdapter, DocumentEditorStateAdapterConstructor } from "../document/Document";
 
 
 export interface EditorProps {
@@ -68,8 +69,7 @@ export class PluginManager {
   }
 
 
-  async getCustomEditorForDocument(doc: Document) {
-    const editorSpec = doc.settings.editor?.name;
+  async getCustomEditor(editorSpec: string | undefined) {
     if (!editorSpec) {
       return undefined;
     }
@@ -256,7 +256,7 @@ export interface PluginExport {
   editors: {
     [name: string]: {
       component: React.ComponentType<EditorProps>
-      stateAdapter?: new (doc: Document, initialContent: Buffer) => DocumentEditorStateAdapter;
+      stateAdapter?: DocumentEditorStateAdapterConstructor;
     }
   };
 }

@@ -3,10 +3,11 @@ import { EntryStorage, StorageErrorCode } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
 import { StorageSyncConfig } from "@sync/storage-sync-data";
 import { FileSettings } from "@common/Settings";
-import { tryParseJson } from "@common/utils/tryParse";
+import { tryParseJson5 } from "@common/utils/tryParse";
 import { SpecialPath } from "@storage/special-path";
-import { workspaceSettingsSchema } from "../client/monaco/workspace-settings-schema";
 import { ThemeConfig } from "../client/theme/theme-config";
+import ajv from "ajv";
+import * as mobx from "mobx";
 
 
 interface WorkspaceSettings {
@@ -20,20 +21,37 @@ interface WorkspaceSettings {
 }
 
 
+const ajvValidator = new ajv();
+
+
 export class WorkspaceSettingsProvider {
   constructor(fs: EntryStorage) {
     this.storage = fs;
+    mobx.makeObservable(this, {
+      settings: mobx.observable
+    } as any);
   }
 
 
-  async init(): Promise<void> {
+  async init() {
+    return this.reload(undefined);
+  }
+
+
+  async reload(content: Buffer | undefined): Promise<void> {
     try {
-      const text = (await this.storage.get(SpecialPath.Settings).read()).toString();
+      const text = (content || await this.storage.get(SpecialPath.Settings).read()).toString();
       if (!text) {
         return;
       }
 
-      this.settings = tryParseJson(text);
+      const settings = tryParseJson5(text);
+      const isValid = this.validateSchema(settings);
+      if (isValid) {
+        this.settings = settings;
+      } else {
+        console.error(`Failed to parse workspace settings`, this.validateSchema.errors);
+      }
     } catch (error: any) {
       if (error.code === StorageErrorCode.NotExists) {
         this.settings = undefined;
@@ -83,10 +101,8 @@ export class WorkspaceSettingsProvider {
   }
 
 
-  static readonly schema = workspaceSettingsSchema;
-
-
   settings: WorkspaceSettings | undefined;
   private readonly storage: EntryStorage;
+  private readonly validateSchema = ajvValidator.compile(require("./workspace-settings-schema.json"));
 }
 

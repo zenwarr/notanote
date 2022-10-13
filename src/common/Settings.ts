@@ -3,10 +3,7 @@ export type FileSettings = BlockSettings & {
   lang?: string;
   blocks?: { [name: string]: BlockSettings };
   drawWhitespace?: boolean;
-  editor?: {
-    name: string;
-    [name: string]: unknown;
-  },
+  editor?: string,
   remoteFonts?: string[];
 }
 
@@ -21,6 +18,5 @@ export interface BlockSettings {
   hyphens?: string;
   textIndent?: number;
 
-  color?: string;
   maxWidth?: string | number;
 }

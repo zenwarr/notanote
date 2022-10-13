@@ -1,5 +1,7 @@
+import { StoragePath } from "@storage/storage-path";
+import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
 import * as React from "react";
-import { Document, DocumentEditorStateAdapter } from "./Document";
+import { Document, DocumentEditorStateAdapter, DocumentEditorStateAdapterConstructor } from "./Document";
 import { PluginManager } from "../plugin/plugin-manager";
 import { ReadonlyStateAdapter } from "./ReadonlyStateAdapter";
 
@@ -20,12 +22,13 @@ function shouldUseCodeMirror(filename: string): boolean {
 
 export interface DocumentEditorProps {
   doc: Document;
+  className?: string;
 }
 
 
 interface LazyEditorModule {
   editor: React.ComponentType<DocumentEditorProps>;
-  state: new (doc: Document, initialContent: Buffer) => DocumentEditorStateAdapter;
+  state: DocumentEditorStateAdapterConstructor;
 }
 
 
@@ -38,36 +41,38 @@ export class DocumentEditorProvider {
   private readonly plugins: PluginManager;
 
 
-  async getStateAdapter(doc: Document, initialContent: Buffer): Promise<DocumentEditorStateAdapter> {
-    let StateClass: new (doc: Document, initialContent: Buffer) => DocumentEditorStateAdapter;
+  async getStateAdapter(doc: Document, initialContent: Buffer, editorSpec: string | undefined): Promise<DocumentEditorStateAdapter> {
+    let StateClass: DocumentEditorStateAdapterConstructor;
 
-    if (doc.settings.editor != null) {
-      const editor = await this.plugins.getCustomEditorForDocument(doc);
+    if (editorSpec != null) {
+      const editor = await this.plugins.getCustomEditor(editorSpec);
       if (!editor) {
-        StateClass = (await this.getDefault(doc)).state;
+        StateClass = (await this.getDefault(doc.entry.path)).state;
       } else {
         StateClass = editor.stateAdapter || ReadonlyStateAdapter;
       }
     } else {
-      StateClass = (await this.getDefault(doc)).state;
+      StateClass = (await this.getDefault(doc.entry.path)).state;
     }
 
-    return new StateClass(doc, initialContent);
+    const settings = WorkspaceSettingsProvider.instance.getSettingsForPath(doc.entry.path);
+
+    return new StateClass(doc, initialContent, settings);
   }
 
 
-  async getComponent(doc: Document): Promise<React.ComponentType<DocumentEditorProps>> {
-    const editor = await this.plugins.getCustomEditorForDocument(doc);
+  async getComponent(path: StoragePath, editorSpec: string | undefined): Promise<React.ComponentType<DocumentEditorProps>> {
+    const editor = await this.plugins.getCustomEditor(editorSpec);
     if (editor?.component) {
       return editor.component;
     } else {
-      return (await this.getDefault(doc)).editor;
+      return (await this.getDefault(path)).editor;
     }
   }
 
 
-  private async getDefault(doc: Document) {
-    if (shouldUseCodeMirror(doc.entry.path.normalized)) {
+  private async getDefault(path: StoragePath) {
+    if (shouldUseCodeMirror(path.normalized)) {
       return this.loadCodeMirror();
     } else {
       return this.loadMonaco();
@@ -85,7 +90,7 @@ export class DocumentEditorProvider {
 
 
   async loadCodeMirror(): Promise<LazyEditorModule> {
-    const [ editor, state ] = await Promise.all([ import("../code-editor/CodeEditor"), import("../code-editor/CodeEditorState") ]);
+    const [ editor, state ] = await Promise.all([ import("../code-editor/code-editor"), import("../code-editor/code-editor-state") ]);
     return {
       editor: editor.CodeEditor,
       state: state.CodeEditorStateAdapter

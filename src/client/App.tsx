@@ -4,7 +4,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { WorkspaceNavigateHelper } from "./workspace/workspace-navigate-helper";
 import { WorkspaceView } from "./workspace/workspace-view";
-import { ConnectedFileView } from "./file-view";
+import { ConnectedFileView } from "./editor/file-view";
 import { Header } from "./Header";
 import { usePreventClose } from "./usePreventClose";
 import { useEffect, useState } from "react";

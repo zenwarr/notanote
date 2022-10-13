@@ -1,4 +1,4 @@
-import { tryParseJson } from "@common/utils/tryParse";
+import { tryParseJson, tryParseJson5 } from "@common/utils/tryParse";
 import { SpecialPath } from "@storage/special-path";
 import { EntryStorage, StorageEntryPointer, StorageError, StorageErrorCode } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
@@ -49,7 +49,7 @@ export class StorageSyncData {
   async getConfig(): Promise<StorageSyncConfig | undefined> {
     try {
       const data = await this.storage.read(SpecialPath.SyncStorageConfig);
-      return tryParseJson(data.toString());
+      return tryParseJson5(data.toString());
     } catch (err) {
       if (err instanceof StorageError && err.code === StorageErrorCode.NotExists) {
         return undefined;

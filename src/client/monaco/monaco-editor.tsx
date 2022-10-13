@@ -1,11 +1,14 @@
-import { IRange } from "monaco-editor";
+import { FileSettings } from "@common/Settings";
+import { observer } from "mobx-react-lite";
 import * as monaco from "monaco-editor";
+import { IRange } from "monaco-editor";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { Document } from "../document/Document";
 import { getStoredEditorState, storeEditorState } from "../editor/store-state";
 import { useCurrentThemeIsDark } from "../theme/theme";
-import { MonacoEditorStateAdapter } from "./monaco-editor-state-adapter";
+import { useEntrySettingsInsideObserver } from "../workspace/use-entry-settings-inside-observer";
 import { configureMonaco } from "./configure";
+import { MonacoEditorStateAdapter } from "./monaco-editor-state-adapter";
 
 
 export interface MonacoEditorProps {
@@ -14,45 +17,49 @@ export interface MonacoEditorProps {
 }
 
 
-function getLanguageFromFileName(filename: string) {
-  const ext = filename.split(".").pop();
-  if (ext === "ts" || ext === "tsx") {
-    return "typescript";
-  } else if (ext === "js" || ext === "jsx") {
-    return "javascript";
-  } else if (ext === "json") {
-    return "json";
-  } else {
-    return "plaintext";
+function getOptionsFromSettings(settings: FileSettings): monaco.editor.IEditorOptions & monaco.editor.IGlobalEditorOptions {
+  let fontSize = settings.fontSize;
+  if (typeof fontSize !== "number") {
+    fontSize = undefined;
   }
+
+  return {
+    fontSize,
+    fontFamily: settings.fontFamily,
+    renderWhitespace: settings.drawWhitespace ? "all" : "none",
+    tabSize: settings.tabWidth
+  };
 }
 
 
-export function MonacoEditor(props: MonacoEditorProps) {
+export const MonacoEditor = observer((props: MonacoEditorProps) => {
   const containerRef = useRef<any>();
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>();
   const stateAdapter = useRef<MonacoEditorStateAdapter>(props.doc.getEditorStateAdapter() as MonacoEditorStateAdapter);
   const isDarkTheme = useCurrentThemeIsDark();
+
+  const settings = useEntrySettingsInsideObserver(props.doc.entry.path);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (editor) {
+      editor.updateOptions(getOptionsFromSettings(settings));
+    }
+  }, [ settings ]);
 
   useEffect(() => {
     configureMonaco();
     monaco.editor.setTheme(isDarkTheme ? "pure-dark" : "vs");
 
-    let fontSize = props.doc.settings.fontSize;
-    if (typeof fontSize !== "number") {
-      fontSize = undefined;
-    }
-
     const editor = monaco.editor.create(containerRef.current, {
-      value: stateAdapter.current.initialText,
-      language: getLanguageFromFileName(props.doc.entry.path.normalized),
+      model: stateAdapter.current.model,
       wordWrap: "on",
-      renderWhitespace: "all",
-      fontSize,
       unicodeHighlight: {
         ambiguousCharacters: false
-      }
+      },
+      ...getOptionsFromSettings(settings)
     });
-    stateAdapter.current.model = editor.getModel();
+    editorRef.current = editor;
 
     const storedSelection = getStoredEditorState(props.doc.entry.path, "monaco");
     if (storedSelection) {
@@ -72,6 +79,10 @@ export function MonacoEditor(props: MonacoEditorProps) {
 
       storeEditorState(props.doc.entry.path, "monaco", range);
     });
+
+    return () => {
+      editor.dispose();
+    };
   }, []);
 
   useLayoutEffect(() => {
@@ -79,4 +90,4 @@ export function MonacoEditor(props: MonacoEditorProps) {
   }, [ isDarkTheme ]);
 
   return <div ref={ containerRef } className={ props.className }/>;
-}
+});

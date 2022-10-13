@@ -6,13 +6,14 @@ import { EditorContext, EditorCtxData } from "editor/editor-context";
 import { observer } from "mobx-react-lite";
 import * as React from "react";
 import { useCallback, useEffect, useMemo } from "react";
-import { Document } from "./document/Document";
-import { DocumentEditorProvider } from "./document/DocumentEditorProvider";
-import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
-import { EditorProps } from "./plugin/plugin-manager";
-import { useLoad } from "./useLoad";
-import { useWindowTitle } from "./useWindowTitle";
-import { Workspace } from "./workspace/workspace";
+import { Document } from "../document/Document";
+import { DocumentEditorProvider } from "../document/DocumentEditorProvider";
+import { ErrorBoundary } from "../error-boundary/ErrorBoundary";
+import { useLoad } from "../useLoad";
+import { useWindowTitle } from "../useWindowTitle";
+import { useEntrySettingsInsideObserver } from "../workspace/use-entry-settings-inside-observer";
+import { Workspace } from "../workspace/workspace";
+import { useGlobalEntrySettings } from "./global-entry-settings";
 
 
 export type FileViewProps = {
@@ -21,42 +22,15 @@ export type FileViewProps = {
 }
 
 
-function fontTagExists(url: string) {
-  const links = document.head.getElementsByTagName("link");
-  for (let i = 0; i < links.length; i++) {
-    if (links[i].href === url) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-
-function applyGlobalDocSettings(doc: Document) {
-  if (doc.settings.remoteFonts) {
-    for (const font of doc.settings.remoteFonts) {
-      if (fontTagExists(font)) {
-        continue;
-      }
-
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = font;
-      document.head.appendChild(link);
-    }
-  }
-}
-
-
 export const FileView = observer((props: FileViewProps) => {
   const classes = useStyles();
   const cw = Workspace.instance;
+  const settings = useEntrySettingsInsideObserver(props.entryPath);
+
+  useGlobalEntrySettings(settings);
 
   const contentLoad = useLoad(useCallback(async () => {
-    const doc = await Document.create(Workspace.instance.storage.get(props.entryPath));
-    applyGlobalDocSettings(doc);
-    return doc;
+    return await Document.create(Workspace.instance.storage.get(props.entryPath));
   }, [ props.entryPath, cw.editorReloadTrigger ]), {
     onError: err => console.error(`Failed to load file ${ props.entryPath.normalized }`, err),
   });
@@ -69,14 +43,14 @@ export const FileView = observer((props: FileViewProps) => {
     };
   }, [ contentLoad.data, cw.editorReloadTrigger ]);
 
-  const componentLoad = useLoad<React.ComponentType<EditorProps> | undefined>(useCallback(async () => {
+  const componentLoad = useLoad(useCallback(async () => {
     if (!contentLoad.isLoaded) {
       return undefined;
     }
 
     const editorProvider = new DocumentEditorProvider(Workspace.instance.plugins);
-    return editorProvider.getComponent(contentLoad.data);
-  }, [ contentLoad.data?.settings.editor?.name, contentLoad.isLoaded ]));
+    return editorProvider.getComponent(props.entryPath, settings.editor);
+  }, [ settings.editor, contentLoad.isLoaded ]));
 
   const editorCtx: EditorCtxData = useMemo(() => ({
     entryPath: props.entryPath,

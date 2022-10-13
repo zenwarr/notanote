@@ -1,3 +1,4 @@
+import { SpecialPath } from "@storage/special-path";
 import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
 import { Mutex } from "async-mutex";
 import * as _ from "lodash";
@@ -12,10 +13,12 @@ export interface DocumentEditorStateAdapter {
 }
 
 
+export type DocumentEditorStateAdapterConstructor = new(doc: Document, initialContent: Buffer, settings: FileSettings) => DocumentEditorStateAdapter;
+
+
 export class Document {
-  constructor(entry: StorageEntryPointer, settings: FileSettings) {
+  constructor(entry: StorageEntryPointer) {
     this.entry = entry;
-    this.settings = settings;
     this.onChangesDebounced = _.debounce(this.save.bind(this), 500);
   }
 
@@ -58,8 +61,13 @@ export class Document {
 
 
   private async save() {
-    await this.entry.writeOrCreate(await this.contentToBuffer());
+    let buf = await this.contentToBuffer();
+    await this.entry.writeOrCreate(buf);
     Workspace.instance.scheduleDiffUpdate(this.entry.path);
+
+    if (this.entry.path.isEqual(SpecialPath.Settings)) {
+      await WorkspaceSettingsProvider.instance.reload(buf);
+    }
   }
 
 
@@ -67,11 +75,12 @@ export class Document {
     const release = await this.docsLock.acquire();
 
     try {
-      const document = new Document(ep, WorkspaceSettingsProvider.instance.getSettingsForPath(ep.path));
+      const document = new Document(ep);
       const content = await ep.read();
 
       const editorProvider = new DocumentEditorProvider(Workspace.instance.plugins);
-      document.setEditorStateAdapter(await editorProvider.getStateAdapter(document, content));
+      const settings = WorkspaceSettingsProvider.instance.getSettingsForPath(ep.path);
+      document.setEditorStateAdapter(await editorProvider.getStateAdapter(document,  content, settings.editor));
 
       this.docs.set(ep.path.normalized, document);
 
@@ -84,7 +93,6 @@ export class Document {
 
   private onChangesDebounced: () => Promise<void> | undefined;
   readonly entry: StorageEntryPointer;
-  readonly settings: FileSettings;
   private adapter: DocumentEditorStateAdapter | undefined;
   private static docs = new Map<string, Document>();
   private static docsLock = new Mutex();

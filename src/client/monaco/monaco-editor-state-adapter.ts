@@ -1,12 +1,29 @@
 import { Document, DocumentEditorStateAdapter } from "../document/Document";
-import * as monaco from "monaco-editor";
 import assert from "assert";
+import * as monaco from "monaco-editor";
+import { configureMonaco } from "./configure";
+import { getLanguageFromFileName } from "./get-language-from-file-name";
+import { getUriFromPath } from "./get-uri";
 
 
 export class MonacoEditorStateAdapter implements DocumentEditorStateAdapter {
   constructor(doc: Document, initialContent: Buffer) {
     this.doc = doc;
     this.initialContent = initialContent;
+
+    configureMonaco(); // to ensure schemas are registered
+
+    const uri = getUriFromPath(doc.entry.path);
+
+    const existingModel = monaco.editor.getModel(uri);
+    if (existingModel) {
+      this._model = existingModel;
+      this._model.setValue(initialContent.toString());
+    } else {
+      this._model = monaco.editor.createModel(initialContent.toString(), getLanguageFromFileName(doc.entry.path.normalized), uri);
+    }
+
+    this._model.onDidChangeContent(() => this.doc.onChanges());
   }
 
 
@@ -16,9 +33,8 @@ export class MonacoEditorStateAdapter implements DocumentEditorStateAdapter {
   }
 
 
-  set model(model: monaco.editor.IModel | null) {
-    this._model = model || null;
-    this._model?.onDidChangeContent(() => this.doc.onChanges());
+  get model() {
+    return this._model;
   }
 
 
