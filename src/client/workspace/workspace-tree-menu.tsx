@@ -12,6 +12,9 @@ export interface WorkspaceTreeMenuProps {
   entry: StorageEntryPointer | undefined;
   x: number | undefined;
   y: number | undefined;
+  onCreateFile: () => void;
+  onCreateDir: () => void;
+  onRemove: () => void;
 }
 
 
@@ -22,14 +25,14 @@ export function WorkspaceTreeMenu(props: WorkspaceTreeMenuProps) {
     <Menu open={ props.open } onClose={ props.onClose } anchorReference={ "anchorPosition" } anchorPosition={
       props.open && props.x && props.y ? { top: props.y, left: props.x } : undefined
     }>
-      <MenuItem onClick={ props.onClose }>
+      <MenuItem onClick={ () => { props.onClose(); props.onCreateFile(); } }>
         <ListItemIcon>
           <PostAddOutlined/>
         </ListItemIcon>
         Create file
       </MenuItem>
 
-      <MenuItem onClick={ props.onClose }>
+      <MenuItem onClick={ () => { props.onClose(); props.onCreateDir(); } }>
         <ListItemIcon>
           <CreateNewFolderOutlined/>
         </ListItemIcon>
@@ -38,10 +41,7 @@ export function WorkspaceTreeMenu(props: WorkspaceTreeMenuProps) {
 
       <Divider/>
 
-      <MenuItem onClick={ props.onClose }>
-        Rename
-      </MenuItem>
-      <MenuItem onClick={ props.onClose }>
+      <MenuItem onClick={ () => { props.onClose(); props.onRemove(); } }>
         <ListItemIcon>
           <DeleteForever color={ "error" }/>
         </ListItemIcon>
