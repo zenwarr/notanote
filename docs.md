@@ -1,18 +1,8 @@
-## Shares
+Nuclear notes is a minimalistic note taking application for power users.
+It can be used as a Web application, desktop app on Windows and Linux and as a mobile app on Android.
+It is similar to Obsidian.md, but is open-source, self-hosted (in case you want to use a web version — a server is not required) and has sync.
 
-You can give everyone access to a read-only rendered versions of your files. Shares are defined in `.notes/shares.json`
-file in the following form:
 
-```json
-{
-  "public": [
-    {
-      "file": "README.md",
-      "url": "/public/README.md"
-    }
-  ]
-}
-```
 
 ## Plugin webpack config
 
