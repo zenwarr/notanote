@@ -1,8 +1,9 @@
 import { StoragePath } from "@storage/storage-path";
 import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
 import * as React from "react";
-import { Document, DocumentEditorStateAdapter, DocumentEditorStateAdapterConstructor } from "./Document";
+import { getPlatform, Platform } from "../platform/get-platform";
 import { PluginManager } from "../plugin/plugin-manager";
+import { Document, DocumentEditorStateAdapter, DocumentEditorStateAdapterConstructor } from "./Document";
 import { ReadonlyStateAdapter } from "./ReadonlyStateAdapter";
 
 
@@ -10,7 +11,7 @@ const TEXT_EXTS = [ ".md", ".txt" ];
 
 
 function shouldUseCodeMirror(filename: string): boolean {
-  if (isAndroidOrIOS()) {
+  if (isMobile()) {
     // monaco-editor doesn't support Android or iOS
     return true;
   }
@@ -99,6 +100,6 @@ export class DocumentEditorProvider {
 }
 
 
-function isAndroidOrIOS() {
-  return /(android|ios)/i.test(navigator.userAgent);
+function isMobile() {
+  return /(android|ios)/i.test(navigator.userAgent) || getPlatform() === Platform.Android || getPlatform() === Platform.Ios;
 }
