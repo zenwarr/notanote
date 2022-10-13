@@ -10,6 +10,7 @@ import { SyncDiffEntry } from "@sync/sync-diff-entry";
 import { DiffAction } from "@sync/sync-metadata-storage";
 import { SyncJobRunner } from "@sync/sync-job-runner";
 import { makeObservable, observable } from "mobx";
+import { Document } from "../document/Document";
 import { PluginManager } from "../plugin/plugin-manager";
 import { RecentDocStorage } from "../RecentDocStorage";
 import { getFileRoutePath } from "./routing";
@@ -117,14 +118,11 @@ export class Workspace {
 
 
   async remove(path: StoragePath) {
-    if (this.openedPath && path.isEqual(this.openedPath)) {
-      const parentPath = path.parentDir;
-      if (parentPath.isEqual(StoragePath.root)) {
-        this.navigateToPath(undefined);
-      } else {
-        this.navigateToPath(parentPath);
-      }
+    if (this.openedPath && this.openedPath.inside(path, true)) {
+      this.navigateToPath(undefined);
     }
+
+    await Document.onRemove(path);
 
     const pointer = await this.storage.get(path);
     await pointer.remove();

@@ -1,4 +1,4 @@
-import { Button, CircularProgress } from "@mui/material";
+import { Box, Button, CircularProgress } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { StorageError, StorageErrorCode } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
@@ -59,7 +59,9 @@ export const FileView = observer((props: FileViewProps) => {
   if (contentLoad.loadError) {
     if (contentLoad.loadError instanceof StorageError && contentLoad.loadError.code === StorageErrorCode.NotExists) {
       return <div className={ classes.error }>
-        File { props.entryPath.normalized } not exists
+        <Box mb={ 2 }>
+          File { props.entryPath.normalized } does not exists
+        </Box>
         <Button variant={ "contained" }>
           Create
         </Button>
@@ -109,7 +111,9 @@ const useStyles = makeStyles(theme => ({
   error: {
     padding: theme.spacing(2),
     display: "flex",
-    color: theme.palette.divider,
-    justifyContent: "center"
+    flexDirection: "column",
+    color: theme.palette.error.main,
+    justifyContent: "center",
+    alignItems: "center"
   }
 }));

@@ -1,4 +1,5 @@
 import { SpecialPath } from "@storage/special-path";
+import { StoragePath } from "@storage/storage-path";
 import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
 import { Mutex } from "async-mutex";
 import * as _ from "lodash";
@@ -61,6 +62,10 @@ export class Document {
 
 
   private async save() {
+    if (this.justDeleted) {
+      return;
+    }
+
     let buf = await this.contentToBuffer();
     await this.entry.writeOrCreate(buf);
     Workspace.instance.scheduleDiffUpdate(this.entry.path);
@@ -80,7 +85,7 @@ export class Document {
 
       const editorProvider = new DocumentEditorProvider(Workspace.instance.plugins);
       const settings = WorkspaceSettingsProvider.instance.getSettingsForPath(ep.path);
-      document.setEditorStateAdapter(await editorProvider.getStateAdapter(document,  content, settings.editor));
+      document.setEditorStateAdapter(await editorProvider.getStateAdapter(document, content, settings.editor));
 
       this.docs.set(ep.path.normalized, document);
 
@@ -91,8 +96,34 @@ export class Document {
   }
 
 
+  /**
+   * This method should only be called by Workspace before entries are deleted.
+   */
+  static async onRemove(path: StoragePath) {
+    const release = await this.docsLock.acquire();
+    try {
+      for (const doc of this.docs.values()) {
+        const docPath = doc.entry.path;
+        if (docPath.inside(path)) {
+          doc.justDeleted = true;
+        }
+      }
+    } finally {
+      release();
+    }
+  }
+
+
   private onChangesDebounced: () => Promise<void> | undefined;
   readonly entry: StorageEntryPointer;
+
+  /**
+   * This property is set to true when a file is intentionally deleted by user.
+   * This document should be closed immediately, but we should prevent saving the document after that.
+   * A document is not going to be automatically saved on close in this case.
+   */
+  justDeleted = false;
+
   private adapter: DocumentEditorStateAdapter | undefined;
   private static docs = new Map<string, Document>();
   private static docsLock = new Mutex();
