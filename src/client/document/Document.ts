@@ -57,21 +57,31 @@ export class Document {
 
 
   onChanges() {
+    ++this.unsavedChangesCounter;
     this.onChangesDebounced()?.catch(error => console.error("onChanges failed", error));
   }
 
 
   private async save() {
-    if (this.justDeleted) {
+    if (this.justDeleted || this.unsavedChangesCounter === 0) {
       return;
     }
 
-    let buf = await this.contentToBuffer();
-    await this.entry.writeOrCreate(buf);
-    Workspace.instance.scheduleDiffUpdate(this.entry.path);
+    const release = await this.saveLock.acquire();
+    try {
+      const prevUnsavedChanges = this.unsavedChangesCounter;
 
-    if (this.entry.path.isEqual(SpecialPath.Settings)) {
-      await WorkspaceSettingsProvider.instance.reload(buf);
+      let buf = await this.contentToBuffer();
+      await this.entry.writeOrCreate(buf);
+      Workspace.instance.scheduleDiffUpdate(this.entry.path);
+
+      if (this.entry.path.isEqual(SpecialPath.Settings)) {
+        await WorkspaceSettingsProvider.instance.reload(buf);
+      }
+
+      this.unsavedChangesCounter -= prevUnsavedChanges;
+    } finally {
+      release();
     }
   }
 
@@ -123,6 +133,8 @@ export class Document {
    * A document is not going to be automatically saved on close in this case.
    */
   justDeleted = false;
+  private unsavedChangesCounter = 0;
+  private saveLock = new Mutex();
 
   private adapter: DocumentEditorStateAdapter | undefined;
   private static docs = new Map<string, Document>();
