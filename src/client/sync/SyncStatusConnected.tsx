@@ -65,7 +65,8 @@ export function SyncStatus(props: SyncStatusProps) {
 const useStyles = makeStyles(theme => ({
   button: {
     textAlign: "left",
-    justifyContent: "flex-start"
+    justifyContent: "flex-start",
+    color: "inherit"
   },
   conflictIcon: {
     fontSize: "1em",

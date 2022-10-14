@@ -7,12 +7,12 @@ export type SyncStatusIconProps = {
 }
 
 
-export type SyncStatusIconColor = "success" | "error" | "warning"
+export type SyncStatusIconColor = "success" | "error";
 
 
 export function SyncStatusIcon(props: SyncStatusIconProps) {
   const styles = {
-    opacity: 0.6,
+    // opacity: 0.6,
     ...(props.rotate ? {
       animation: "spin 4s linear infinite",
       "@keyframes spin": {
@@ -26,5 +26,5 @@ export function SyncStatusIcon(props: SyncStatusIconProps) {
     } : undefined)
   };
 
-  return <SyncIcon color={ props.color } sx={ styles }/>;
+  return <SyncIcon color={ props.color === "success" ? undefined : props.color } sx={ styles }/>;
 }
