@@ -22,7 +22,7 @@ import { FileSettings } from "@common/Settings";
 import { json } from "@codemirror/lang-json";
 import { javascript } from "@codemirror/lang-javascript";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-import { CHECKBOX_RE} from "./react-widget";
+import { CHECKBOX_RE } from "./react-widget";
 import { NodeProp } from "@lezer/common";
 import { languages } from "@codemirror/language-data";
 import { format } from "date-fns";
@@ -263,13 +263,12 @@ const customKeymap: KeyBinding[] = [
 
 export class CodeEditorStateAdapter implements DocumentEditorStateAdapter {
   constructor(doc: Document, initialContent: Buffer, settings: FileSettings) {
-    this.doc = doc;
     const self = this;
     this.state = createEditorState(initialContent.toString(), doc.entry.path, settings, {
       onUpdate: upd => {
         self.state = upd.state;
         if (upd.docChanged) {
-          self.doc.onChanges();
+          doc.onChange();
         }
       }
     });
@@ -281,6 +280,19 @@ export class CodeEditorStateAdapter implements DocumentEditorStateAdapter {
   }
 
 
+  onExternalChange(data: Buffer) {
+    const tx = this.state.update({
+      changes: {
+        from: 0,
+        to: this.state.doc.length,
+        insert: data.toString()
+      }
+    });
+
+    this.view?.update([ tx ])
+  }
+
+
   state: EditorState;
-  private readonly doc: Document;
+  view: EditorView | undefined;
 }

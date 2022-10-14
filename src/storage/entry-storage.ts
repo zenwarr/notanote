@@ -2,14 +2,13 @@ import { StorageEntryData } from "@storage/storage-entry-data";
 import { StoragePath } from "./storage-path";
 
 
-export enum StorageChangeEvent {
-  Create = "create",
+export enum StorageWatchEvent {
   Update = "update",
   Remove = "remove"
 }
 
 
-export type StorageWatcherCallback = (p: StorageEntryPointer, event: StorageChangeEvent) => void;
+export type StorageWatcherCallback = (p: StorageEntryPointer, event: StorageWatchEvent) => void;
 
 
 interface StorageWatcher {
@@ -109,7 +108,7 @@ export abstract class EntryStorage {
   }
 
 
-  protected handleChange(path: StoragePath, event: StorageChangeEvent) {
+  protected handleChange(path: StoragePath, event: StorageWatchEvent) {
     this.watchers.forEach(w => {
       if (path.isEqual(w.path)) {
         w.cb(this.get(path), event);

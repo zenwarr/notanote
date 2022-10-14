@@ -1,8 +1,10 @@
 import { SpecialPath } from "@storage/special-path";
 import { StoragePath } from "@storage/storage-path";
 import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
+import { ContentIdentity, getContentIdentity, getContentIdentityForData } from "@sync/content-identity";
 import { Mutex } from "async-mutex";
 import * as _ from "lodash";
+import * as mobx from "mobx";
 import { FileSettings } from "@common/Settings";
 import { Workspace } from "../workspace/workspace";
 import { StorageEntryPointer } from "@storage/entry-storage";
@@ -11,6 +13,8 @@ import { DocumentEditorProvider } from "./DocumentEditorProvider";
 
 export interface DocumentEditorStateAdapter {
   serializeContent(): string | Buffer | Promise<string | Buffer>;
+
+  onExternalChange?(data: Buffer): void;
 }
 
 
@@ -18,26 +22,30 @@ export type DocumentEditorStateAdapterConstructor = new(doc: Document, initialCo
 
 
 export class Document {
-  constructor(entry: StorageEntryPointer) {
+  constructor(entry: StorageEntryPointer, initialData: Buffer) {
     this.entry = entry;
-    this.onChangesDebounced = _.debounce(this.save.bind(this), 500);
+    this.onChangeDebounced = _.debounce(this.save.bind(this), 500);
+    this.lastSavedIdentity = getContentIdentityForData(initialData);
+    mobx.makeObservable(this, {
+      updatedExternally: mobx.observable,
+      removedExternally: mobx.observable,
+      justDeleted: mobx.observable
+    });
   }
 
 
-  async close() {
+  async close(save = true) {
     const release = await Document.docsLock.acquire();
 
     try {
-      await this.save();
+      if (save) {
+        await this.save();
+      }
+
       Document.docs.delete(this.entry.path.normalized);
     } finally {
       release();
     }
-  }
-
-
-  setEditorStateAdapter(adapter: DocumentEditorStateAdapter) {
-    this.adapter = adapter;
   }
 
 
@@ -56,22 +64,29 @@ export class Document {
   }
 
 
-  onChanges() {
+  onChange() {
     ++this.unsavedChangesCounter;
-    this.onChangesDebounced()?.catch(error => console.error("onChanges failed", error));
+    this.onChangeDebounced()?.catch(error => console.error("onChange failed", error));
   }
 
 
-  private async save() {
-    if (this.justDeleted || this.unsavedChangesCounter === 0) {
+  async save(force = false) {
+    if (this.justDeleted) {
       return;
     }
+
+    if (!force && (this.removedExternally || this.updatedExternally || this.unsavedChangesCounter === 0)) {
+      return;
+    }
+
+    const prevSavedIdentity = this.lastSavedIdentity;
 
     const release = await this.saveLock.acquire();
     try {
       const prevUnsavedChanges = this.unsavedChangesCounter;
 
       let buf = await this.contentToBuffer();
+      this.lastSavedIdentity = getContentIdentityForData(buf);
       await this.entry.writeOrCreate(buf);
       Workspace.instance.scheduleDiffUpdate(this.entry.path);
 
@@ -80,9 +95,22 @@ export class Document {
       }
 
       this.unsavedChangesCounter -= prevUnsavedChanges;
+
+      if (force) {
+        this.removedExternally = false;
+        this.updatedExternally = false;
+      }
+    } catch (err) {
+      this.lastSavedIdentity = prevSavedIdentity;
+      throw err;
     } finally {
       release();
     }
+  }
+
+
+  async reload() {
+    this.adapter?.onExternalChange?.(await this.entry.read());
   }
 
 
@@ -90,12 +118,12 @@ export class Document {
     const release = await this.docsLock.acquire();
 
     try {
-      const document = new Document(ep);
       const content = await ep.read();
+      const document = new Document(ep, content);
 
       const editorProvider = new DocumentEditorProvider(Workspace.instance.plugins);
       const settings = WorkspaceSettingsProvider.instance.getSettingsForPath(ep.path);
-      document.setEditorStateAdapter(await editorProvider.getStateAdapter(document, content, settings.editor));
+      document.adapter = await editorProvider.getStateAdapter(document, content, settings.editor);
 
       this.docs.set(ep.path.normalized, document);
 
@@ -108,14 +136,41 @@ export class Document {
 
   /**
    * This method should only be called by Workspace before entries are deleted.
+   * Returns false if the document has unsaved changes and user should be prompted to save it
    */
-  static async onRemove(path: StoragePath) {
+  static async onRemove(path: StoragePath): Promise<boolean> {
     const release = await this.docsLock.acquire();
     try {
       for (const doc of this.docs.values()) {
         const docPath = doc.entry.path;
         if (docPath.inside(path)) {
-          doc.justDeleted = true;
+          if (doc.unsavedChangesCounter) {
+            doc.removedExternally = true;
+            return false;
+          } else {
+            doc.justDeleted = true;
+          }
+        }
+      }
+    } finally {
+      release();
+    }
+
+    return true;
+  }
+
+
+  static async onUpdate(path: StoragePath, contentIdentity: ContentIdentity | undefined, content: Buffer | undefined) {
+    const release = await this.docsLock.acquire();
+    try {
+      for (const doc of this.docs.values()) {
+        const docPath = doc.entry.path;
+        if (docPath.isEqual(path)) {
+          if (doc.unsavedChangesCounter || !doc.adapter?.onExternalChange) {
+            doc.updatedExternally = true;
+          } else {
+            doc.adapter?.onExternalChange?.(content || await doc.entry.read());
+          }
         }
       }
     } finally {
@@ -124,7 +179,7 @@ export class Document {
   }
 
 
-  private onChangesDebounced: () => Promise<void> | undefined;
+  private onChangeDebounced: () => Promise<void> | undefined;
   readonly entry: StorageEntryPointer;
 
   /**
@@ -133,6 +188,9 @@ export class Document {
    * A document is not going to be automatically saved on close in this case.
    */
   justDeleted = false;
+  updatedExternally = false;
+  removedExternally = false;
+  private lastSavedIdentity: string | undefined;
   private unsavedChangesCounter = 0;
   private saveLock = new Mutex();
 

@@ -18,6 +18,9 @@ import { EntryCompareData } from "./entry-compare-data";
 import { DiffAction, EntrySyncMetadata, SyncMetadataMap, SyncMetadataStorage } from "./sync-metadata-storage";
 
 
+export type SyncUpdateCallback = (path: StoragePath, updatedIdentity: ContentIdentity | undefined, updatedData: Buffer | undefined) => void;
+
+
 export class Sync {
   constructor(storage: EntryStorage, syncTarget: SyncTargetProvider) {
     this.storage = storage;
@@ -40,8 +43,16 @@ export class Sync {
   private lock = new Mutex();
   private readonly activeJobPaths = new Set<string>();
   private cachedDiffRules: DiffHandleRule[] | undefined;
+  private readonly updateCallbacks: SyncUpdateCallback[] = [];
   actualDiff: SyncDiffEntry[] = [];
   updatingDiff = false;
+
+
+  addUpdateCallback(cb: SyncUpdateCallback | undefined) {
+    if (cb) {
+      this.updateCallbacks.push(cb);
+    }
+  }
 
 
   get cleanDiffCount() {
@@ -399,7 +410,11 @@ export class Sync {
       let synced = job.syncMetadata.synced;
       if (accepted) {
         if (accepted === DirContentIdentity) {
-          await this.syncTarget.createDir(job.path, synced);
+          await to.createDir(job.path, synced);
+
+          if (to === this.localSyncTarget) {
+            this.updateCallbacks.forEach(c => c(job.path, DirContentIdentity, undefined));
+          }
         } else {
           let data: Buffer;
 
@@ -425,6 +440,10 @@ export class Sync {
           }
 
           await to.update(job.path, data, synced);
+
+          if (to === this.localSyncTarget) {
+            this.updateCallbacks.forEach(c => c(job.path, actual, data));
+          }
         }
       } else {
         if (!synced) {
@@ -432,6 +451,10 @@ export class Sync {
         }
 
         await to.remove(job.path, synced);
+
+        if (to === this.localSyncTarget) {
+          this.updateCallbacks.forEach(c => c(job.path, undefined, undefined));
+        }
       }
 
       const release = await this.lock.acquire();

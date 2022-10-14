@@ -39,6 +39,7 @@ export const CodeEditor = observer((props: CodeEditorProps) => {
     }
 
     viewRef.current = view;
+    stateAdapter.current.view = view;
 
     return () => {
       view.destroy();

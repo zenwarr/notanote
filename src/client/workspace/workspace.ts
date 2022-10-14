@@ -1,20 +1,21 @@
-import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
-import { StorageEntryData } from "@storage/storage-entry-data";
+import { EntryStorage, StorageEntryType, StorageWatchEvent } from "@storage/entry-storage";
 import { MemoryCachedStorage } from "@storage/memory-cached-storage";
-import { EntryStorage, StorageEntryType } from "@storage/entry-storage";
+import { StorageEntryData } from "@storage/storage-entry-data";
 import { StoragePath } from "@storage/storage-path";
+import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
+import { ContentIdentity, getContentIdentityForData } from "@sync/content-identity";
 import { Sync } from "@sync/sync";
-import { isConflictingDiff } from "@sync/sync-diff-type";
-import { SyncTargetProvider } from "@sync/sync-target-provider";
 import { SyncDiffEntry } from "@sync/sync-diff-entry";
-import { DiffAction } from "@sync/sync-metadata-storage";
+import { isConflictingDiff } from "@sync/sync-diff-type";
 import { SyncJobRunner } from "@sync/sync-job-runner";
+import { DiffAction } from "@sync/sync-metadata-storage";
+import { SyncTargetProvider } from "@sync/sync-target-provider";
 import { makeObservable, observable } from "mobx";
+import { ThemeConfig } from "theme/theme-config";
 import { Document } from "../document/Document";
 import { PluginManager } from "../plugin/plugin-manager";
 import { RecentDocStorage } from "../RecentDocStorage";
 import { getFileRoutePath } from "./routing";
-import { ThemeConfig } from "theme/theme-config";
 
 
 export class Workspace {
@@ -39,6 +40,13 @@ export class Workspace {
           this.storage,
           syncTarget
       );
+      this.sync.addUpdateCallback(async (path, updatedIdentity, updatedData) => {
+        if (updatedIdentity == null) {
+          await this.onEntryChange(StorageWatchEvent.Remove, path, undefined, undefined);
+        } else {
+          await this.onEntryChange(StorageWatchEvent.Update, path, updatedIdentity, updatedData);
+        }
+      });
       this.syncJobRunner = new SyncJobRunner(this.sync);
     }
   }
@@ -119,11 +127,11 @@ export class Workspace {
 
 
   async remove(path: StoragePath) {
+    await Document.onRemove(path);
+
     if (this.openedPath && this.openedPath.inside(path, true)) {
       this.navigateToPath(undefined);
     }
-
-    await Document.onRemove(path);
 
     const pointer = await this.storage.get(path);
     await pointer.remove();
@@ -205,6 +213,21 @@ export class Workspace {
       const lastOpenedDocPath = new StoragePath(lastOpenedDoc);
       this._openedPath = lastOpenedDocPath;
       this.navigateToPath(lastOpenedDocPath);
+    }
+  }
+
+
+  async onEntryChange(event: StorageWatchEvent, path: StoragePath, updatedIdentity: ContentIdentity | undefined, updatedData: Buffer | undefined) {
+    if (event === StorageWatchEvent.Remove) {
+      if (!await Document.onRemove(path)) {
+        return;
+      }
+
+      if (this.openedPath && this.openedPath.inside(path, true)) {
+        this.navigateToPath(undefined);
+      }
+    } else if (event === StorageWatchEvent.Update) {
+      await Document.onUpdate(path, updatedIdentity, updatedData);
     }
   }
 

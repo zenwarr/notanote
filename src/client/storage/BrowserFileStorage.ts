@@ -1,5 +1,5 @@
 import {
-  StorageChangeEvent,
+  StorageWatchEvent,
   StorageEntryPointer,
   StorageEntryStats,
   StorageError,

@@ -23,13 +23,18 @@ export class MonacoEditorStateAdapter implements DocumentEditorStateAdapter {
       this._model = monaco.editor.createModel(initialContent.toString(), getLanguageFromFileName(doc.entry.path.normalized), uri);
     }
 
-    this._model.onDidChangeContent(() => this.doc.onChanges());
+    this._model.onDidChangeContent(() => this.doc.onChange());
   }
 
 
   serializeContent() {
     assert(this._model != null);
     return this._model.getValue();
+  }
+
+
+  onExternalChange(data: Buffer) {
+    this._model?.setValue(data.toString());
   }
 
 

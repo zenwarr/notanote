@@ -14,6 +14,7 @@ import { useWindowTitle } from "../useWindowTitle";
 import { useEntrySettingsInsideObserver } from "../workspace/use-entry-settings-inside-observer";
 import { Workspace } from "../workspace/workspace";
 import { CreateMissingFile } from "./create-missing-file";
+import { ExternalChangesLine } from "./external-changes-line";
 import { useGlobalEntrySettings } from "./global-entry-settings";
 
 
@@ -30,7 +31,7 @@ export const FileView = observer((props: FileViewProps) => {
 
   useGlobalEntrySettings(settings);
 
-  const contentLoad = useLoad(useCallback(async () => {
+  const docLoad = useLoad(useCallback(async () => {
     return await Document.create(Workspace.instance.storage.get(props.entryPath));
   }, [ props.entryPath, cw.editorReloadTrigger ]), {
     onError: err => console.error(`Failed to load file ${ props.entryPath.normalized }`, err),
@@ -38,38 +39,38 @@ export const FileView = observer((props: FileViewProps) => {
 
   useEffect(() => {
     return () => {
-      if (contentLoad.data) {
-        contentLoad.data.close(); // not handling intentionally
+      if (docLoad.data) {
+        docLoad.data.close(); // not handling intentionally
       }
     };
-  }, [ contentLoad.data, cw.editorReloadTrigger ]);
+  }, [ docLoad.data, cw.editorReloadTrigger ]);
 
   const componentLoad = useLoad(useCallback(async () => {
-    if (!contentLoad.isLoaded) {
+    if (!docLoad.isLoaded) {
       return undefined;
     }
 
     const editorProvider = new DocumentEditorProvider(Workspace.instance.plugins);
     return editorProvider.getComponent(props.entryPath, settings.editor);
-  }, [ settings.editor, contentLoad.isLoaded ]));
+  }, [ settings.editor, docLoad.isLoaded ]));
 
   const editorCtx: EditorCtxData = useMemo(() => ({
     entryPath: props.entryPath,
   }), [ props.entryPath ]);
 
-  if (contentLoad.loadError) {
-    if (contentLoad.loadError instanceof StorageError && contentLoad.loadError.code === StorageErrorCode.NotExists) {
+  if (docLoad.loadError) {
+    if (docLoad.loadError instanceof StorageError && docLoad.loadError.code === StorageErrorCode.NotExists) {
       return <CreateMissingFile path={ props.entryPath }/>;
-    } else if (contentLoad.loadError instanceof StorageError && contentLoad.loadError.code === StorageErrorCode.NotFile) {
+    } else if (docLoad.loadError instanceof StorageError && docLoad.loadError.code === StorageErrorCode.NotFile) {
       return null;
     } else {
       return <div className={ classes.error }>
-        { `Error loading "${ props.entryPath.normalized }": ${ contentLoad.loadError }` }
+        { `Error loading "${ props.entryPath.normalized }": ${ docLoad.loadError }` }
       </div>;
     }
   }
 
-  if (!contentLoad.isLoaded || !componentLoad.isLoaded || !componentLoad.data) {
+  if (!docLoad.isLoaded || !componentLoad.isLoaded || !componentLoad.data) {
     return <div className={ classes.loader }>
       <CircularProgress/>
     </div>;
@@ -77,7 +78,9 @@ export const FileView = observer((props: FileViewProps) => {
 
   return <ErrorBoundary>
     <EditorContext.Provider value={ editorCtx }>
-      <componentLoad.data doc={ contentLoad.data } className={ props.className }/>
+      <ExternalChangesLine doc={docLoad.data} />
+
+      <componentLoad.data doc={ docLoad.data } className={ props.className }/>
     </EditorContext.Provider>
   </ErrorBoundary>;
 });
