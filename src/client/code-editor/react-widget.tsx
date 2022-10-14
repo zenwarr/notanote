@@ -3,7 +3,7 @@ import * as ReactDOM from "react-dom";
 import { ReactElement } from "react";
 
 
-abstract class ReactWidget<StateType> extends WidgetType {
+export abstract class ReactWidget<StateType> extends WidgetType {
   constructor(state: StateType) {
     super();
     this.state = state;

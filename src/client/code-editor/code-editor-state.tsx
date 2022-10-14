@@ -22,6 +22,7 @@ import { FileSettings } from "@common/Settings";
 import { json } from "@codemirror/lang-json";
 import { javascript } from "@codemirror/lang-javascript";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { linkPlugin } from "./link-widget";
 import { CHECKBOX_RE } from "./react-widget";
 import { NodeProp } from "@lezer/common";
 import { languages } from "@codemirror/language-data";
@@ -184,7 +185,8 @@ export function createEditorState(content: string, entryPath: StoragePath, setti
             };
           }
         ]
-      })
+      }),
+      linkPlugin
     ]
   });
 }
@@ -289,7 +291,7 @@ export class CodeEditorStateAdapter implements DocumentEditorStateAdapter {
       }
     });
 
-    this.view?.update([ tx ])
+    this.view?.update([ tx ]);
   }
 
 
