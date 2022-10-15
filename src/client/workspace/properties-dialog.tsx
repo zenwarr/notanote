@@ -1,5 +1,5 @@
 import { CircularProgress, Dialog, DialogContent} from "@mui/material";
-import { useLoad } from "../useLoad";
+import { useLoad } from "../use-load";
 import { useCallback } from "react";
 import * as React from "react";
 import { format } from "date-fns";

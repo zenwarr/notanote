@@ -1,5 +1,5 @@
 import { Stack, Button } from "@mui/material";
-import { Document } from "../document/Document";
+import { Document } from "../document/document";
 import * as mobx from "mobx-react-lite";
 import { Workspace } from "workspace/workspace";
 

@@ -12,9 +12,9 @@ import { DiffAction } from "@sync/sync-metadata-storage";
 import { SyncTargetProvider } from "@sync/sync-target-provider";
 import { makeObservable, observable } from "mobx";
 import { ThemeConfig } from "theme/theme-config";
-import { Document } from "../document/Document";
+import { Document } from "../document/document";
 import { PluginManager } from "../plugin/plugin-manager";
-import { RecentDocStorage } from "../RecentDocStorage";
+import { RecentDocStorage } from "../document/recent-doc-storage";
 import { getFileRoutePath } from "./routing";
 
 

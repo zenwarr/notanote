@@ -1,4 +1,4 @@
-import { tryParseJson } from "@common/utils/tryParse";
+import { tryParseJson } from "@common/utils/try-parse";
 import { StoragePath } from "@storage/storage-path";
 
 

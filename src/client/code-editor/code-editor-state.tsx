@@ -18,7 +18,7 @@ import {
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { getStoredEditorState, storeEditorState } from "../editor/store-state";
 import { createHighlightStyle } from "./highlight";
-import { FileSettings } from "@common/Settings";
+import { FileSettings } from "@common/settings";
 import { json } from "@codemirror/lang-json";
 import { javascript } from "@codemirror/lang-javascript";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
@@ -27,7 +27,7 @@ import { CHECKBOX_RE } from "./react-widget";
 import { NodeProp } from "@lezer/common";
 import { languages } from "@codemirror/language-data";
 import { format } from "date-fns";
-import { Document, DocumentEditorStateAdapter } from "../document/Document";
+import { Document, DocumentEditorStateAdapter } from "../document/document";
 import { StoragePath } from "@storage/storage-path";
 
 

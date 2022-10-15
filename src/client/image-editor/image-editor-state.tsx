@@ -1,6 +1,6 @@
-import { DocumentEditorStateAdapter } from "../document/Document";
+import { DocumentEditorStateAdapter } from "../document/document";
 import * as mobx from "mobx";
-import { Document } from "../document/Document";
+import { Document } from "../document/document";
 
 
 export class ImageEditorStateAdapter implements DocumentEditorStateAdapter {

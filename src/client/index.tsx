@@ -2,10 +2,10 @@ import "setup-env";
 import { createRoot } from "react-dom/client";
 import { configure } from "mobx";
 import { Workbox } from "workbox-window";
-import { registerStorageProviders } from "./storage/StorageRegistration";
+import { registerStorageProviders } from "./storage/storage-registration";
 import { AppThemeProvider } from "./theme/theme";
-import { ErrorBoundary } from "./error-boundary/ErrorBoundary";
-import { AppConfigurationGuard } from "storage-config/AppConfigurationGuard";
+import { ErrorBoundary } from "./error-boundary/error-boundary";
+import { AppConfigurationGuard } from "storage-config/app-configuration-guard";
 
 
 if ("serviceWorker" in navigator) {

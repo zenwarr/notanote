@@ -1,5 +1,5 @@
 import * as babel from "@babel/core";
-import { FileSettings } from "@common/Settings";
+import { FileSettings } from "@common/settings";
 import { EntryStorage, StorageError, StorageErrorCode } from "@storage/entry-storage";
 import { resolveImport } from "@storage/resolve-import";
 import { SpecialPath } from "@storage/special-path";
@@ -7,7 +7,7 @@ import { StoragePath } from "@storage/storage-path";
 import { ContentIdentity, getContentIdentityForData } from "@sync/content-identity";
 import * as React from "react";
 import "react-data-grid/lib/styles.css";
-import { Document, DocumentEditorStateAdapter, DocumentEditorStateAdapterConstructor } from "../document/Document";
+import { Document, DocumentEditorStateAdapter, DocumentEditorStateAdapterConstructor } from "../document/document";
 
 
 export interface EditorProps {

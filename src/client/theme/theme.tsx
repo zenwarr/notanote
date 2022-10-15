@@ -4,7 +4,7 @@ import * as mobx from "mobx-react-lite";
 import { useMemo, useState } from "react";
 import { Workspace } from "../workspace/workspace";
 import { ThemeConfig } from "./theme-config";
-import { useMeta } from "./useMeta";
+import { useMeta } from "./use-meta";
 
 
 export interface AppThemeCtxData {

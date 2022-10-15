@@ -1,4 +1,4 @@
-import { uint8ArrayToBuffer } from "@common/utils/uint8ArrayToBuffer";
+import { uint8ArrayToBuffer } from "@common/utils/uint8-array-to-buffer";
 import { EntryStorage, StorageEntryPointer, StorageEntryStats, StorageError, StorageErrorCode } from "@storage/entry-storage";
 import { joinNestedPathSecure, StoragePath } from "@storage/storage-path";
 import * as fs from "fs";

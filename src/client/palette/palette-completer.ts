@@ -2,7 +2,7 @@ import levenshtein from "js-levenshtein";
 import { StorageEntryData } from "@storage/storage-entry-data";
 import { Workspace } from "../workspace/workspace";
 import { PaletteOption } from "./palette";
-import { RecentDocStorage } from "../RecentDocStorage";
+import { RecentDocStorage } from "../document/recent-doc-storage";
 
 
 const COMPLETE_RESULT_COUNT = 10;

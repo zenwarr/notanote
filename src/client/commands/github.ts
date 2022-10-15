@@ -1,5 +1,5 @@
-import { Backend } from "../backend/Backend";
-import { WorkspaceBackend } from "../backend/WorkspaceBackend";
+import { Backend } from "../backend/backend";
+import { WorkspaceBackend } from "../backend/workspace-backend";
 import { Workspace } from "../workspace/workspace";
 
 

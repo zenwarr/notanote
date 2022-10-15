@@ -1,4 +1,4 @@
-import { FileSettings } from "@common/Settings";
+import { FileSettings } from "@common/settings";
 
 
 function numberValueToPropValue(value: number | undefined): string | null {

@@ -1,4 +1,4 @@
-import { FileSettings } from "@common/Settings";
+import { FileSettings } from "@common/settings";
 import { useEffect } from "react";
 import * as nanoid from "nanoid";
 

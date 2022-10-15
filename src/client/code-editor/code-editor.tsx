@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { useEffect, useLayoutEffect, useRef} from "react";
-import { Document } from "../document/Document";
+import { Document } from "../document/document";
 import "./code-editor.css";
 import { EditorView } from "@codemirror/view";
 import { useCurrentThemeIsDark } from "../theme/theme";

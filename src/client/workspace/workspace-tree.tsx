@@ -4,10 +4,10 @@ import * as mobx from "mobx-react-lite";
 import { useMemo } from "react";
 import { FixedSizeNodeData, FixedSizeTree, FixedSizeTreeProps } from "react-vtree";
 import { Workspace } from "./workspace";
-import { TreeContext, TreeCtxData } from "../tree/TreeContext";
-import { TreeNode } from "../tree/TreeNode";
-import { TreeNodeDataBox } from "../tree/TreeNodeData";
-import { useExpandedPaths } from "../tree/useExpandedPaths";
+import { TreeContext, TreeCtxData } from "../tree/tree-context";
+import { TreeNode } from "../tree/tree-node";
+import { TreeNodeDataBox } from "../tree/tree-node-data";
+import { useExpandedPaths } from "../tree/use-expanded-paths";
 
 
 export type WorkspaceTreeProps = Omit<FixedSizeTreeProps<FixedSizeNodeData>, "treeWalker" | "children"> & {

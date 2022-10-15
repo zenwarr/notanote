@@ -9,7 +9,7 @@ import * as React from "react";
 import { useRef, useState } from "react";
 import { Workspace } from "./workspace";
 import { CreateEntryDialog } from "./create-entry-dialog";
-import { ContainerWithSizeDetection } from "../utils/ContainerWithSizeDetection";
+import { ContainerWithSizeDetection } from "../utils/container-with-size-detection";
 import { WorkspaceTreeMenu } from "./workspace-tree-menu";
 import { WorkspaceTree } from "./workspace-tree";
 

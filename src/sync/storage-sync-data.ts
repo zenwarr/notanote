@@ -1,4 +1,4 @@
-import { tryParseJson, tryParseJson5 } from "@common/utils/tryParse";
+import { tryParseJson, tryParseJson5 } from "@common/utils/try-parse";
 import { SpecialPath } from "@storage/special-path";
 import { EntryStorage, StorageEntryPointer, StorageError, StorageErrorCode } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";

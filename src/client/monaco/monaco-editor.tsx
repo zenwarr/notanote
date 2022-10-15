@@ -1,9 +1,9 @@
-import { FileSettings } from "@common/Settings";
+import { FileSettings } from "@common/settings";
 import { observer } from "mobx-react-lite";
 import * as monaco from "monaco-editor";
 import { IRange } from "monaco-editor";
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { Document } from "../document/Document";
+import { Document } from "../document/document";
 import { getStoredEditorState, storeEditorState } from "../editor/store-state";
 import { useCurrentThemeIsDark } from "../theme/theme";
 import { useEntrySettingsInsideObserver } from "../workspace/use-entry-settings-inside-observer";

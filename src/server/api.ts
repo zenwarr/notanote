@@ -7,8 +7,8 @@ import { FastifyInstance, FastifyRequest } from "fastify";
 import S from "fluent-json-schema";
 import * as fs from "fs";
 import { getProfile, requireAuthenticatedUser } from "./auth";
-import { commitAndPushChanges, initGithubIntegration } from "./github/Github";
-import { ServerStorageFactory } from "./storage/ServerStorageFactory";
+import { commitAndPushChanges, initGithubIntegration } from "./github/github";
+import { ServerStorageFactory } from "./storage/server-storage-factory";
 
 
 type StorageRouteParams = {

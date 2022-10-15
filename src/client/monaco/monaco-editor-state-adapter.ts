@@ -1,4 +1,4 @@
-import { Document, DocumentEditorStateAdapter } from "../document/Document";
+import { Document, DocumentEditorStateAdapter } from "../document/document";
 import assert from "assert";
 import * as monaco from "monaco-editor";
 import { configureMonaco } from "./configure";
