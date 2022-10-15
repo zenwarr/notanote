@@ -18,7 +18,7 @@ services:
     environment:
       - ENV_FILE=/env/.env
       - CONFIG_DIR=/config
-      - NODE_ENV
+      - NODE_ENV=development
     labels:
       - "traefik.http.routers.notes.rule=Host(\"${PUBLIC_DOMAIN}\")"
       - "traefik.http.services.notes.loadbalancer.server.port=8080"
