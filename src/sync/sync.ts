@@ -4,7 +4,7 @@ import { StoragePath } from "@storage/storage-path";
 import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
 import { shouldPathBeSynced } from "@sync/ignore";
 import { DiffHandleRule, StorageSyncData } from "@sync/storage-sync-data";
-import { shouldReadFromLocalToAccept, SyncDiffEntry, walkSyncDiffEntriesDownToTop } from "@sync/sync-diff-entry";
+import { isAccepted, shouldReadFromLocalToAccept, SyncDiffEntry, walkSyncDiffEntriesDownToTop } from "@sync/sync-diff-entry";
 import { isCleanLocalDiff, isCleanRemoteDiff, isConflictingDiff, SyncDiffType } from "@sync/sync-diff-type";
 import { SyncOutlineEntry } from "@sync/sync-entry";
 import { SyncTarget } from "@sync/sync-target";
@@ -16,6 +16,7 @@ import * as mobx from "mobx";
 import { ContentIdentity, DirContentIdentity, getContentIdentity, getContentIdentityForData } from "./content-identity";
 import { EntryCompareData } from "./entry-compare-data";
 import { DiffAction, EntrySyncMetadata, SyncMetadataMap, SyncMetadataStorage } from "./sync-metadata-storage";
+import { count } from "@common/utils/count";
 
 
 export type SyncUpdateCallback = (path: StoragePath, updatedIdentity: ContentIdentity | undefined, updatedData: Buffer | undefined) => void;
@@ -30,6 +31,7 @@ export class Sync {
     mobx.makeObservable(this, {
       actualDiff: mobx.observable,
       conflictCount: mobx.computed,
+      unresolvedDiffCount: mobx.computed,
       updatingDiff: mobx.observable,
       mergeDiffsIntoActual: mobx.action
     } as any);
@@ -55,8 +57,8 @@ export class Sync {
   }
 
 
-  get cleanDiffCount() {
-    return this.actualDiff.length - this.conflictCount;
+  get unresolvedDiffCount() {
+    return count(this.actualDiff, d => !isAccepted(d));
   }
 
 

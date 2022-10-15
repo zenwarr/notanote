@@ -19,13 +19,13 @@ export const SyncStatusConnected = observer((props: SyncStatusConnectedProps) =>
     return null;
   }
 
-  const cleanDiffCount = sync.cleanDiffCount;
+  const unresolvedDiffCount = sync.unresolvedDiffCount;
   const conflictCount = sync.conflictCount;
 
   return <SyncStatus isError={ jobs.errors.length > 0 }
-                     cleanDiffCount={ cleanDiffCount }
+                     cleanDiffCount={ unresolvedDiffCount }
                      conflictCount={ conflictCount }
-                     isWorking={ jobs.isWorking }
+                     isWorking={ jobs.isWorking || sync.updatingDiff }
                      onClick={ props.onClick }/>;
 });
 
@@ -54,7 +54,7 @@ export function SyncStatus(props: SyncStatusProps) {
           props.conflictCount > 0 && <span>
           &nbsp;
           <PriorityHighIcon color={ "error" } className={ classes.conflictIcon }/>
-          { props.conflictCount }
+            { props.conflictCount }
         </span>
       }
     </Box>
