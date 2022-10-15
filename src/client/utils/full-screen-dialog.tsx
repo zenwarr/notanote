@@ -1,5 +1,5 @@
 import CloseIcon from "@mui/icons-material/Close";
-import { AppBar, Box, Dialog, IconButton, Toolbar, Typography } from "@mui/material";
+import { AppBar, Dialog, IconButton, Toolbar, Typography } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 
 

@@ -1,6 +1,6 @@
-import { Box, Button, CircularProgress } from "@mui/material";
+import { CircularProgress } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { StorageEntryType, StorageError, StorageErrorCode } from "@storage/entry-storage";
+import { StorageError, StorageErrorCode } from "@storage/entry-storage";
 import { StoragePath } from "@storage/storage-path";
 import { EditorContext, EditorCtxData } from "editor/editor-context";
 import { observer } from "mobx-react-lite";

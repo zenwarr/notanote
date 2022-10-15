@@ -1,7 +1,7 @@
 import { SpecialPath } from "@storage/special-path";
 import { StoragePath } from "@storage/storage-path";
 import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
-import { ContentIdentity, getContentIdentity, getContentIdentityForData } from "@sync/content-identity";
+import { ContentIdentity, getContentIdentityForData } from "@sync/content-identity";
 import { Mutex } from "async-mutex";
 import * as _ from "lodash";
 import * as mobx from "mobx";

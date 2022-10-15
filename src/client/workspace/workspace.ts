@@ -3,7 +3,7 @@ import { MemoryCachedStorage } from "@storage/memory-cached-storage";
 import { StorageEntryData } from "@storage/storage-entry-data";
 import { StoragePath } from "@storage/storage-path";
 import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
-import { ContentIdentity, getContentIdentityForData } from "@sync/content-identity";
+import { ContentIdentity } from "@sync/content-identity";
 import { Sync } from "@sync/sync";
 import { SyncDiffEntry } from "@sync/sync-diff-entry";
 import { isConflictingDiff } from "@sync/sync-diff-type";

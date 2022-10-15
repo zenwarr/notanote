@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Box, Button, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 import { KVEntryStorage } from "@storage/kv-entry-storage";
 import { IdbKvStorage } from "../storage/idb-kv-storage";
 import { StorageProviderConfigEditorProps, StorageProviderManager } from "../storage/storage-provider";

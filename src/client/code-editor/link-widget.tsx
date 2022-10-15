@@ -8,9 +8,7 @@ import {
   WidgetType
 } from "@codemirror/view";
 import { Range } from "@codemirror/state";
-import { ExternalLink, Link } from "../plugin/plugin-api";
-import { checkRangeOverlap, getParentWithClass, invisibleDecoration } from "./widget-utils";
-import { ReactWidget } from "./react-widget";
+import { getParentWithClass } from "./widget-utils";
 import { openLink } from "workspace/routing";
 
 

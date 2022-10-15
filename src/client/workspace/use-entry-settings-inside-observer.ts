@@ -1,4 +1,3 @@
-import { patternMatches } from "@common/utils/patterns";
 import { StoragePath } from "@storage/storage-path";
 import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
 import { useMemo } from "react";

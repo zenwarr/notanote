@@ -1,5 +1,4 @@
 import { SpecialPath } from "@storage/special-path";
-import { WorkspaceSettingsProvider } from "@storage/workspace-settings-provider";
 import * as monaco from "monaco-editor";
 import { getUriFromPath } from "./get-uri";
 

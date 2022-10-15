@@ -8,7 +8,6 @@ import { SyncDiffType } from "@sync/sync-diff-type";
 import { SyncTarget } from "@sync/sync-target";
 import { DiffAction } from "@sync/sync-metadata-storage";
 import { SyncJobRunner } from "@sync/sync-job-runner";
-import * as mobx from "mobx";
 import * as luxon from "luxon";
 
 

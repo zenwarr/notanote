@@ -5,7 +5,6 @@ import { SyncTarget } from "@sync/sync-target";
 import { StorageSyncData } from "@sync/storage-sync-data";
 import { FastifyInstance, FastifyRequest } from "fastify";
 import S from "fluent-json-schema";
-import * as fs from "fs";
 import { getProfile, requireAuthenticatedUser } from "./auth";
 import { commitAndPushChanges, initGithubIntegration } from "./github/github";
 import { ServerStorageFactory } from "./storage/server-storage-factory";
