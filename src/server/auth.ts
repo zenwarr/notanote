@@ -1,12 +1,12 @@
 import { ErrorCode, LogicError } from "@common/errors";
 import fastifyPassport from "@fastify/passport";
 import fastifySecureSession from "@fastify/secure-session";
-import * as childProcess from "child_process";
 import { FastifyInstance, FastifyRequest } from "fastify";
 import * as fs from "fs";
 import * as luxon from "luxon";
 import { Strategy as LocalStrategy } from "passport-local";
 import * as path from "path";
+import * as sodium from "sodium-native";
 // import * as jwt from "jsonwebtoken";
 // import { ExtractJwt, Strategy as JwtStrategy } from "passport-jwt";
 
@@ -20,9 +20,6 @@ export interface UserInfo {
 const USERS: [ id: string, name: string, password: string | undefined ][] = [
   [ "admin", "Admin", process.env["AUTH_PASSWORD"] ]
 ];
-
-
-const SECRET = fs.readFileSync(getSecretFilePath());
 
 
 export async function configureAuth(app: FastifyInstance) {
@@ -56,7 +53,7 @@ export async function configureAuth(app: FastifyInstance) {
   await generateSessionSecret();
 
   app.register(fastifySecureSession, {
-    key: SECRET,
+    key: fs.readFileSync(getSecretFilePath()),
     cookie: {
       httpOnly: true,
       secure: true,
@@ -77,8 +74,10 @@ async function generateSessionSecret() {
     try {
       console.log("generating session secret");
 
-      const output = childProcess.execSync("./node_modules/.bin/secure-session-gen-key");
-      fs.writeFileSync(secretFilePath, output);
+      const buf = Buffer.allocUnsafe(sodium.crypto_secretbox_KEYBYTES);
+      sodium.randombytes_buf(buf);
+
+      fs.writeFileSync(secretFilePath, buf);
     } catch (error) {
       console.error("failed to generate session secret", error);
     }
