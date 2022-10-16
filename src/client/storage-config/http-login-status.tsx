@@ -145,6 +145,7 @@ async function requestLogOut(server: string) {
 async function requestLogIn(server: string, name: string, password: string): Promise<UserInfo | undefined> {
   try {
     const r = await httpRequest("auth/login", {
+      method: "post",
       prefixUrl: server,
       credentials: "include",
       json: { name, password }
