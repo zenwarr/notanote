@@ -1,5 +1,5 @@
 import * as babel from "@babel/core";
-import { EntryStorage, StorageError, StorageErrorCode } from "@storage/entry-storage";
+import { EntryStorage, StorageEntryPointer, StorageError, StorageErrorCode } from "@storage/entry-storage";
 import { resolveImport } from "@storage/resolve-import";
 import { SpecialPath } from "@storage/special-path";
 import { StoragePath } from "@storage/storage-path";
@@ -35,7 +35,18 @@ export class PluginManager {
 
 
   async discoverPlugins(): Promise<void> {
-    for (const child of await this.storage.children(SpecialPath.PluginsDir)) {
+    let children: StorageEntryPointer[];
+    try {
+      children = await this.storage.children(SpecialPath.PluginsDir);
+    } catch (err) {
+      if (err instanceof StorageError && err.code === StorageErrorCode.NotExists) {
+        return;
+      } else {
+        throw err;
+      }
+    }
+
+    for (const child of children) {
       const stat = await child.stats();
       if (!stat.isDirectory) {
         continue;
